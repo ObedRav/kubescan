@@ -71,6 +71,7 @@ from provenance import provenance
 # Escape-flag indices in the 26-dim node feature vector — canonical
 # definition derived in the kubescan package (single source of truth).
 from kubescan.model.ga_ensemble import ESCAPE_FLAG_INDICES
+from kubescan.utils.device_utils import resolve_device
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -430,7 +431,7 @@ def main():
     parser.add_argument("--seed",         type=int,   default=42)
     args = parser.parse_args()
 
-    device = torch.device("cpu")
+    device = resolve_device()
 
     # ------------------------------------------------------------------
     # Load predictions

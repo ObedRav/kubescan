@@ -48,6 +48,12 @@ except ImportError as e:
     sys.exit(f"Cannot import KubeGAT: {e}")
 
 try:
+    from kubescan.utils.device_utils import resolve_device
+except ImportError:
+    sys.path.insert(0, str(PROJECT_ROOT.parent / "kubescan" / "src"))
+    from kubescan.utils.device_utils import resolve_device
+
+try:
     from extract_yaml_features import FEATURE_COLS, extract_features_from_dir
 except ImportError as e:
     sys.exit(f"Cannot import extract_yaml_features: {e}")
@@ -450,7 +456,7 @@ def main():
 
     cluster_dir  = args.cluster_dir.resolve()
     cluster_name = args.cluster_name or cluster_dir.name
-    device       = torch.device("cpu")
+    device       = resolve_device()
 
     if not cluster_dir.is_dir():
         sys.exit(f"Cluster directory not found: {cluster_dir}")

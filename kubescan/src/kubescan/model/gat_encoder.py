@@ -27,6 +27,7 @@ from torch import Tensor
 from torch_geometric.nn import GATConv, global_max_pool, global_mean_pool
 
 from ..exceptions import ModelLoadError
+from ..utils.device_utils import resolve_device
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +146,7 @@ def load_fold_ensemble(
     Averaging predictions across folds reduces variance (implicit ensemble).
     """
     if device is None:
-        device = torch.device("cpu")
+        device = resolve_device()
 
     models: list[KubeGAT] = []
     for fold_idx in range(NUM_FOLDS):

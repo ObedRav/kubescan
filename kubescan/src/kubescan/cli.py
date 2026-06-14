@@ -41,6 +41,7 @@ from .model.ga_ensemble import (
 )
 from .model.gat_encoder import load_fold_ensemble
 from .model.rf_classifier import RFClassifier
+from .utils.device_utils import resolve_device
 from .utils.graph_builder import build_cluster_graph, graph_to_pyg
 from .utils.yaml_parser import FEATURE_COLS, extract_cluster_features
 
@@ -377,7 +378,7 @@ def scan(
     """
     cluster_dir  = cluster_dir.resolve()
     cluster_name = cluster_name or cluster_dir.name
-    device       = torch.device("cpu")
+    device       = resolve_device()
 
     try:
         ckpt_dir = _resolve_checkpoints(checkpoints_dir)
@@ -439,7 +440,7 @@ def live(
         kubescan live --all-namespaces --format json
         kubescan live -n kube-system --show-nodes
     """
-    device = torch.device("cpu")
+    device = resolve_device()
 
     try:
         ckpt_dir = _resolve_checkpoints(checkpoints_dir)

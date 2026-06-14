@@ -52,9 +52,11 @@ from gnn_dataset import LABEL_NAMES, KubeClusterDataset, load_split
 # Research may import from kubescan (never the reverse).
 try:
     from kubescan.model.gat_encoder import KubeGAT
+    from kubescan.utils.device_utils import resolve_device
 except ImportError:
     sys.path.insert(0, str(PROJECT_ROOT.parent / "kubescan" / "src"))
     from kubescan.model.gat_encoder import KubeGAT
+    from kubescan.utils.device_utils import resolve_device
 
 from provenance import provenance
 
@@ -349,7 +351,7 @@ def main():
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = resolve_device()
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     print(f"Device: {device}")

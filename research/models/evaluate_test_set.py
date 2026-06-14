@@ -69,6 +69,7 @@ except ImportError as e:
 
 # Canonical escape-flag indices from the kubescan package (single source of truth)
 from kubescan.model.ga_ensemble import ESCAPE_FLAG_INDICES
+from kubescan.utils.device_utils import resolve_device
 
 LABEL_MAP = {0: "clean", 1: "isolated", 2: "attack_chain"}
 
@@ -214,7 +215,7 @@ def main():
                         help="Print per-cluster ranked scores")
     args = parser.parse_args()
 
-    device = torch.device("cpu")
+    device = resolve_device()
 
     # ------------------------------------------------------------------
     # Load ensemble weights
