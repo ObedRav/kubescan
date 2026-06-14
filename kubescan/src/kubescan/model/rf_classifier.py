@@ -21,7 +21,8 @@ import pickle
 from pathlib import Path
 
 import numpy as np
-from skops.io import get_untrusted_types, load as skops_load
+from skops.io import get_untrusted_types
+from skops.io import load as skops_load
 
 from ..exceptions import ModelLoadError
 from ..utils.yaml_parser import FEATURE_COLS
