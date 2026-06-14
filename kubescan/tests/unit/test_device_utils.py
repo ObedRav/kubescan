@@ -9,10 +9,8 @@ from __future__ import annotations
 __all__: list[str] = []
 
 import torch
-import pytest
 
 from kubescan.utils.device_utils import _MAX_DATALOADER_WORKERS, dataloader_kwargs, resolve_device
-
 
 # ---------------------------------------------------------------------------
 # resolve_device

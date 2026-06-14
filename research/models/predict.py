@@ -38,7 +38,6 @@ try:
     import torch
     import torch.nn.functional as F
     from torch_geometric.data import Data
-    from torch_geometric.loader import DataLoader
 except ImportError as e:
     sys.exit(f"Missing dependency: {e}\nInstall: pip install torch torch-geometric")
 
