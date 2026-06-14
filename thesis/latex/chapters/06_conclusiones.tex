@@ -1,0 +1,190 @@
+% ============================================================
+\chapter{Conclusiones y Trabajo Futuro}
+\label{cap:conclusiones}
+% ============================================================
+
+\section{Conclusiones}
+
+Este trabajo ha demostrado la viabilidad de un enfoque híbrido de tres capas para la
+detección automática de cadenas de ataque en infraestructuras \textit{Kubernetes}. Las
+conclusiones C1--C6 responden, respectivamente, a los objetivos OE2, OE4, OE1, OE5,
+OE3 y OE6 definidos en la Sección~\ref{cap:objetivos}. Las conclusiones principales son:
+
+\textbf{C1 — La Capa~1 supera ampliamente el objetivo de diseño (OE2).} El clasificador
+\textit{Random Forest} alcanza F1 macro\,=\,0,9935 y \ac{AUC}\,=\,0,9988 en test, superando
+el umbral objetivo del 0,85 en 14,4 puntos porcentuales. El modelo de severidad de
+tres clases logra F1\,=\,1,000 en la clase \textit{high-critical}, garantizando que
+ninguna misconfiguration crítica es perdida.
+
+\textbf{C2 — La Capa~2 supera el objetivo de Precisión@5 (OE4).} La \ac{GAT} de
+3~capas con \textit{embedding} de tipos de arista alcanza
+F1~macro\,=\,0,870\,\(\pm\)\,0,075 y P@5\,=\,0,720\,\(\pm\)\,0,098 en los 5~pliegues
+bajo el protocolo \textit{group-aware}, superando el objetivo de P@5\,\(>\)\,0,70.
+Tres pliegues alcanzan su techo teórico de P@5, situando todos los clústeres de
+cadena del pliegue en las primeras 5~posiciones del ranking. La ablación de
+arquitectura (Tabla~\ref{tab:arch_ablation}) respalda las decisiones de diseño: la
+\ac{GAT} supera a la \ac{GCN} en 8~puntos de P@5, y la configuración de 3~capas es
+la única que cumple el objetivo de la métrica primaria.
+
+\textbf{C3 — La combinación de aumentación de datos y expansión del corpus es la
+contribución metodológica central (OE1).} La evolución en cinco fases — línea base
+(P@5\,=\,0,40), aumentación (P@5\,=\,0,52), corrección \texttt{HOSTPATH\_MOUNT}
+(P@5\,=\,0,60), dataset extendido con 25~cadenas (P@5\,=\,0,88, protocolo
+preliminar) y corrección \textit{group-aware} del particionado (P@5\,=\,0,72,
+resultado final) — demuestra que la escasez de ejemplos de cadena de ataque es el
+factor limitante predominante y que ambas estrategias de mitigación son efectivas y
+complementarias. La quinta fase ilustra además una lección metodológica: la
+aumentación de datos exige particionado consciente de grupos, pues parte de la
+mejora aparente de la fase~4 procedía de fuga entre variantes aumentadas y sus
+grafos base de evaluación.
+
+\textbf{C4 — El ensemble es robusto y no produce falsos positivos de clústeres
+limpios (OE5).} La ablación sobre el conjunto de test
+(Tabla~\ref{tab:ensemble_ablation}) confirma que el componente \ac{GNN} es
+indispensable: la configuración RF-sólo degrada el ranking (P@5 de 0,60 a 0,40) e
+introduce un falso positivo de clúster limpio (\ac{FPR}\,=\,0,20), mientras que
+\ac{FPR}\_clean\,=\,0,00 para cualquier combinación que incluya el \ac{GNN}. El
+clúster de mayor puntuación es una cadena de ataque (P@1\,=\,1,00). Con honestidad
+metodológica debe señalarse que, en este conjunto de test, los pesos optimizados
+por el \ac{GA} no superan a los pesos uniformes ni al \ac{GNN} en solitario: la
+aportación del \textit{ensemble} en estos datos es la robustez frente a la
+degradación de componentes individuales, no una mejora del ranking sobre el mejor
+componente.
+
+\textbf{C5 — El tipo de arista \ac{RBAC} mejora la cobertura de escalada de privilegios
+(OE3).} La detección de roles privilegiados en dos pasadas sobre los manifiestos,
+limitando las aristas \ac{RBAC} a cuentas de servicio vinculadas realmente a roles con
+permisos de escalada, produce señales de grafo más precisas y reduce los falsos
+positivos estructurales.
+
+\textbf{C6 — kubescan es una herramienta distribuible, instalable y operacionalmente
+viable (OE6).} La evaluación funcional de la Sección~\ref{sec:evaluacion_funcional}
+confirma que el sistema se instala sin compiladores externos (\textit{pip install -e
+kubescan/}), analiza clústeres de hasta 312~manifiestos en menos de 8~segundos en
+hardware de gama media, produce salida en dos formatos (texto y \ac{JSON}) adecuados para
+integración en pipelines CI/CD, y garantiza reproducibilidad completa mediante la
+resolución determinista de \textit{checkpoints}. El prototipo implementado en este
+trabajo demuestra que el paradigma \textit{shift-left} —detectar cadenas de ataque
+antes del despliegue, sin requerir acceso al clúster activo— es técnicamente factible
+y operacionalmente eficiente.
+
+\section{Consideraciones éticas y uso responsable}
+\label{sec:etica}
+
+\textit{kubescan} es una herramienta de uso dual: aunque su propósito es defensivo
+—detectar cadenas de ataque potenciales antes de que sean explotadas— la información
+que produce (identificación de pods con flags de escape, rutas de privilegio \ac{RBAC})
+podría ser utilizada con fines ofensivos si cayera en manos de un actor no autorizado.
+En consecuencia, este trabajo adopta los principios de divulgación responsable
+(\textit{responsible disclosure}) que rigen la investigación en ciberseguridad.
+
+Los patrones de ataque detectados por \textit{kubescan} se basan exclusivamente en
+documentación pública —la guía \ac{NSA}/\ac{CISA} \citep{NSA2022}, el trabajo de BishopFox
+\citep{BishopFox2021} y el marco MITRE ATT\&CK for Containers \citep{MITRE2021Containers}—
+y no revelan ninguna vulnerabilidad nueva. El código fuente del sistema es de acceso
+abierto para facilitar la auditoría independiente de las reglas de detección, lo que
+permite a la comunidad verificar que las señales de riesgo generadas son correctas y
+no contienen sesgos perjudiciales. El uso de la herramienta sobre clústeres de terceros
+sin autorización explícita estaría fuera del ámbito previsto y podría constituir un
+acceso no autorizado a sistemas informáticos según la legislación aplicable.
+
+\section{Limitaciones}
+\label{sec:limitaciones}
+
+\textbf{L1 — Varianza entre pliegues.} Con 81~grafos originales en los pliegues de
+validación cruzada, la varianza entre pliegues (\(\sigma\)\,=\,0,075 para F1 macro;
+rango 0,738--0,941) refleja la dependencia de los resultados respecto a qué
+clústeres caen en cada pliegue de validación. Un corpus más amplio reduciría esta
+varianza.
+
+\textbf{L2 — Imputación de características extendidas.} Las 6 características
+extendidas (basadas en \textit{Checkov}) están imputadas para el 42,6\,\% de las
+filas, diluyendo su señal. La descarga completa de los manifiestos referenciados en
+el dataset de Rahman et~al.\ permitiría mejorar estos vectores. Un experimento de
+ablación eliminando las 6 características imputadas y reentrenando únicamente con las
+19 características de alta cobertura podría cuantificar el impacto de esta limitación
+sobre la F1 macro de la Capa~1.
+
+\textbf{L3 — Sesgo de muestreo en el dataset tabular.} Los 10 repositorios más
+representados suponen el 60,8\,\% del dataset, y \textit{gitcontroller} por sí solo
+aporta el 13,7\,\%. Un esquema de validación cruzada por repositorio ofrecería
+estimaciones más conservadoras de la generalización del modelo.
+
+\textbf{L4 — Evaluación en clústeres de producción reales.} Toda la evaluación
+se ha realizado sobre repositorios públicos. La validación en entornos de producción
+de organizaciones reales es la siguiente etapa crítica para confirmar la validez
+externa del sistema.
+
+\textbf{L5 — Identificabilidad de los pesos del ensemble.} La Capa~3 optimiza
+los pesos \((w_{\text{rf}}, w_{\text{gnn}}, w_{\text{esc}})\) maximizando la función
+objetivo \(F = 0{,}7 \cdot P@5 + 0{,}3 \cdot (1 - \text{\ac{FPR}\_clean})\) sobre las
+predicciones \textit{out-of-fold} (\acs{OOF}) de los 5~modelos de validación
+cruzada, calculadas sobre los 81~grafos originales de entrenamiento/validación
+(21~cadenas); bajo el protocolo \textit{group-aware}, ningún clúster de test
+participa en este ajuste. La limitación restante es de identificabilidad: con una
+función objetivo basada en P@5 —que solo toma seis valores discretos— y 81~muestras,
+el paisaje de \textit{fitness} presenta amplias mesetas en las que múltiples
+combinaciones de pesos alcanzan un objetivo idéntico. La búsqueda en rejilla y el
+\ac{GA} encuentran configuraciones muy distintas con la misma puntuación, y el
+\ac{GA} converge hacia pesos casi uniformes
+\((w_{\text{rf}} \approx 0{,}34,\, w_{\text{gnn}} \approx 0{,}33,\,
+w_{\text{esc}} \approx 0{,}33)\) — un punto compatible con la deriva hacia el
+centroide que induce el cruce aritmético en mesetas planas. Los pesos concretos
+deben interpretarse, por tanto, como una solución representativa de una clase de
+equivalencia, no como un óptimo único; el tamaño del conjunto de test (15~grafos)
+limita además la significación estadística de la comparación entre configuraciones
+de pesos, como reflejan los intervalos de confianza reportados.
+
+\textbf{L6 — Etiquetado derivado de reglas sobre el mismo espacio de
+características.} Las etiquetas de grafo (clean / isolated / attack\_chain) se
+generan mediante una regla determinista definida sobre las mismas \textit{flags} y
+aristas que observan los modelos (Sección de diseño). El sistema aprende, por
+tanto, una aproximación robusta de dicha regla bajo ruido, enmascaramiento y
+observabilidad parcial — no una noción de cadena de ataque independiente de la
+regla. Esta circularidad es común en la literatura de detección de
+misconfiguraciones, pero limita el alcance de la afirmación «predice cadenas de
+ataque». Las vías para romperla son la validación externa frente a herramientas de
+grafo de ataque sobre clústeres activos (KubeHound, IceKube), el etiquetado experto
+de una submuestra, y la confirmación mediante explotación controlada en entornos de
+laboratorio como \textit{kubernetes-goat}.
+
+\section{Trabajo futuro}
+
+Los resultados de este trabajo permiten formular las siguientes recomendaciones de
+trabajo futuro, ordenadas por impacto esperado:
+
+\textbf{TF1 — Continuar la expansión del corpus.} El objetivo de P@5\,\(>\)\,0,70 ha
+sido alcanzado con 25~clústeres de cadena de ataque. La incorporación de corpus
+adicionales — repositorios de infraestructura de organizaciones de código abierto,
+entornos de laboratorio multiclúster — permitiría reducir la varianza entre pliegues
+y mejorar la generalización a patrones de ataque menos representados.
+
+\textbf{TF2 — Implementar P@5 global como métrica alternativa.} En lugar de P@5 por
+pliegue, evaluar el ranking del modelo sobre el conjunto completo de grafos en un único
+ranking global eliminaría el efecto de techo por pliegue y permitiría comparar con el
+objetivo original de diseño sin restricciones estructurales.
+
+\textbf{TF3 — Incorporar análisis semántico de \ac{RBAC} completo.} El parser de \ac{YAML}
+actual identifica roles privilegiados por nombre y por verbos de escalada. Una extensión
+natural es el análisis de la cadena completa Role/ClusterRole \(\to\) RoleBinding \(\to\)
+ServiceAccount \(\to\) Pod para detectar rutas de escalada de privilegios mediante
+\ac{RBAC} que no requieran flags de escape directas.
+
+\textbf{TF4 — Validación cruzada dejando un repositorio fuera.} La estrategia
+\textit{leave-one-repo-out} ofrece estimaciones más conservadoras de la generalización
+que la validación cruzada por fila, y es especialmente relevante dada la concentración
+del dataset en pocos repositorios.
+
+\textbf{TF5 — Modo de análisis continuo (\textit{admission controller}).} La integración
+de \textit{kubescan} como un \textit{validating admission webhook} de \textit{Kubernetes}
+permitiría bloquear el despliegue de manifiestos que eleven el riesgo de cadena de
+ataque del clúster en tiempo real, sin necesidad de análisis \textit{post-hoc}.
+
+\textbf{TF6 — Estudio de ablación arquitectónica.} La justificación de la elección
+de \ac{GAT} frente a \ac{GCN}, de 3~capas frente a 2, y de \textit{mean+max pooling} frente a
+\textit{mean-only} es actualmente teórica (fundamentada en la literatura de \ac{GNN}s
+para grafos heterogéneos, Sección~\ref{sec:gnn_por_clase}). Un experimento de ablación
+controlado que varíe cada uno de estos hiperparámetros arquitectónicos manteniendo
+constante el resto cuantificaría la contribución incremental de cada decisión de diseño
+y produciría evidencia empírica directamente comparable con la literatura de \ac{GNN}s para
+ciberseguridad.

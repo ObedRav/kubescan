@@ -1,0 +1,35 @@
+% ============================================================
+\chapter{Repositorio de Código y Datos}
+\label{ap:repositorio}
+% ============================================================
+
+El código fuente completo del sistema \textit{kubescan}, incluyendo los
+\textit{scripts} de adquisición de datos, entrenamiento de modelos,
+construcción de grafos y la interfaz de línea de comandos, se encuentra
+disponible en el siguiente repositorio de GitHub:
+
+\begin{center}
+  \url{https://github.com/ObedRav/kubescan}
+\end{center}
+
+El repositorio incluye los siguientes componentes:
+
+\begin{itemize}m \textbf{\texttt{kubescan/}}: paquete Python instalable con la CLI y los
+    modelos de inferencia.
+  \item \textbf{\texttt{research/scripts/}}: \textit{scripts} de adquisición y
+    preprocesamiento de los manifiestos YAML (fases 1 y 2).
+  \item \textbf{\texttt{research/models/}}: código de entrenamiento del Random
+    Forest (\texttt{train\_rf.py}), de la GAT (\texttt{train\_gnn.py}), y del
+    Algoritmo Genético (\texttt{run\_ga\_ensemble.py}).
+  \item \textbf{\texttt{research/data/}}: los grafos de clúster en formato
+    \texttt{.pt} (PyTorch Geometric) y el dataset tabular en formato
+    \texttt{.csv}.
+  \item \textbf{\texttt{kubescan/checkpoints/trained/}}: \textit{checkpoints}
+    de los 5~modelos GAT entrenados en validación cruzada y el modelo RF.
+  \item \textbf{\texttt{thesis/}}: fuentes LaTeX de esta memoria.
+\end{itemize}
+
+El estudiante es el único autor de todos los \textit{commits} del repositorio.
+Los datos públicos utilizados provienen de las fuentes citadas en la
+Sección~4.3.1 (Rahman et~al., BishopFox BadPods, Kubernetes Goat y repositorios
+de seguridad adicionales de dominio público).

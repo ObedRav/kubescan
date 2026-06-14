@@ -1,0 +1,441 @@
+% ============================================================
+\chapter{Resultados y Evaluación}
+\label{cap:resultados}
+% ============================================================
+
+Este capítulo presenta y analiza los resultados obtenidos en cada una de las tres
+capas del sistema \textit{kubescan}, seguidos de una validación cruzada con
+herramientas de análisis estático externas y de una evaluación funcional de la
+herramienta como software distribuible. Los resultados se organizan en el mismo
+orden que las fases de entrenamiento descritas en el Capítulo~\ref{cap:diseno}.
+
+% -----------------------------------------------------------
+\section{Resultados de la Capa 1: Random Forest}
+% -----------------------------------------------------------
+
+\subsection{Clasificación binaria}
+
+La Tabla~\ref{tab:rf_results} resume los resultados del modelo binario. El clasificador
+alcanza una F1 macro de 0,9935 en el conjunto de test, superando el objetivo de diseño
+(OE2, F1 macro\,>\,0,85) en 14,4 puntos porcentuales.
+
+\begin{table}[htbp]
+\centering
+\caption{Resultados del Random Forest — clasificación binaria}
+\label{tab:rf_results}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Métrica & Test & \acs{CV} (5-fold) & Objetivo \\
+\midrule
+F1 macro & \textbf{0,9935} & 0,9908 \(\pm\) 0,0059 & \(>0{,}85\) \checkmark \\
+Exactitud (\textit{accuracy}) & 0,9940 & 0,9915 \(\pm\) 0,0055 & — \\
+\ac{AUC}-\ac{ROC} & \textbf{0,9988} & 0,9988 \(\pm\) 0,0012 & — \\
+\textit{Out-of-bag score} & 0,9909 & — & — \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La Figura~\ref{fig:rf_confusion} muestra la matriz de confusión sobre el conjunto
+de test (496~muestras). El modelo comete sólo 3~errores totales: 3~falsos positivos
+(manifiestos seguros clasificados como misconfigured) y 0~falsos negativos.
+La ausencia de falsos negativos es la propiedad más crítica para seguridad operacional:
+significa que ningún manifiesto con misconfiguraciones reales escapa al filtrado de
+la Capa~1, independientemente de cuántas flags estén activas o de su rareza en el
+dataset. Los 3~falsos positivos corresponden a manifiestos seguros que acumulan varias
+features de riesgo de severidad media (por ejemplo, \texttt{NO\_RUN\_AS\_NON\_ROOT}
+y \texttt{IMAGE\_USES\_LATEST} simultáneamente), pero que no tienen ninguna
+flag de escape activa; el operador de seguridad puede descartarlos rápidamente
+inspeccionando el campo \texttt{flags} de la salida \ac{JSON}.
+
+El \ac{AUC}-\ac{ROC} de 0,9988 (prácticamente~1,00) indica que el modelo puede ordenar las
+muestras por probabilidad de misconfiguration de forma casi perfecta a cualquier umbral
+de decisión. En la práctica, este valor implica que, si se ordenan los 496~manifiestos
+de test de mayor a menor \textit{risk\_score}, los manifiestos misconfigured aparecen
+casi todos antes que los seguros. Esta propiedad es la que habilita el uso del
+\textit{risk\_score} como característica nodal cuantitativa en el grafo de la Capa~2:
+la señal transmitida a la \ac{GNN} no es un bit binario sino una probabilidad calibrada
+que refleja la densidad de misconfiguraciones del manifiesto.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.52\textwidth]{fig_rf_confusion}
+  \caption{Matriz de confusión del modelo Random Forest en el conjunto de test
+           (496 muestras). Los 3~falsos positivos son manifiestos seguros con alta
+           densidad de características de riesgo; no existe ningún falso negativo.}
+  \label{fig:rf_confusion}
+\end{figure}
+
+\subsection{Importancia de características}
+
+La Figura~\ref{fig:rf_importance} muestra las 10 características más relevantes del
+modelo. La característica más discriminativa es \texttt{total\_misconfigs}
+(33,25\,\% de importancia), seguida de \texttt{INSECURE\_HTTP} (24,84\,\%). Las flags
+de escape críticas (\texttt{TRUE\_HOST\_PID}, \texttt{SEC\_CONT\_OVER\_PRIVIL})
+presentan importancias menores (\(<\)2\,\%) por su rareza en el dataset, pero son
+identificadas correctamente cuando están presentes, como confirma la ausencia de
+falsos negativos críticos.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig_rf_importance}
+  \caption{Importancia de las 10 características más relevantes del clasificador
+           Random Forest. Las dos primeras (en rojo) concentran el 58\,\% de la
+           capacidad discriminativa total del modelo.}
+  \label{fig:rf_importance}
+\end{figure}
+
+Un estudio de ablación eliminando \texttt{total\_misconfigs} produce F1 idéntico
+y la misma matriz de confusión, confirmando que el modelo no depende de esta
+característica derivada y que no existe fuga de datos circular.
+
+\subsection{Modelo de severidad}
+
+El clasificador de tres clases (\textit{clean}, \textit{low-medium},
+\textit{high-critical}) alcanza F1 macro\,=\,0,9894 en test. La Tabla~\ref{tab:severity_f1}
+desglosa las métricas por clase:
+
+\begin{table}[htbp]
+\centering
+\caption{F1 por clase — modelo de severidad (3 clases, test)}
+\label{tab:severity_f1}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Clase & Precisión & Recall & F1 & Soporte \\
+\midrule
+\textit{clean}          & 0,9957 & 0,9985 & 0,9971 & 382 \\
+\textit{low-medium}     & 0,9688 & 0,9688 & 0,9688 & 96 \\
+\textit{high-critical}  & \textbf{1,000}  & \textbf{1,000}  & \textbf{1,000}  & 18 \\
+\midrule
+Macro media & 0,9882 & 0,9891 & 0,9886 & — \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La clase \textit{high-critical} (18~muestras de test, que representan manifiestos con
+flags de escape activas como \texttt{TRUE\_HOST\_PID} o \texttt{SEC\_CONT\_OVER\_PRIVIL})
+obtiene F1\,=\,1,000 — ningún manifiesto crítico clasifica erróneamente. Este es el
+resultado más relevante desde el punto de vista de seguridad operacional: el sistema
+no produce falsos negativos críticos. Los únicos errores del modelo ocurren en la
+frontera entre \textit{clean} y \textit{low-medium}, donde algunos manifiestos con
+pocas flags de baja severidad pueden ser sobreclasificados como \textit{low-medium}
+(falsos positivos benignos desde el punto de vista del operador).
+
+El modelo de severidad se utiliza en el informe de salida de \textit{kubescan} para
+proporcionar al operador una descripción cualitativa del nivel de riesgo de cada
+manifiesto, complementando el \textit{risk\_score} numérico del modelo binario.
+
+% -----------------------------------------------------------
+\section{Resultados de la Capa 2: \ac{GNN}}
+% -----------------------------------------------------------
+
+\subsection{Evolución por fase experimental}
+
+La Tabla~\ref{tab:gnn_evolution} muestra la evolución de los resultados de la \ac{GAT}
+a lo largo de las cinco fases del desarrollo experimental. La
+Figura~\ref{fig:gnn_evolution} ilustra visualmente la trayectoria de las cuatro
+primeras fases, mostrando cómo la aumentación de datos y la corrección del vector
+de escape \texttt{HOSTPATH\_MOUNT} contribuyeron de forma independiente y
+complementaria. La quinta fase corrige el protocolo de particionado: las fases
+anteriores incluían en el entrenamiento variantes aumentadas derivadas de los
+clústeres de validación y test (fuga de datos por casi-duplicados), por lo que sus
+métricas están infladas de forma optimista. La fase final aplica el protocolo
+\textit{group-aware} descrito en la Sección de diseño (las variantes acompañan a su
+clúster base y los clústeres de test quedan fuera de los pliegues) e incorpora el
+\textit{embedding} de tipos de arista. Sus métricas son inferiores pero
+metodológicamente válidas, y son las que se reportan como resultado final de este
+trabajo.
+
+\begin{table}[htbp]
+\centering
+\caption{Evolución de resultados de la Capa~2 (\ac{GAT}, 5-fold \ac{CV}).
+         Las fases 1--4 emplean el protocolo de particionado preliminar (con fuga
+         por variantes aumentadas) y se reportan como registro histórico; la
+         fase~5 es el resultado final con protocolo \textit{group-aware}.}
+\label{tab:gnn_evolution}
+\begin{tabular}{@{}p{4.5cm}rrrrr@{}}
+\toprule
+Fase & Grafos & Cadenas & F1 macro & P@5 & Cobert.\ techo \\
+\midrule
+Línea base & 82 & 13 & 0,829 \(\pm\) 0,098 & 0,400 \(\pm\) 0,179 & 2/5 \\
+Tras aumentación & 277 & 13 & 0,915 \(\pm\) 0,059 & 0,520 \(\pm\) 0,098 & 5/5 \\
+Tras corrección HOSTPATH & 307 & 15 & 0,915 \(\pm\) 0,050 & 0,600 \(\pm\) 0,000 & 5/5 \\
+Dataset extendido & 471 & 25 & 0,917 \(\pm\) 0,065 & 0,880 \(\pm\) 0,098 & 5/5 \\
+\addlinespace
+Protocolo \textit{group-aware} + \textit{embedding} de aristas (final)
+  & 471 & 25 & \textbf{0,870 \(\pm\) 0,075} & \textbf{0,720 \(\pm\) 0,098} & \textbf{3/5} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig_gnn_evolution}
+  \caption{Evolución de F1 macro y Precisión@5 de la Capa~2 a lo largo de las
+           cuatro primeras fases experimentales (protocolo preliminar; la fase
+           final \textit{group-aware} se reporta en la
+           Tabla~\ref{tab:gnn_evolution}). Las líneas de puntos indican los
+           objetivos de diseño (F1\,>\,0,85 y P@5\,>\,0,70). Las barras de error
+           representan la desviación estándar entre los 5~pliegues de validación
+           cruzada.}
+  \label{fig:gnn_evolution}
+\end{figure}
+
+\subsection{Análisis de Precisión@5}
+
+El objetivo de diseño es P@5\,>\,0,70 (OE4). Con el protocolo \textit{group-aware},
+los pliegues particionan los 81~grafos originales no reservados para test
+(21~cadenas), de modo que cada pliegue de validación contiene 4--5~clústeres de
+cadena. El modelo alcanza P@5\,=\,0,720\,\(\pm\)\,0,098, superando el objetivo en
+2~puntos porcentuales. Tres pliegues (1, 2 y 3) alcanzan su techo teórico
+(P@5\,=\,0,80 con 4~cadenas en el pliegue) — todos los clústeres de cadena del
+pliegue aparecen en el top-5.
+
+\subsection{Resultados por pliegue (fase final)}
+
+\begin{table}[htbp]
+\centering
+\caption{Resultados por pliegue — Capa~2 final (protocolo \textit{group-aware};
+         los pliegues particionan 81~grafos originales, 21~cadenas; test excluido)}
+\label{tab:gnn_folds}
+\begin{tabular}{@{}crrrr@{}}
+\toprule
+Pliegue & F1 macro & P@5 & Techo & Cobertura \\
+\midrule
+0 & 0,8424 & 0,60 & 1,00 & 60\,\% \\
+1 & 0,8857 & 0,80 & 0,80 & 100\,\% \\
+2 & 0,9407 & 0,80 & 0,80 & 100\,\% \\
+3 & 0,9407 & 0,80 & 0,80 & 100\,\% \\
+4 & 0,7381 & 0,60 & 0,80 & 75\,\% \\
+\midrule
+\textbf{Media} & \textbf{0,8695} & \textbf{0,720} & — & \textbf{87\,\%} \\
+\textbf{\(\pm\) Desv.} & \textbf{0,0754} & \textbf{0,098} & — & — \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Tres pliegues (1, 2 y 3) alcanzan su techo teórico de P@5, situando todos los
+clústeres de cadena de ataque del pliegue en las primeras 5~posiciones del ranking.
+La varianza entre pliegues (F1 entre 0,738 y 0,941) refleja la sensibilidad de un
+corpus de 81~grafos a qué clústeres caen en cada pliegue: el pliegue~4 concentra
+los casos más difíciles (cadenas cuya señal pasa por \ac{RBAC} y movimiento lateral
+en lugar de \textit{flags} de escape explícitas).
+
+% -----------------------------------------------------------
+\section{Resultados de la Capa 3: Ensemble}
+% -----------------------------------------------------------
+
+El Algoritmo Genético converge a pesos aproximadamente iguales entre los tres
+componentes:
+\((w_{\text{rf}}, w_{\text{gnn}}, w_{\text{esc}}) \approx (0{,}34,\, 0{,}33,\, 0{,}33)\).
+Este equilibrio refleja que, con el dataset extendido, la señal de escape binaria
+aporta información complementaria al \ac{GNN}: en el dataset original (sin la corrección
+\texttt{HOSTPATH\_MOUNT}) el \ac{GNN} ya capturaba esa información a través de las aristas
+de alcance de privilegio, pero al añadir nuevos clústeres con rutas \ac{RBAC} menos obvias,
+la señal de escape discreta gana valor predictivo independiente.
+
+La evaluación final se realiza sobre el conjunto de test (15~grafos, 4~cadenas,
+techo P@5\,=\,0,80), que bajo el protocolo \textit{group-aware} queda excluido de
+los pliegues de validación cruzada, del ajuste de pesos del \ac{GA} y del
+entrenamiento con variantes aumentadas — es decir, genuinamente no visto durante
+el desarrollo. El ensemble alcanza: P@1\,=\,1,00 (el clúster de mayor puntuación
+es una cadena de ataque), P@3\,=\,0,67 y P@5\,=\,0,60, recuperando 3~de las
+4~cadenas en las primeras 5~posiciones (la cuarta aparece en la posición~8).
+\ac{FPR}\_clean\,=\,0,00: ningún clúster limpio aparece entre los de mayor riesgo.
+La F1~macro por clasificación \textit{argmax} del ensemble de pliegues es 0,726.
+
+Dado el tamaño del conjunto de test, estas estimaciones llevan asociados
+intervalos de confianza amplios (bootstrap de 10\,000 remuestreos, 95\,\%):
+P@5 \([0{,}00,\ 1{,}00]\), \ac{FPR}\_clean \([0{,}00,\ 0{,}40]\) y F1~macro
+\([0{,}42,\ 0{,}93]\). Los valores puntuales deben interpretarse como
+\textit{consistentes con} los objetivos de diseño, no como demostraciones
+concluyentes; la ampliación del corpus de test es la vía directa para estrechar
+estos intervalos (TF1).
+
+La Tabla~\ref{tab:ensemble_ablation} desglosa la contribución de cada componente
+sobre el conjunto de test. Tres observaciones honestas: (i)~la configuración
+RF-sólo degrada el ranking (P@5\,=\,0,40) e introduce un falso positivo de clúster
+limpio (\ac{FPR}\,=\,0,20), confirmando que el componente estructural es necesario;
+(ii)~la señal de escape por sí sola pierde por completo la precisión en el primer
+puesto (P@1\,=\,0,00), al no poder distinguir cadenas compuestas de
+misconfiguraciones aisladas con capacidad de escape; y (iii)~en este conjunto de
+test los pesos optimizados por el \ac{GA} no superan a los pesos uniformes ni al
+\ac{GNN} solo — el valor del ensemble en estos datos reside en su robustez frente a
+la degradación de componentes individuales, no en una mejora del ranking sobre el
+mejor componente. Este resultado se discute en las limitaciones (L5).
+
+\begin{table}[htbp]
+\centering
+\caption{Ablación de componentes del ensemble en el conjunto de test
+         (15~grafos, 4~cadenas, techo P@5\,=\,0,80)}
+\label{tab:ensemble_ablation}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+Configuración & P@1 & P@3 & P@5 & FPR\_clean \\
+\midrule
+GA-óptimo \((0{,}34/0{,}33/0{,}33)\) & 1,00 & 0,67 & 0,60 & 0,00 \\
+Pesos uniformes \((1/3)\)            & 1,00 & 0,67 & 0,60 & 0,00 \\
+Solo \ac{GNN}                        & 1,00 & 0,67 & 0,60 & 0,00 \\
+Solo \ac{RF}                         & 1,00 & 0,33 & 0,40 & 0,20 \\
+Solo señal de escape                 & 0,00 & 0,33 & 0,60 & 0,00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% -----------------------------------------------------------
+\section{Análisis de la clasificación por clases: \ac{GNN}}
+\label{sec:gnn_por_clase}
+% -----------------------------------------------------------
+
+La Tabla~\ref{tab:gnn_folds} reporta las métricas agregadas (F1 macro y P@5) para
+los cinco pliegues de validación cruzada. En el conjunto de test, la matriz de
+confusión del ensemble de pliegues (Sección anterior) muestra el mismo patrón de
+error que los pliegues de validación: los falsos negativos de cadena se clasifican
+como \textit{isolated}, nunca como \textit{clean} — el sistema degrada hacia la
+clase intermedia, no hacia la omisión total.
+
+El error sistemático del modelo es consistente: clústeres de cadena de ataque con
+pocas aristas de escape explícitas —donde la ruta de ataque pasa principalmente por
+movimiento lateral o \ac{RBAC}— son los casos más difíciles. En el conjunto de test,
+el clúster \textit{cloudify-kubernetes-plugin} (cadena no recuperada en el top-5)
+presenta exactamente este perfil: probabilidad \ac{GNN} de 0,22 y fracción de escape
+nula. Esta observación motiva el trabajo futuro TF3 (análisis semántico de \ac{RBAC}
+completo).
+
+En cuanto a la elección arquitectónica de \ac{GAT} sobre alternativas más simples, la
+literatura sobre \ac{GNN}s aplicadas a grafos pequeños heterogéneos documenta de forma
+consistente que los mecanismos de atención mejoran la precisión cuando los tipos de
+arista tienen importancias desiguales \citep{Velickovic2018}. En el grafo de clúster
+\textit{Kubernetes}, las aristas de \textit{privilege\_reach} (tipo~1) son
+cualitativamente más informativas que las de \textit{dir\_proximity} (tipo~0): la
+primera conecta directamente nodos de escape con el resto del clúster, mientras que
+la segunda simplemente refleja la organización de directorios del repositorio.
+\ac{GAT} puede aprender esta distinción durante el entrenamiento, mientras que \ac{GCN} asigna
+pesos uniformes a todos los vecinos, diluyendo la señal de escape con ruido de
+co-localización.
+
+Esta hipótesis se cuantifica empíricamente mediante un experimento de ablación
+controlado bajo el protocolo \textit{group-aware} (mismos pliegues, mismas semillas,
+mismos hiperparámetros de entrenamiento):
+
+\begin{table}[htbp]
+\centering
+\caption{Ablación de arquitectura — Capa~2 (5-fold \ac{CV}, protocolo
+         \textit{group-aware})}
+\label{tab:arch_ablation}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Arquitectura & F1 macro & P@5 \\
+\midrule
+\ac{GAT} 3 capas + \textit{embedding} de aristas (final)
+  & 0,870 \(\pm\) 0,075 & \textbf{0,720 \(\pm\) 0,098} \\
+\ac{GAT} 2 capas + \textit{embedding} de aristas
+  & \textbf{0,880 \(\pm\) 0,054} & 0,680 \(\pm\) 0,098 \\
+\ac{GCN} 3 capas (sin tipos de arista)
+  & 0,837 \(\pm\) 0,047 & 0,640 \(\pm\) 0,080 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La \ac{GAT} supera a la \ac{GCN} tanto en F1 (+3,3~puntos) como en P@5
+(+8~puntos), confirmando que la atención sobre tipos de arista aporta señal real
+para el ranking de cadenas. La comparación 2 vs.\ 3~capas es más matizada: la red
+de 2~capas obtiene F1 ligeramente superior pero P@5 inferior, y solo la
+configuración de 3~capas supera el objetivo de diseño P@5\,>\,0,70 — la métrica
+primaria del proyecto — por lo que se selecciona como arquitectura final. La
+ablación de \textit{pooling} (\textit{mean}-only vs.\ \textit{mean+max}) queda como
+trabajo futuro (TF6).
+
+% -----------------------------------------------------------
+\section{Validación con herramientas de análisis estático}
+% -----------------------------------------------------------
+
+Como validación cruzada, se ejecutó \textit{Checkov} \citep{Checkov2021} sobre los
+1.175~manifiestos con \ac{YAML} descargado. El índice \ac{UMI} medio resultante fue de 0,603,
+coherente con el 22,3\,\% de la tasa de misconfiguraciones en el dataset tabular.
+Las detecciones de \textit{checkov\_no\_run\_as\_nonroot} (38,3\,\%) y
+\textit{checkov\_no\_readonly\_rootfs} (37,2\,\%) coinciden con los nodos de
+severidad media identificados por la Capa~1. Esta coherencia entre los resultados del
+modelo y los de una herramienta de auditoría independiente refuerza la validez de las
+predicciones.
+
+% -----------------------------------------------------------
+\section{Evaluación funcional de la herramienta}
+\label{sec:evaluacion_funcional}
+% -----------------------------------------------------------
+
+Además de la evaluación cuantitativa sobre los conjuntos de datos etiquetados, se
+realizó una evaluación funcional de \textit{kubescan} como herramienta de software
+distribuible, atendiendo a los requisitos no funcionales definidos en la
+Sección~\ref{sec:requisitos}.
+
+\paragraph{Instalabilidad (RNF-3).} El paquete se instaló satisfactoriamente en
+entornos Python 3.10 y 3.11 mediante \texttt{pip install -e kubescan/} en sistemas
+macOS y Linux (Ubuntu 22.04). Las dependencias principales (\textit{PyTorch Geometric},
+\textit{scikit-learn}, \textit{Click}) se resuelven automáticamente sin compiladores
+externos.
+
+\paragraph{Latencia (RNF-4).} Se midió el tiempo de análisis sobre cuatro clústeres
+de prueba de diferente tamaño: 12 manifiestos (0,8\,s), 47 manifiestos (1,4\,s),
+128 manifiestos (3,1\,s) y 312 manifiestos (7,2\,s) en un equipo con CPU Intel
+Core i7 de octava generación sin GPU. El requisito de menos de 60\,s hasta
+500~manifiestos se cumple con amplio margen.
+
+\paragraph{Reproducibilidad (RNF-2).} La resolución de \textit{checkpoints} mediante
+la cadena argumento \acs{CLI} \(\to\) variable de entorno \(\to\) enlace simbólico garantiza
+que el mismo directorio de manifiestos produce siempre el mismo informe dado el mismo
+conjunto de pesos del modelo.
+
+\paragraph{Trazabilidad (RNF-1).} El campo \texttt{flags} de la salida \ac{JSON} lista
+explícitamente las características de seguridad activas en cada manifiesto, y el
+campo \texttt{escape\_capable} indica qué nodos tienen capacidad de escape. Esto
+permite al operador de seguridad comprender y auditar las razones concretas de la
+clasificación de riesgo producida por el modelo.
+
+% -----------------------------------------------------------
+\section{Comparación con el estado del arte}
+\label{sec:comparacion}
+% -----------------------------------------------------------
+
+Esta sección contextualiza los resultados de \textit{kubescan} respecto a los
+trabajos revisados en el Capítulo~\ref{cap:estado}.
+
+\subsection{Capa 1 en contexto}
+
+La F1 macro de 0,9935 del clasificador \textit{Random Forest} supera las cifras
+reportadas en trabajos de clasificación de código \ac{IaC} de propósito general. Rahman
+et~al.\ \citep{Rahman2022}, cuyos datos forman la base del presente trabajo, no
+reportan modelos de clasificación supervisada sobre el mismo conjunto; el objetivo
+de su trabajo era la construcción del dataset y el análisis de la densidad de
+misconfiguraciones, no la predicción. El umbral objetivo F1\,>\,0,85 adoptado en
+este trabajo se alinea con los estándares de la literatura de \acs{IDS} sobre UNSW-NB15
+\citep{Moustafa2015}, donde clasificadores basados en \textit{Random Forest}
+típicamente alcanzan F1 macro entre 0,85 y 0,93.
+
+El \ac{AUC}-\ac{ROC} de 0,9988 indica que el clasificador separa casi perfectamente las dos
+clases a cualquier umbral de decisión. Este resultado es consistente con la naturaleza
+del problema: las misconfiguraciones en manifiestos \ac{YAML} son mayoritariamente discretas
+y acumulativas (más flags activas implica mayor riesgo), lo que hace que el espacio de
+características sea relativamente separable una vez que se dispone de un conjunto de
+datos suficientemente representativo.
+
+\subsection{Capa 2 en contexto}
+
+El resultado de F1~macro\,=\,0,870 con P@5\,=\,0,720 para la \ac{GAT} es difícil de
+comparar directamente con la literatura, ya que no existe ningún trabajo previo que
+aborde la clasificación supervisada de cadenas de ataque en clústeres \textit{Kubernetes}
+mediante \ac{GNN}s. Las referencias más cercanas son los trabajos de \ac{GNN}s para \ac{IDS} en red,
+como \textit{E-GraphSAGE} \citep{Lo2022}, que reporta mejoras del 2--8\,\% en F1
+sobre clasificadores tabulares en el dataset UNSW-NB15. En el presente trabajo,
+la ventaja del componente \ac{GNN} sobre el RF-sólo es de mayor magnitud: en el
+conjunto de test, P@5 pasa de 0,40 (RF-sólo) a 0,60 (configuraciones con \ac{GNN}) y
+el falso positivo de clúster limpio desaparece (\ac{FPR} de 0,20 a 0,00), lo que
+refleja que la información estructural del grafo es decisiva para identificar
+cadenas de ataque y no simplemente complementaria.
+
+La varianza entre pliegues (\(\sigma\)\,=\,0,098 para P@5) es coherente con lo
+reportado en la literatura para conjuntos de grafos pequeños (n\,<\,200): trabajos
+como los revisados en \citeauthor{GNNSurvey2024} \citeyear{GNNSurvey2024} identifican
+la escasez de datos como el principal factor de variabilidad en \ac{GNN}s para ciberseguridad,
+y recomiendan validación cruzada estratificada como el estándar de evaluación para
+conjuntos de este tamaño, que es precisamente la metodología adoptada.

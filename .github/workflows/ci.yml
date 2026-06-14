@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install package + dev tooling
+        run: |
+          python -m pip install --upgrade pip
+          # CPU-only torch wheels keep the CI image small and fast
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install torch-geometric
+          pip install -e "kubescan/[dev]"
+
+      - name: Ruff lint
+        run: ruff check kubescan/src kubescan/tests research/models research/scripts
+
+      - name: Regenerate CI fixtures
+        run: python kubescan/tests/fixtures/make_fixtures.py
+
+      - name: Run test suite
+        run: cd kubescan && pytest tests/ -q

@@ -1,0 +1,26 @@
+# Pre-commit hooks — install with: pip install pre-commit && pre-commit install
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^(kubescan/(src|tests)|research/(models|scripts))/
+      - id: ruff-format
+        files: ^(kubescan/(src|tests)|research/(models|scripts))/
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        files: \.(py|md|toml|yaml|yml)$
+        exclude: ^research/data/
+      - id: end-of-file-fixer
+        files: \.(py|toml)$
+      - id: check-yaml
+        # Only our own configs — research/data contains intentionally broken YAML fixtures
+        files: ^(\.pre-commit-config\.yaml|\.github/.*\.yml|research/configs/.*\.yaml)$
+      - id: check-added-large-files
+        # 12 MB admits the trained checkpoints (rf_model.skops ≈ 10 MB) while
+        # still catching accidental dataset/binary commits
+        args: [--maxkb=12288]

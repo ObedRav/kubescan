@@ -1,0 +1,70 @@
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# ── Test / lint / type caches ──────────────────────────────────────────────────
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+.coverage
+htmlcov/
+
+# ── Editor / OS ────────────────────────────────────────────────────────────────
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# ── Tool output (regenerable) ────────────────────────────────────────────────
+graphify-out/
+
+# ── Research data: third-party raw inputs (re-download via scripts/01_acquire) ──
+research/data/raw/
+
+# ── Build artifacts regenerable via `make data` ─────────────────────────────────
+research/data/graphs/*_aug_*.npz
+research/data/graphs/graphs_cache.npz
+research/data/graphs/processed/
+
+# ── Superseded / regenerable checkpoint dirs ────────────────────────────────────
+research/models/checkpoints_legacy_pre_fix/
+research/models/checkpoints_ablation/
+research/models/checkpoints/test_results.json.bak
+
+# Legacy pickle checkpoints — superseded by .skops (pickle executes code on load)
+research/models/checkpoints/*.pkl
+
+# 3-class severity RF — research-only (11 MB, regenerable via train_rf.py);
+# the package consumes only rf_model.skops
+research/models/checkpoints/rf_severity.*
+
+# Personal thesis working notes (not part of the deliverable; some predate the
+# 2026-06 group-aware protocol correction and contain superseded numbers)
+thesis/MEJORAS_PENDIENTES.md
+thesis/memory/
+thesis/process-docs/
+
+# ── Pipeline run logs ───────────────────────────────────────────────────────────
+research/models/*.log
+research/models/retrain_*.log
+research/*.log
+
+# ── LaTeX build aux (keep .tex, .bib, .sty, and the final PDF) ──────────────────
+thesis/latex/**/*.aux
+thesis/latex/*.bbl
+thesis/latex/*.blg
+thesis/latex/*.log
+thesis/latex/*.out
+thesis/latex/*.toc
+thesis/latex/*.lof
+thesis/latex/*.lot
+thesis/latex/*.synctex.gz
+thesis/latex/test_fig.pdf

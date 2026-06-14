@@ -1,0 +1,15 @@
+Java-MicroProfile-on-Kubernetes
+kube-goat
+eShopOnContainers
+kubernetes-service-discovery
+badpods_nothing-allowed
+kubernetes-elastic-logging
+marblerun
+OpenStack-on-Kubernetes
+istio-index-conf2018
+kube_security_lab
+badpods_hostpath
+microservices-applications
+kubernetes_goat_cache-store
+opentracing-istio-troubleshooting
+java-on-aks
