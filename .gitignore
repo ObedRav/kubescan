@@ -23,6 +23,9 @@ htmlcov/
 .vscode/
 *.swp
 
+# ── Tool output (regenerable) ────────────────────────────────────────────────
+graphify-out/
+
 # ── Research data: third-party raw inputs (re-download via scripts/01_acquire) ──
 research/data/raw/
 
