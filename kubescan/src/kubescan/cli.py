@@ -112,13 +112,14 @@ def _print_node_table(
 ) -> None:
     click.echo(f"\n  {'Manifest':<45} {'Risk':>5}  {'Type':>8}  Top flags")
     click.echo(f"  {'-' * 88}")
+    path_to_orig_idx = {str(yp): i for i, yp in enumerate(yaml_paths)}
     sorted_nodes = sorted(
         zip(node_data, risk_scores, yaml_paths, strict=True),
         key=lambda t: t[1],
         reverse=True,
     )
     for nd, risk, path in sorted_nodes:
-        orig_idx = next(i for i, yp in enumerate(yaml_paths) if str(yp) == str(path))
+        orig_idx = path_to_orig_idx[str(path)]
         click.echo(_format_node_row(nd, risk, path, orig_idx, escape_nodes, sa_nodes))
 
 
@@ -223,6 +224,11 @@ def _fetch_live_manifests(
         except FileNotFoundError as exc:
             raise KubescanError(
                 "kubectl not found — install kubectl and ensure it is in PATH"
+            ) from exc
+        except subprocess.TimeoutExpired as exc:
+            raise KubescanError(
+                f"kubectl timed out after 30 s ({' '.join(cmd[:3])}) — "
+                "check cluster connectivity"
             ) from exc
         if proc.returncode != 0:
             raise KubescanError(

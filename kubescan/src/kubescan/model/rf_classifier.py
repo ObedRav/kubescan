@@ -21,9 +21,10 @@ import pickle
 from pathlib import Path
 
 import numpy as np
-from skops.io import load as skops_load
+from skops.io import get_untrusted_types, load as skops_load
 
 from ..exceptions import ModelLoadError
+from ..utils.yaml_parser import FEATURE_COLS
 
 logger = logging.getLogger(__name__)
 
@@ -45,17 +46,8 @@ _ALL_RF_FEATURES: list[str] = [
     *_EXTENDED_FEATURES,
 ]
 
-# All extractor columns — used to compute total_misconfigs
-_EXTRACTOR_COLS: list[str] = [
-    "TRUE_HOST_PID", "TRUE_HOST_IPC", "TRUE_HOST_NET", "DOCKERSOCK_PATH",
-    "CAP_SYS_ADMIN", "CAP_SYS_MODULE", "WITHIN_MANIFEST_SECRET",
-    "SEC_CONT_OVER_PRIVIL", "ALLOW_PRIVI", "SECCOMP_UNCONFINED",
-    "VALID_TAINT_SECRET", "INSECURE_HTTP", "NO_SECU_CONTEXT",
-    "NO_NETWORK_POLICY", "HOST_ALIAS", "NO_DEFAULT_NSPACE",
-    "NO_RESO", "NO_ROLLING_UPDATE",
-    "NO_RUN_AS_NON_ROOT", "NO_READ_ONLY_ROOT_FS", "IMAGE_USES_LATEST",
-    "SA_AUTOMOUNT_TOKEN", "USES_DEFAULT_SA", "UNTRUSTED_REGISTRY", "HOSTPATH_MOUNT",
-]
+# All extractor columns — single source of truth: yaml_parser.FEATURE_COLS
+_EXTRACTOR_COLS: list[str] = list(FEATURE_COLS)
 
 
 def _compute_derived_features(feats: dict[str, int | float]) -> dict[str, int]:
@@ -90,7 +82,8 @@ class RFClassifier:
 
     def __init__(self, model_path: Path) -> None:
         if model_path.suffix == ".skops":
-            self._model = skops_load(model_path)
+            trusted = get_untrusted_types(file=model_path)
+            self._model = skops_load(model_path, trusted=trusted)
         else:
             logger.warning(
                 "Loading RF from pickle (%s) — pickle executes arbitrary code on "

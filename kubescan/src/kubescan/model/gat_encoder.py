@@ -174,5 +174,11 @@ def load_fold_ensemble(
             Path(checkpoints_dir),
             "No gnn_fold_*.pt files found. Run research/models/train_gnn.py first.",
         )
+    if len(models) < NUM_FOLDS:
+        logger.warning(
+            "Only %d of %d GNN fold checkpoints found in %s — "
+            "ensemble quality is degraded; re-run train_gnn.py to regenerate all folds",
+            len(models), NUM_FOLDS, checkpoints_dir,
+        )
     logger.info("Loaded %d GNN fold models from %s", len(models), checkpoints_dir)
     return models

@@ -74,13 +74,20 @@ class EnsembleScorer:
     def __init__(self, weights_path: Path) -> None:
         with open(weights_path) as f:
             w = json.load(f)
-        total = w["w_rf"] + w["w_gnn"] + w.get("w_escape", 0.0)
+        try:
+            total = w["w_rf"] + w["w_gnn"] + w.get("w_escape", 0.0)
+        except KeyError as exc:
+            raise ModelLoadError(
+                weights_path,
+                f"Missing required key {exc} in ga_weights.json",
+            ) from exc
         if total <= 0.0:
-            raise ValueError(
-                f"Ensemble weights sum to {total}; ga_weights.json may be corrupt."
+            raise ModelLoadError(
+                weights_path,
+                f"Ensemble weights sum to {total}; ga_weights.json may be corrupt.",
             )
-        self.w_rf     = w["w_rf"]            / total
-        self.w_gnn    = w["w_gnn"]           / total
+        self.w_rf     = w["w_rf"]              / total
+        self.w_gnn    = w["w_gnn"]             / total
         self.w_escape = w.get("w_escape", 0.0) / total
         logger.debug(
             "Ensemble weights: w_rf=%.4f w_gnn=%.4f w_escape=%.4f",

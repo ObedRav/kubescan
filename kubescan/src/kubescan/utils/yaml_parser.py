@@ -152,13 +152,15 @@ def _extract_host_features(
     pod_spec: dict[str, object],
     feats:    dict[str, int],
 ) -> None:
-    """Set host-namespace flags (TRUE_HOST_PID, TRUE_HOST_IPC, TRUE_HOST_NET)."""
+    """Set host-namespace flags (TRUE_HOST_PID, TRUE_HOST_IPC, TRUE_HOST_NET, HOST_ALIAS)."""
     if pod_spec.get("hostPID"):
         feats["TRUE_HOST_PID"] = 1
     if pod_spec.get("hostIPC"):
         feats["TRUE_HOST_IPC"] = 1
     if pod_spec.get("hostNetwork"):
         feats["TRUE_HOST_NET"] = 1
+    if pod_spec.get("hostAliases"):
+        feats["HOST_ALIAS"] = 1
 
 
 def _extract_volume_features(
@@ -177,6 +179,25 @@ def _extract_volume_features(
             feats["DOCKERSOCK_PATH"] = 1
         else:
             feats["HOSTPATH_MOUNT"] = 1
+
+
+def _extract_pod_security_context(
+    pod_spec: dict[str, object],
+    feats:    dict[str, int],
+) -> tuple[bool, bool]:
+    """
+    Check pod-level securityContext for root-user and seccomp settings.
+
+    Returns (pod_run_as_root, pod_writable_fs). Container-level values are
+    checked separately in _extract_container_features and OR-ed with these.
+    """
+    pod_sc = _safe_dict(pod_spec.get("securityContext"))
+    pod_seccomp = _safe_dict(pod_sc.get("seccompProfile"))
+    if pod_seccomp.get("type") == "Unconfined":
+        feats["SECCOMP_UNCONFINED"] = 1
+    pod_run_as_root = pod_sc.get("runAsNonRoot") is False or pod_sc.get("runAsUser") == 0
+    pod_writable_fs = pod_sc.get("readOnlyRootFilesystem") is False
+    return pod_run_as_root, pod_writable_fs
 
 
 def _extract_container_features(
@@ -225,9 +246,10 @@ def _extract_container_features(
         if seccomp.get("type") == "Unconfined":
             feats["SECCOMP_UNCONFINED"] = 1
 
-        if ctr.get("automountServiceAccountToken") is not False:
-            if pod_spec.get("automountServiceAccountToken") is not False:
-                feats["SA_AUTOMOUNT_TOKEN"] = 1
+        ctr_mount   = ctr.get("automountServiceAccountToken")
+        pod_no_mount = pod_spec.get("automountServiceAccountToken") is False
+        if ctr_mount is True or (ctr_mount is not False and not pod_no_mount):
+            feats["SA_AUTOMOUNT_TOKEN"] = 1
 
         image = str(ctr.get("image", ""))
         if _image_uses_latest(image):
@@ -304,6 +326,7 @@ def _extract_file(yaml_path: Path) -> tuple[dict[str, object] | None, bool]:
         _extract_volume_features(pod_spec, feats)
         _extract_workload_metadata(doc, pod_spec, feats)
 
+        pod_run_as_root, pod_writable_fs = _extract_pod_security_context(pod_spec, feats)
         has_resources, has_security_ctx, has_run_as_root, has_writable_fs = (
             _extract_container_features(pod_spec, feats)
         )
@@ -312,9 +335,9 @@ def _extract_file(yaml_path: Path) -> tuple[dict[str, object] | None, bool]:
             feats["NO_SECU_CONTEXT"] = 1
         if not has_resources:
             feats["NO_RESO"] = 1
-        if has_run_as_root:
+        if has_run_as_root or pod_run_as_root:
             feats["NO_RUN_AS_NON_ROOT"] = 1
-        if has_writable_fs:
+        if has_writable_fs or pod_writable_fs:
             feats["NO_READ_ONLY_ROOT_FS"] = 1
 
     if not has_workload:

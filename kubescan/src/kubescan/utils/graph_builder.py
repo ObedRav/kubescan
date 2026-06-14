@@ -274,6 +274,7 @@ def _enrich_with_yaml_semantics(
         if sem.get("hostpath_mount"):
             node_data[idx]["HOSTPATH_MOUNT"] = 1
             G.nodes[idx]["HOSTPATH_MOUNT"]   = 1
+            G.nodes[idx]["features"][FEATURE_COLS.index("HOSTPATH_MOUNT")] = 1.0
 
         sa = sem.get("service_account")
         if sa:
