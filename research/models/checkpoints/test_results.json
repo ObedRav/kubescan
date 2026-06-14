@@ -1,0 +1,274 @@
+{
+  "test_set": {
+    "n_graphs": 15,
+    "n_chains": 4,
+    "p5_ceiling": 0.8,
+    "distribution": {
+      "0": 4,
+      "1": 7,
+      "2": 4
+    }
+  },
+  "ensemble": {
+    "weights": {
+      "w_rf": 0.33742524431364523,
+      "w_gnn": 0.3278789386574905,
+      "w_escape": 0.33469581702886425
+    },
+    "n_fold_models": 5
+  },
+  "ranking_metrics": {
+    "precision_at_1": 1.0,
+    "precision_at_3": 0.6666666666666666,
+    "precision_at_5": 0.6,
+    "precision_at_5_ceiling": 0.8,
+    "hits_ceiling": false,
+    "fpr_clean": 0.0
+  },
+  "confidence_intervals_95": {
+    "n_bootstrap": 10000,
+    "p_at_k_ci95": [
+      0.0,
+      1.0
+    ],
+    "fpr_clean_ci95": [
+      0.0,
+      0.4
+    ],
+    "macro_f1_ci95": [
+      0.4222222222222222,
+      0.9327731092436974
+    ]
+  },
+  "ablation": [
+    {
+      "config": "GA-best",
+      "w_rf": 0.3374,
+      "w_gnn": 0.3279,
+      "w_escape": 0.3347,
+      "p_at_1": 1.0,
+      "p_at_3": 0.6666666666666666,
+      "p_at_5": 0.6,
+      "fpr_clean": 0.0
+    },
+    {
+      "config": "Equal (1/3)",
+      "w_rf": 0.3333,
+      "w_gnn": 0.3333,
+      "w_escape": 0.3333,
+      "p_at_1": 1.0,
+      "p_at_3": 0.6666666666666666,
+      "p_at_5": 0.6,
+      "fpr_clean": 0.0
+    },
+    {
+      "config": "RF-only",
+      "w_rf": 1.0,
+      "w_gnn": 0.0,
+      "w_escape": 0.0,
+      "p_at_1": 1.0,
+      "p_at_3": 0.3333333333333333,
+      "p_at_5": 0.4,
+      "fpr_clean": 0.2
+    },
+    {
+      "config": "GNN-only",
+      "w_rf": 0.0,
+      "w_gnn": 1.0,
+      "w_escape": 0.0,
+      "p_at_1": 1.0,
+      "p_at_3": 0.6666666666666666,
+      "p_at_5": 0.6,
+      "fpr_clean": 0.0
+    },
+    {
+      "config": "Escape-only",
+      "w_rf": 0.0,
+      "w_gnn": 0.0,
+      "w_escape": 1.0,
+      "p_at_1": 0.0,
+      "p_at_3": 0.3333333333333333,
+      "p_at_5": 0.6,
+      "fpr_clean": 0.0
+    }
+  ],
+  "classification_metrics": {
+    "macro_f1": 0.7261904761904763,
+    "accuracy": 0.7333333333333333,
+    "per_class_f1": {
+      "clean": 0.8571428571428571,
+      "isolated": 0.75,
+      "attack_chain": 0.5714285714285714
+    },
+    "confusion_matrix": [
+      [
+        3,
+        1,
+        0
+      ],
+      [
+        0,
+        6,
+        1
+      ],
+      [
+        0,
+        2,
+        2
+      ]
+    ]
+  },
+  "gnn_only_p5": 0.6,
+  "ranked_clusters": [
+    {
+      "rank": 1,
+      "cluster": "kubernetes_goat_kube-bench-security",
+      "true_label": "attack_chain",
+      "ensemble_score": 0.696594,
+      "gnn_chain_prob": 0.919441,
+      "rf_mean_risk": 0.1791,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 2,
+      "cluster": "gatekeeper-library",
+      "true_label": "attack_chain",
+      "ensemble_score": 0.650114,
+      "gnn_chain_prob": 0.961996,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 0.16
+    },
+    {
+      "rank": 3,
+      "cluster": "kube-pod-escape",
+      "true_label": "isolated",
+      "ensemble_score": 0.622288,
+      "gnn_chain_prob": 0.877128,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 4,
+      "cluster": "microservices-deploy",
+      "true_label": "isolated",
+      "ensemble_score": 0.360613,
+      "gnn_chain_prob": 0.008166,
+      "rf_mean_risk": 0.068875,
+      "escape_signal": 1.0,
+      "escape_fraction": 0.25
+    },
+    {
+      "rank": 5,
+      "cluster": "gitcontroller",
+      "true_label": "attack_chain",
+      "ensemble_score": 0.35631,
+      "gnn_chain_prob": 0.021329,
+      "rf_mean_risk": 0.04333,
+      "escape_signal": 1.0,
+      "escape_fraction": 0.021352
+    },
+    {
+      "rank": 6,
+      "cluster": "kubernetes_goat_poor-registry",
+      "true_label": "isolated",
+      "ensemble_score": 0.096898,
+      "gnn_chain_prob": 0.201983,
+      "rf_mean_risk": 0.0909,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 7,
+      "cluster": "kubernetes_goat_kubernetes-goat-home",
+      "true_label": "clean",
+      "ensemble_score": 0.096898,
+      "gnn_chain_prob": 0.201983,
+      "rf_mean_risk": 0.0909,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 8,
+      "cluster": "cloudify-kubernetes-plugin",
+      "true_label": "attack_chain",
+      "ensemble_score": 0.090579,
+      "gnn_chain_prob": 0.223472,
+      "rf_mean_risk": 0.051291,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 9,
+      "cluster": "kustomizegoat",
+      "true_label": "isolated",
+      "ensemble_score": 0.023139,
+      "gnn_chain_prob": 0.070572,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 10,
+      "cluster": "kubernetes-with-spring-boot-microservices",
+      "true_label": "isolated",
+      "ensemble_score": 0.016264,
+      "gnn_chain_prob": 0.00428,
+      "rf_mean_risk": 0.04404,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 11,
+      "cluster": "caastle",
+      "true_label": "isolated",
+      "ensemble_score": 0.015859,
+      "gnn_chain_prob": 0.002646,
+      "rf_mean_risk": 0.044429,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 12,
+      "cluster": "kubernetes-microservices",
+      "true_label": "isolated",
+      "ensemble_score": 0.015237,
+      "gnn_chain_prob": 0.005783,
+      "rf_mean_risk": 0.039536,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 13,
+      "cluster": "skampi",
+      "true_label": "clean",
+      "ensemble_score": 0.010088,
+      "gnn_chain_prob": 0.002466,
+      "rf_mean_risk": 0.0275,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 14,
+      "cluster": "piggymetrics-k8s",
+      "true_label": "clean",
+      "ensemble_score": 0.010088,
+      "gnn_chain_prob": 0.002466,
+      "rf_mean_risk": 0.0275,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 15,
+      "cluster": "kubecf",
+      "true_label": "clean",
+      "ensemble_score": 0.010088,
+      "gnn_chain_prob": 0.002466,
+      "rf_mean_risk": 0.0275,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    }
+  ]
+}

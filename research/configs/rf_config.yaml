@@ -1,0 +1,15 @@
+# Random Forest training configuration — Layer 1
+# Produced: RF Macro-F1 = 0.9935, AUC = 0.9988, CV = 0.9908 ± 0.0059
+#
+# Usage:
+#   python models/train_rf.py $(python -c "
+#     import yaml; c=yaml.safe_load(open('configs/rf_config.yaml'))
+#     print(' '.join(f'--{k.replace(\"_\",\"-\")} {v}' for k,v in c.items() if not isinstance(v,bool) or v))")
+#
+# Or simply use defaults — all argparse defaults match these values:
+#   python models/train_rf.py --seed 42
+
+test_size: 0.20
+seed: 42
+# --no-cv: false   (run 5-fold cross-validation)
+# --ablation: false

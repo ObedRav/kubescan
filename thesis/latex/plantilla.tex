@@ -1,0 +1,86 @@
+% ============================================================
+% plantilla.tex — root file (preamble + structure only)
+%
+% Chapter content lives in:
+%   chapters/00_resumen.tex       Resumen + Abstract
+%   chapters/01_introduccion.tex  Cap. 1 Introducción
+%   chapters/02_estado_arte.tex   Cap. 2 Estado del Arte
+%   chapters/03_objetivos.tex     Cap. 3 Objetivos y Metodología
+%   chapters/04_diseno.tex        Cap. 4 Diseño e Implementación
+%   chapters/05_resultados.tex    Cap. 5 Resultados y Evaluación
+%   chapters/06_conclusiones.tex  Cap. 6 Conclusiones y Trabajo Futuro
+%   appendix/acronimos.tex        Apéndice A: Acrónimos
+%   appendix/repositorio.tex      Apéndice B: Repositorio de código
+%
+% To compile only selected chapters during editing, uncomment \includeonly:
+%   \includeonly{chapters/05_resultados,chapters/06_conclusiones}
+% ============================================================
+
+\documentclass[11pt,a4paper,spanish]{book}
+\usepackage{estilo_unir-1}
+\usepackage[natbibapa]{apacite}  % natbibapa enables \citep, \citet etc.
+\usepackage{hyperref}
+\usepackage{bookmark}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{acronym}  % definitions only; list built manually below
+\graphicspath{{../figures/}}
+\setlength{\headheight}{25.3pt}
+\addtolength{\topmargin}{-11.3pt}
+\newcommand{\safeincludegraphics}[2][]{%
+  \includegraphics[#1]{#2}%
+}
+\numberwithin{equation}{chapter}
+\numberwithin{figure}{chapter}
+
+%---------------------------
+% Metadatos del trabajo
+%---------------------------
+\title{Predicción de Cadenas de Ataque en Infraestructuras
+       Kubernetes mediante Graph Neural Networks}
+\titulacion{Máster Universitario en Inteligencia Artificial}
+\author{Milton Obed Rayo Viana}
+\date{Mayo de 2026}
+\director{Pedro León Millán}
+\nombreciudad{Medellín}
+
+% Uncomment to speed up compilation while editing a single chapter:
+%\includeonly{chapters/05_resultados}
+
+\begin{document}
+\renewcommand{\listfigurename}{Índice de Ilustraciones}
+\renewcommand{\listtablename}{Índice de Tablas}
+\renewcommand{\contentsname}{Índice de Contenidos}
+\renewcommand{\figurename}{Figura}
+\renewcommand{\tablename}{Tabla}
+
+\maketitle
+
+% ---- Front matter ----------------------------------------
+\frontmatter
+\tableofcontents
+\listoffigures
+\listoftables
+\include{chapters/00_resumen}
+
+% ---- Main chapters ----------------------------------------
+\mainmatter
+\include{chapters/01_introduccion}
+\include{chapters/02_estado_arte}
+\include{chapters/03_objetivos}
+\include{chapters/04_diseno}
+\include{chapters/05_resultados}
+\include{chapters/06_conclusiones}
+
+% ---- Bibliography -----------------------------------------
+\bibliographystyle{apacite}
+\bibliography{bibliografia}
+
+% ---- Appendices -------------------------------------------
+\appendix
+\include{appendix/acronimos}
+\include{appendix/repositorio}
+
+\end{document}

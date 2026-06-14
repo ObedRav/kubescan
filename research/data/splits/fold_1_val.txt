@@ -1,0 +1,16 @@
+badpods_priv-and-hostpid
+kubernetes_goat_hidden-in-layers
+kubernetes-extras
+grpc-go-api
+sisyphus
+badpods_hostnetwork
+securekubernetes
+GameOn-Java-Microservices-on-Kubernetes
+kafka-cqrs
+k8s-ingress
+badpods_hostipc
+k8s-springboot-data-rest
+sa-traefik
+kubernetes-sigs-kubespray
+netcore-microservices
+operator

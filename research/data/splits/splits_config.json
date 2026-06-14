@@ -1,0 +1,31 @@
+{
+  "seed": 42,
+  "total_graphs": 471,
+  "original_graphs": 96,
+  "augmented_graphs": 375,
+  "val_frac": 0.15,
+  "test_frac": 0.15,
+  "train_count": 321,
+  "val_count": 15,
+  "test_count": 15,
+  "k_folds": 5,
+  "augmentation_note": "Group-aware splits: an augmented graph (_aug_ suffix) joins a training partition only when its base cluster is in that partition. Variants of val/test clusters are excluded from training entirely. Test clusters are held out of the CV folds, so OOF predictions used for GA weight tuning contain no test cluster.",
+  "label_names": {
+    "0": "clean",
+    "1": "isolated_misconfig",
+    "2": "attack_chain"
+  },
+  "label_distribution_total": {
+    "0": 25,
+    "1": 46,
+    "2": 400
+  },
+  "label_distribution_originals": {
+    "0": 25,
+    "1": 46,
+    "2": 25
+  },
+  "cv_pool_originals": 81,
+  "augmented_in_global_train": 255,
+  "augmented_excluded_from_train": 120
+}
