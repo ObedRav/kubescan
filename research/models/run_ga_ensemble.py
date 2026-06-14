@@ -71,7 +71,7 @@ from provenance import provenance
 # Escape-flag indices in the 26-dim node feature vector — canonical
 # definition derived in the kubescan package (single source of truth).
 from kubescan.model.ga_ensemble import ESCAPE_FLAG_INDICES
-from kubescan.utils.device_utils import resolve_device
+from kubescan.utils.device_utils import dataloader_kwargs, resolve_device
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -92,11 +92,11 @@ def _build_model(in_channels, hidden, heads, num_layers, device):
 
 def _infer_dataset(model, dataset, device):
     """Run inference and return (true_labels, gnn_chain_probs, rf_risks, escape_signals)."""
-    loader = DataLoader(dataset, batch_size=32, shuffle=False)
+    loader = DataLoader(dataset, batch_size=32, shuffle=False, **dataloader_kwargs(device))
     true_labels, gnn_probs, rf_risks, esc_signals = [], [], [], []
 
     model.eval()
-    with torch.no_grad():
+    with torch.inference_mode():
         for batch in loader:
             batch = batch.to(device)
             out   = model(batch.x, batch.edge_index, batch.edge_attr, batch.batch)

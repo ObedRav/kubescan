@@ -69,7 +69,7 @@ except ImportError as e:
 
 # Canonical escape-flag indices from the kubescan package (single source of truth)
 from kubescan.model.ga_ensemble import ESCAPE_FLAG_INDICES
-from kubescan.utils.device_utils import resolve_device
+from kubescan.utils.device_utils import dataloader_kwargs, resolve_device
 
 LABEL_MAP = {0: "clean", 1: "isolated", 2: "attack_chain"}
 
@@ -91,7 +91,7 @@ def ensemble_predict(
     escape_signals is binary (scoring); escape_fracs is the per-cluster
     fraction (display only).
     """
-    loader = DataLoader(dataset, batch_size=32, shuffle=False)
+    loader = DataLoader(dataset, batch_size=32, shuffle=False, **dataloader_kwargs(device))
 
     # Collect per-model softmax probs
     all_model_probs = []   # shape: [n_models][n_graphs][3]
@@ -104,7 +104,7 @@ def ensemble_predict(
         model.eval()
         model_probs = []
 
-        with torch.no_grad():
+        with torch.inference_mode():
             for batch in loader:
                 batch = batch.to(device)
                 out   = model(batch.x, batch.edge_index, batch.edge_attr, batch.batch)

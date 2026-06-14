@@ -314,17 +314,18 @@ def run_gnn_ensemble(
     Run all fold models and return averaged predictions.
     Returns (chain_prob, clean_prob, isolated_prob).
     """
-    loader = DataLoader([pyg_data], batch_size=1, shuffle=False)
+    x          = pyg_data.x.to(device)
+    edge_index = pyg_data.edge_index.to(device)
+    edge_attr  = pyg_data.edge_attr.to(device)
+    batch      = torch.zeros(x.size(0), dtype=torch.long, device=device)
 
     all_probs = []
-    for model in fold_models:
-        model.eval()
-        with torch.no_grad():
-            for batch in loader:
-                batch = batch.to(device)
-                out   = model(batch.x, batch.edge_index, batch.edge_attr, batch.batch)
-                probs = F.softmax(out, dim=-1).cpu().numpy()[0]
-                all_probs.append(probs)
+    with torch.inference_mode():
+        for model in fold_models:
+            model.eval()
+            out   = model(x, edge_index, edge_attr, batch)
+            probs = F.softmax(out, dim=-1).cpu().numpy()[0]
+            all_probs.append(probs)
 
     mean_probs = np.mean(all_probs, axis=0)
     return float(mean_probs[2]), float(mean_probs[0]), float(mean_probs[1])

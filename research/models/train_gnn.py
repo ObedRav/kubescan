@@ -52,15 +52,19 @@ from gnn_dataset import LABEL_NAMES, KubeClusterDataset, load_split
 # Research may import from kubescan (never the reverse).
 try:
     from kubescan.model.gat_encoder import KubeGAT
-    from kubescan.utils.device_utils import resolve_device
+    from kubescan.utils.device_utils import dataloader_kwargs, resolve_device
 except ImportError:
     sys.path.insert(0, str(PROJECT_ROOT.parent / "kubescan" / "src"))
     from kubescan.model.gat_encoder import KubeGAT
-    from kubescan.utils.device_utils import resolve_device
+    from kubescan.utils.device_utils import dataloader_kwargs, resolve_device
 
 from provenance import provenance
 
 __all__ = ["KubeGAT", "KubeGCN"]
+
+from typing import Final
+
+_GRAD_CLIP_NORM: Final[float] = 2.0
 
 # ---------------------------------------------------------------------------
 # GCN ablation baseline
@@ -160,23 +164,34 @@ def train_epoch(
     optimizer: torch.optim.Optimizer,
     criterion: nn.Module,
     device: torch.device,
+    scaler: torch.cuda.amp.GradScaler | None = None,
 ) -> float:
     model.train()
     total_loss = 0.0
+    amp_enabled = scaler is not None
     for batch in loader:
         batch = batch.to(device)
         optimizer.zero_grad()
-        out = model(batch.x, batch.edge_index, batch.edge_attr, batch.batch)
-        loss = criterion(out, batch.y)
-        loss.backward()
-        # Gradient clipping for stability on small graphs
-        nn.utils.clip_grad_norm_(model.parameters(), max_norm=2.0)
-        optimizer.step()
+        with torch.amp.autocast(device.type, enabled=amp_enabled):
+            out  = model(batch.x, batch.edge_index, batch.edge_attr, batch.batch)
+            loss = criterion(out, batch.y)
+        if scaler is not None:
+            scaler.scale(loss).backward()
+            scaler.unscale_(optimizer)
+            # Gradient clipping for stability on small graphs
+            nn.utils.clip_grad_norm_(model.parameters(), max_norm=_GRAD_CLIP_NORM)
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            loss.backward()
+            # Gradient clipping for stability on small graphs
+            nn.utils.clip_grad_norm_(model.parameters(), max_norm=_GRAD_CLIP_NORM)
+            optimizer.step()
         total_loss += loss.item() * batch.num_graphs
     return total_loss / len(loader.dataset)
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def evaluate(
     model: KubeGAT,
     loader: DataLoader,
@@ -245,11 +260,14 @@ def train_fold(
 ) -> dict:
 
     num_classes = 2 if args.binary else 3
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
-    val_loader   = DataLoader(val_set,   batch_size=args.batch_size, shuffle=False)
+    dl_kwargs    = dataloader_kwargs(device)
+    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True,  **dl_kwargs)
+    val_loader   = DataLoader(val_set,   batch_size=args.batch_size, shuffle=False, **dl_kwargs)
 
     in_channels = train_set[0].x.shape[1]
     model = make_model(args, in_channels, num_classes).to(device)
+    if args.compile and hasattr(torch, "compile"):
+        model = torch.compile(model)
 
     class_weights = compute_class_weights(train_set, num_classes).to(device)
     criterion = nn.CrossEntropyLoss(weight=class_weights)
@@ -260,6 +278,10 @@ def train_fold(
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=args.epochs, eta_min=1e-5
     )
+    # AMP: float16 + GradScaler on CUDA; other devices run in full precision
+    scaler: torch.cuda.amp.GradScaler | None = (
+        torch.cuda.amp.GradScaler() if device.type == "cuda" else None
+    )
 
     best_f1     = 0.0
     best_state  = None
@@ -268,7 +290,7 @@ def train_fold(
     history     = []
 
     for epoch in range(1, args.epochs + 1):
-        train_loss = train_epoch(model, train_loader, optimizer, criterion, device)
+        train_loss = train_epoch(model, train_loader, optimizer, criterion, device, scaler)
         val_metrics = evaluate(model, val_loader, device, num_classes)
         scheduler.step()
 
@@ -347,6 +369,8 @@ def main():
     parser.add_argument("--cv-folds",    type=int,   default=5,
                         help="Number of CV folds (0 = use train/val/test split)")
     parser.add_argument("--seed",        type=int,   default=42)
+    parser.add_argument("--compile",     action="store_true",
+                        help="torch.compile the model for faster training (PyTorch >= 2.0)")
     args = parser.parse_args()
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
@@ -461,7 +485,8 @@ def main():
         result = train_fold(train_set, val_set, args, device, fold_idx=0)
 
         # Evaluate on test set
-        test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
+        test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False,
+                                 **dataloader_kwargs(device))
         test_in_channels = test_set[0].x.shape[1]
         test_model = make_model(args, test_in_channels, num_classes).to(device)
         test_model.load_state_dict(

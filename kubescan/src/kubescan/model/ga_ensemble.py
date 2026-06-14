@@ -32,7 +32,6 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch_geometric.data import Data
-from torch_geometric.loader import DataLoader
 
 from ..exceptions import ModelLoadError
 from ..utils.graph_builder import ESCAPE_FLAGS, LATERAL_FLAGS
@@ -146,16 +145,19 @@ def run_gnn_ensemble(
     Average softmax probabilities across all fold models.
     Returns (chain_prob, clean_prob, isolated_prob).
     """
-    loader: DataLoader = DataLoader([pyg_data], batch_size=1, shuffle=False)
+    x          = pyg_data.x.to(device)
+    edge_index = pyg_data.edge_index.to(device)
+    edge_attr  = pyg_data.edge_attr.to(device)
+    # global_mean/max_pool needs a batch vector; all nodes belong to graph 0
+    batch      = torch.zeros(x.size(0), dtype=torch.long, device=device)
+
     all_probs: list[np.ndarray] = []
-    for model in fold_models:
-        model.eval()
-        with torch.no_grad():
-            for batch in loader:
-                batch = batch.to(device)
-                out   = model(batch.x, batch.edge_index, batch.edge_attr, batch.batch)
-                probs = F.softmax(out, dim=-1).cpu().numpy()[0]
-                all_probs.append(probs)
+    with torch.inference_mode():
+        for model in fold_models:
+            model.eval()
+            out   = model(x, edge_index, edge_attr, batch)
+            probs = F.softmax(out, dim=-1).cpu().numpy()[0]
+            all_probs.append(probs)
     mean_probs = np.mean(all_probs, axis=0)
     return float(mean_probs[2]), float(mean_probs[0]), float(mean_probs[1])
 
