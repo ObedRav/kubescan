@@ -49,29 +49,23 @@ import networkx as nx
 import numpy as np
 import yaml
 
+from kubescan.utils.graph_builder import (
+    EDGE_DIR_PROXIMITY,
+    EDGE_PRIV_REACH,
+    EDGE_RBAC_PRIV,
+    EDGE_SA_LATERAL,
+    EDGE_SEMANTIC_NS,
+    ESCAPE_FLAGS,
+    LATERAL_FLAGS,
+    NODE_FEATURE_DIM,
+)
+from kubescan.utils.yaml_parser import FEATURE_COLS, WORKLOAD_KINDS
+
 try:
     import torch
     HAS_TORCH = True
 except ImportError:
     HAS_TORCH = False
-
-# ---------------------------------------------------------------------------
-# Feature schema — imported from kubescan (single source of truth)
-# ---------------------------------------------------------------------------
-
-from kubescan.utils.yaml_parser import FEATURE_COLS, WORKLOAD_KINDS
-from kubescan.utils.graph_builder import (
-    ESCAPE_FLAGS,
-    LATERAL_FLAGS,
-    NODE_FEATURE_DIM,
-    RISK_SCORE_INDEX,
-    EdgeType,
-    EDGE_DIR_PROXIMITY,
-    EDGE_PRIV_REACH,
-    EDGE_SA_LATERAL,
-    EDGE_SEMANTIC_NS,
-    EDGE_RBAC_PRIV,
-)
 
 # Backward-compatible aliases used by the rest of this file
 ALL_FEATURE_COLS = list(FEATURE_COLS)   # 25 binary feature names

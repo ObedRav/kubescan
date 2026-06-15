@@ -37,3 +37,10 @@ known-first-party = ["kubescan"]
 "kubescan/tests/**" = [
     "S101",  # assert allowed in tests
 ]
+"thesis/**" = [
+    "E702",  # semicolons intentional in compact matplotlib one-liners
+    "C408",  # dict() vs literal — stylistic preference in figure scripts
+    "B007",  # unused loop variable — acceptable in matplotlib iteration
+    "B905",  # zip() strict — aligned lists by construction
+    "I001",  # import ordering — matplotlib.use() must precede pyplot import
+]
