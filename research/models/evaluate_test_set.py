@@ -229,7 +229,11 @@ def main():
     w_rf     = weights["w_rf"]
     w_gnn    = weights["w_gnn"]
     w_escape = weights.get("w_escape", 0.0)
-    print(f"Ensemble weights: w_rf={w_rf:.4f}  w_gnn={w_gnn:.4f}  w_escape={w_escape:.4f}")
+    # Normalise to match EnsembleScorer.__init__ (CLI divides by sum before scoring).
+    _total   = w_rf + w_gnn + w_escape
+    if _total > 0.0:
+        w_rf, w_gnn, w_escape = w_rf / _total, w_gnn / _total, w_escape / _total
+    print(f"Ensemble weights (normalised): w_rf={w_rf:.4f}  w_gnn={w_gnn:.4f}  w_escape={w_escape:.4f}")
     print(f"  (source: {weights.get('mode','?')} mode, "
           f"optimised on {weights.get('oof_n_graphs','?')} graphs, "
           f"{weights.get('oof_n_chains','?')} chains)")

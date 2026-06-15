@@ -56,57 +56,32 @@ except ImportError:
     HAS_TORCH = False
 
 # ---------------------------------------------------------------------------
-# Feature schema — must match rf_dataset.csv column order
+# Feature schema — imported from kubescan (single source of truth)
 # ---------------------------------------------------------------------------
 
-RAHMAN_FLAGS = [
-    "TRUE_HOST_PID", "TRUE_HOST_IPC", "TRUE_HOST_NET", "DOCKERSOCK_PATH",
-    "CAP_SYS_ADMIN", "CAP_SYS_MODULE", "WITHIN_MANIFEST_SECRET",
-    "SEC_CONT_OVER_PRIVIL", "ALLOW_PRIVI", "SECCOMP_UNCONFINED",
-    "VALID_TAINT_SECRET", "INSECURE_HTTP", "NO_SECU_CONTEXT",
-    "NO_NETWORK_POLICY", "HOST_ALIAS", "NO_DEFAULT_NSPACE",
-    "NO_RESO", "NO_ROLLING_UPDATE",
-]
+from kubescan.utils.yaml_parser import FEATURE_COLS, WORKLOAD_KINDS
+from kubescan.utils.graph_builder import (
+    ESCAPE_FLAGS,
+    LATERAL_FLAGS,
+    NODE_FEATURE_DIM,
+    RISK_SCORE_INDEX,
+    EdgeType,
+    EDGE_DIR_PROXIMITY,
+    EDGE_PRIV_REACH,
+    EDGE_SA_LATERAL,
+    EDGE_SEMANTIC_NS,
+    EDGE_RBAC_PRIV,
+)
 
-EXTENDED_FLAGS = [
-    "NO_RUN_AS_NON_ROOT", "NO_READ_ONLY_ROOT_FS", "IMAGE_USES_LATEST",
-    "SA_AUTOMOUNT_TOKEN", "USES_DEFAULT_SA", "UNTRUSTED_REGISTRY",
-    "HOSTPATH_MOUNT",   # non-docker-sock hostPath volume (host FS escape)
-]
-
-ALL_FEATURE_COLS = RAHMAN_FLAGS + EXTENDED_FLAGS  # 25 binary features
-# index 25 = risk_score  →  NODE_FEATURE_DIM = 26
-NODE_FEATURE_DIM = 26
-
-# Edge type codes
-EDGE_DIR_PROXIMITY  = 0   # same directory
-EDGE_PRIV_REACH     = 1   # privileged pod → other
-EDGE_SA_LATERAL     = 2   # SA-exposed pod → co-located pod
-EDGE_SEMANTIC_NS    = 3   # same K8s namespace (from YAML)
-EDGE_RBAC_PRIV      = 4   # pod whose SA has an elevated RoleBinding → others
-
-# Flags that grant pod-escape / host-level access
-ESCAPE_FLAGS = {
-    "TRUE_HOST_PID", "TRUE_HOST_IPC", "TRUE_HOST_NET",
-    "DOCKERSOCK_PATH", "CAP_SYS_ADMIN", "CAP_SYS_MODULE",
-    "SEC_CONT_OVER_PRIVIL",
-    "HOSTPATH_MOUNT",   # hostPath vol (non-docker-sock) — host FS access
-}
-# Flags that enable lateral movement / credential theft
-LATERAL_FLAGS = {
-    "SA_AUTOMOUNT_TOKEN", "USES_DEFAULT_SA",
-    "WITHIN_MANIFEST_SECRET", "ALLOW_PRIVI",
-}
+# Backward-compatible aliases used by the rest of this file
+ALL_FEATURE_COLS = list(FEATURE_COLS)   # 25 binary feature names
+RAHMAN_FLAGS     = ALL_FEATURE_COLS[:18]  # first 18 (Rahman SLI-KUBE)
+EXTENDED_FLAGS   = ALL_FEATURE_COLS[18:]  # last 7 (extended gap-fill)
 
 
 # ---------------------------------------------------------------------------
 # YAML semantic parser
 # ---------------------------------------------------------------------------
-
-WORKLOAD_KINDS = {
-    "Pod", "Deployment", "DaemonSet", "StatefulSet", "ReplicaSet",
-    "ReplicationController", "Job", "CronJob",
-}
 
 def _safe_load_all(path: Path) -> list[dict]:
     """Load all YAML documents from a file; skip non-dict items silently."""
@@ -183,7 +158,7 @@ def parse_yaml_semantics(local_path: str) -> dict:
                 if not hp:
                     continue
                 path_val = str(hp.get("path", ""))
-                if "/var/run/docker.sock" not in path_val and "/docker.sock" not in path_val:
+                if "docker.sock" not in path_val:
                     result["hostpath_mount"] = True
 
         if kind in ("RoleBinding", "ClusterRoleBinding"):

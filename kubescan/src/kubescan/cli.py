@@ -165,6 +165,22 @@ def _print_text_report(
 
 
 # ---------------------------------------------------------------------------
+# Model loading
+# ---------------------------------------------------------------------------
+
+def _load_models(
+    ckpt_dir: Path,
+    device:   torch.device,
+) -> tuple[RFClassifier, EnsembleScorer, list]:
+    """Load all three model components from checkpoints_dir."""
+    return (
+        RFClassifier.from_checkpoints(ckpt_dir),
+        EnsembleScorer.from_checkpoints(ckpt_dir),
+        load_fold_ensemble(ckpt_dir, device=device),
+    )
+
+
+# ---------------------------------------------------------------------------
 # kubectl live-scan helpers
 # ---------------------------------------------------------------------------
 
@@ -279,13 +295,11 @@ def _run_inference_pipeline(
     chain_prob, clean_prob, _iso_prob = run_gnn_ensemble(pyg_data, gnn_fold, device)
 
     mean_rf_risk   = float(np.mean(risk_scores))
-    node_feat_vecs = [
-        np.array(
-            [float(nd.get(FEATURE_COLS[i], 0)) for i in range(len(FEATURE_COLS))],
-            dtype=np.float32,
-        )
-        for nd in node_data
-    ]
+    # Reuse the feature vectors already stored in the graph (post-enrichment),
+    # avoiding a redundant O(n·|FEATURE_COLS|) reconstruction from node_data.
+    # ESCAPE_FLAG_INDICES are all < 25, so the 26-dim vectors work correctly.
+    G              = graph_result["graph"]
+    node_feat_vecs = [G.nodes[i]["features"] for i in range(len(node_data))]
     escape_frac    = compute_escape_fraction(node_feat_vecs)   # for display
     escape_signal  = compute_escape_signal(node_feat_vecs)     # for scoring
     ensemble_score = scorer.score(mean_rf_risk, chain_prob, escape_signal)
@@ -392,9 +406,7 @@ def scan(
         raise click.ClickException(str(exc)) from exc
 
     try:
-        rf       = RFClassifier.from_checkpoints(ckpt_dir)
-        scorer   = EnsembleScorer.from_checkpoints(ckpt_dir)
-        gnn_fold = load_fold_ensemble(ckpt_dir, device=device)
+        rf, scorer, gnn_fold = _load_models(ckpt_dir, device)
     except KubescanError as exc:
         raise click.ClickException(str(exc)) from exc
 
@@ -454,9 +466,7 @@ def live(
         raise click.ClickException(str(exc)) from exc
 
     try:
-        rf       = RFClassifier.from_checkpoints(ckpt_dir)
-        scorer   = EnsembleScorer.from_checkpoints(ckpt_dir)
-        gnn_fold = load_fold_ensemble(ckpt_dir, device=device)
+        rf, scorer, gnn_fold = _load_models(ckpt_dir, device)
     except KubescanError as exc:
         raise click.ClickException(str(exc)) from exc
 

@@ -18,6 +18,7 @@ __all__ = [
     "ESCAPE_FLAGS",
     "LATERAL_FLAGS",
     "NODE_FEATURE_DIM",
+    "RISK_SCORE_INDEX",
     "EdgeType",
     "build_cluster_graph",
     "graph_to_pyg",
@@ -119,17 +120,17 @@ def _is_privileged_role(rules: list[object]) -> bool:
     return False
 
 
-def _collect_privileged_roles(yaml_paths: list[Path]) -> frozenset[str]:
+def _collect_privileged_roles(docs_lists: list[list[dict[str, object]]]) -> frozenset[str]:
     """
-    First pass over all manifest files: collect names of privileged roles.
+    Identify privileged roles from pre-parsed YAML document lists.
 
     A role is privileged if its name is in _PRIVILEGED_ROLE_NAMES or if its
     rules grant privilege-escalation verbs.  ClusterRoles are globally
     privileged; Roles are treated the same way (conservative assumption).
     """
     privileged: set[str] = set()
-    for path in yaml_paths:
-        for doc in _safe_load_all(path):
+    for docs in docs_lists:
+        for doc in docs:
             kind = doc.get("kind", "")
             if kind not in ("Role", "ClusterRole"):
                 continue
@@ -150,14 +151,14 @@ def _collect_privileged_roles(yaml_paths: list[Path]) -> frozenset[str]:
 # YAML semantic parser (namespace, SA, hostPath — for edge construction only)
 # ---------------------------------------------------------------------------
 
-def _parse_yaml_semantics(path: Path, privileged_roles: frozenset[str]) -> dict[str, object]:
+def _parse_yaml_semantics(docs: list[dict[str, object]], privileged_roles: frozenset[str]) -> dict[str, object]:
     result: dict[str, object] = {
         "namespace":       None,
         "service_account": None,
         "rbac_subjects":   [],
         "hostpath_mount":  False,
     }
-    for doc in _safe_load_all(path):
+    for doc in docs:
         kind = doc.get("kind", "")
         meta = _safe_dict(doc.get("metadata"))
         ns   = meta.get("namespace")
@@ -253,21 +254,22 @@ def _enrich_with_yaml_semantics(
     """
     Parse each manifest for namespace / SA / RBAC / hostPath semantics.
 
-    Performs a first pass over all files to identify privileged roles, then
-    a second pass to collect namespace groups, SA assignments, and elevated SAs.
-    Only SAs bound to genuinely privileged roles are added to elevated_sas.
-
-    Returns (ns_groups, pod_sa, elevated_sas) for edge construction.
+    Reads every file exactly once, collects privileged roles in the same pass,
+    then extracts per-file semantics from the cached documents without re-opening
+    any file. Returns (ns_groups, pod_sa, elevated_sas) for edge construction.
     """
-    privileged_roles = _collect_privileged_roles(yaml_paths)
+    # Single I/O pass: read all files once and cache parsed documents.
+    docs_cache: list[list[dict[str, object]]] = [_safe_load_all(p) for p in yaml_paths]
+
+    privileged_roles = _collect_privileged_roles(docs_cache)
     logger.debug("Privileged roles detected: %s", privileged_roles or "(none)")
 
     ns_groups:    dict[str, list[int]] = {}
     pod_sa:       dict[int, str]       = {}
     elevated_sas: set[str]             = set()
 
-    for idx, path in enumerate(yaml_paths):
-        sem = _parse_yaml_semantics(path, privileged_roles)
+    for idx, docs in enumerate(docs_cache):
+        sem = _parse_yaml_semantics(docs, privileged_roles)
         ns  = str(sem.get("namespace") or DEFAULT_NAMESPACE)
         ns_groups.setdefault(ns, []).append(idx)
 
@@ -304,9 +306,11 @@ def _add_privilege_edges(
     escape_nodes: list[int],
     n:            int,
 ) -> None:
+    # PRIV_REACH always overwrites lower-priority edge types (e.g. DIR_PROXIMITY)
+    # so that escape-capable nodes are never silently downgraded to mere neighbours.
     for src in escape_nodes:
         for dst in range(n):
-            if dst != src and not G.has_edge(src, dst):
+            if dst != src:
                 G.add_edge(src, dst, edge_type=EdgeType.PRIV_REACH)
 
 

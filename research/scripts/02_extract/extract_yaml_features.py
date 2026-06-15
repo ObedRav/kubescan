@@ -38,38 +38,7 @@ try:
 except ImportError as exc:
     raise ImportError("PyYAML required: pip install pyyaml") from exc
 
-
-# ---------------------------------------------------------------------------
-# Feature column names (canonical order — matches rf_dataset.csv)
-# ---------------------------------------------------------------------------
-FEATURE_COLS = [
-    "TRUE_HOST_PID",
-    "TRUE_HOST_IPC",
-    "TRUE_HOST_NET",
-    "DOCKERSOCK_PATH",
-    "CAP_SYS_ADMIN",
-    "CAP_SYS_MODULE",
-    "WITHIN_MANIFEST_SECRET",
-    "SEC_CONT_OVER_PRIVIL",
-    "ALLOW_PRIVI",
-    "SECCOMP_UNCONFINED",
-    "VALID_TAINT_SECRET",      # Complex taint analysis — always 0 (not implemented)
-    "INSECURE_HTTP",
-    "NO_SECU_CONTEXT",
-    "NO_NETWORK_POLICY",
-    "HOST_ALIAS",
-    "NO_DEFAULT_NSPACE",
-    "NO_RESO",
-    "NO_ROLLING_UPDATE",
-    # --- Extended features (gap-fill) ---
-    "NO_RUN_AS_NON_ROOT",
-    "NO_READ_ONLY_ROOT_FS",
-    "IMAGE_USES_LATEST",
-    "SA_AUTOMOUNT_TOKEN",
-    "USES_DEFAULT_SA",
-    "UNTRUSTED_REGISTRY",
-    "HOSTPATH_MOUNT",       # non-docker-sock hostPath volume (host FS escape)
-]
+from kubescan.utils.yaml_parser import FEATURE_COLS  # single source of truth
 
 # Features present in the original Rahman CSV (first 18) — used for backward compat
 RAHMAN_FEATURE_COLS = [
