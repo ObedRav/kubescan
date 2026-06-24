@@ -19,6 +19,7 @@ __all__ = ["RFClassifier"]
 import logging
 import pickle
 from pathlib import Path
+from typing import Final
 
 import numpy as np
 from skops.io import get_untrusted_types
@@ -28,6 +29,22 @@ from ..exceptions import ModelLoadError
 from ..utils.yaml_parser import FEATURE_COLS
 
 logger = logging.getLogger(__name__)
+
+# Only sklearn and numpy types are ever expected in a trained RF checkpoint.
+# Validating before trusting prevents a tampered .skops file from smuggling in
+# arbitrary types (e.g. os.system, subprocess.Popen) that skops would execute.
+_TRUSTED_RF_TYPE_PREFIXES: Final[frozenset[str]] = frozenset({"sklearn.", "numpy."})
+
+
+def _validate_skops_types(model_path: Path, untrusted_types: frozenset[str]) -> None:
+    malicious = {t for t in untrusted_types if not any(t.startswith(p) for p in _TRUSTED_RF_TYPE_PREFIXES)}
+    if malicious:
+        raise ModelLoadError(
+            model_path,
+            f"skops file requests unsafe types: {malicious!r}; "
+            "only sklearn/numpy types are trusted for RF checkpoints.",
+        )
+
 
 # Feature layout — must exactly match research/models/train_rf.py
 _RAHMAN_FEATURES: list[str] = [
@@ -83,8 +100,9 @@ class RFClassifier:
 
     def __init__(self, model_path: Path) -> None:
         if model_path.suffix == ".skops":
-            trusted = get_untrusted_types(file=model_path)
-            self._model = skops_load(model_path, trusted=trusted)
+            untrusted = get_untrusted_types(file=model_path)
+            _validate_skops_types(model_path, untrusted)
+            self._model = skops_load(model_path, trusted=untrusted)
         else:
             logger.warning(
                 "Loading RF from pickle (%s) — pickle executes arbitrary code on "

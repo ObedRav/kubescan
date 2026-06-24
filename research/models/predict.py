@@ -47,12 +47,22 @@ except ImportError as e:
     sys.exit(f"Cannot import KubeGAT: {e}")
 
 try:
-    from kubescan.model.ga_ensemble import SCORE_HIGH_THRESHOLD, SCORE_MODERATE_THRESHOLD
+    from kubescan.model.ga_ensemble import (
+        ESCAPE_FLAG_INDICES,
+        SCORE_HIGH_THRESHOLD,
+        SCORE_MODERATE_THRESHOLD,
+    )
     from kubescan.utils.device_utils import resolve_device
+    from kubescan.utils.graph_builder import graph_to_pyg
 except ImportError:
     sys.path.insert(0, str(PROJECT_ROOT.parent / "kubescan" / "src"))
-    from kubescan.model.ga_ensemble import SCORE_HIGH_THRESHOLD, SCORE_MODERATE_THRESHOLD
+    from kubescan.model.ga_ensemble import (
+        ESCAPE_FLAG_INDICES,
+        SCORE_HIGH_THRESHOLD,
+        SCORE_MODERATE_THRESHOLD,
+    )
     from kubescan.utils.device_utils import resolve_device
+    from kubescan.utils.graph_builder import graph_to_pyg
 
 try:
     from extract_yaml_features import FEATURE_COLS, extract_features_from_dir
@@ -93,9 +103,6 @@ RF_EXTENDED_FEATURES = [
     "SA_AUTOMOUNT_TOKEN", "USES_DEFAULT_SA", "UNTRUSTED_REGISTRY", "HOSTPATH_MOUNT",
 ]
 RF_ALL_FEATURES = [*RF_RAHMAN_FEATURES, "cap_misuse", "all_secrets", "total_misconfigs", *RF_EXTENDED_FEATURES]
-
-# Escape flag indices in 26-dim node feature vector (must match layer3_ga.py)
-ESCAPE_FLAG_INDICES = [0, 1, 2, 3, 4, 5, 7, 24]
 
 LABEL_NAMES = {0: "CLEAN", 1: "ISOLATED_MISCONFIG", 2: "ATTACK_CHAIN"}
 
@@ -242,9 +249,12 @@ def build_graph(
         idx for idx, nd in enumerate(node_data)
         if any(nd.get(f, 0) for f in ESCAPE_FLAGS)
     ]
+    # PRIV_REACH always overwrites lower-priority edge types (e.g. DIR_PROXIMITY)
+    # so that escape-capable nodes are never silently downgraded to mere neighbours.
+    # Mirrors graph_builder._add_privilege_edges — no has_edge guard.
     for src in escape_nodes:
         for dst in range(n):
-            if dst != src and not G.has_edge(src, dst):
+            if dst != src:
                 G.add_edge(src, dst, edge_type=EDGE_PRIV_REACH)
 
     # Edge type 2: SA lateral movement
@@ -282,34 +292,7 @@ def build_graph(
 # Step 4: GNN fold ensemble inference
 # ---------------------------------------------------------------------------
 
-def graph_to_pyg(graph_result: dict) -> Data:
-    """Convert in-memory NetworkX graph to a PyG Data object."""
-    G         = graph_result["graph"]
-    node_data = graph_result["node_data"]
-    n         = len(node_data)
-
-    x = np.stack([G.nodes[i]["features"] for i in range(n)]).astype(np.float32)
-
-    edges = list(G.edges(data=True))
-    if edges:
-        src        = np.array([e[0] for e in edges], dtype=np.int64)
-        dst        = np.array([e[1] for e in edges], dtype=np.int64)
-        edge_index = np.stack([src, dst])
-        edge_attr  = np.array(
-            [e[2].get("edge_type", 0) for e in edges], dtype=np.int64
-        ).reshape(-1, 1)
-    else:
-        edge_index = np.zeros((2, 0), dtype=np.int64)
-        edge_attr  = np.zeros((0, 1), dtype=np.int64)
-
-    return Data(
-        x          = torch.FloatTensor(x),
-        edge_index = torch.LongTensor(edge_index),
-        edge_attr  = torch.LongTensor(edge_attr),
-        y          = torch.LongTensor([0]),   # unknown label for new cluster
-        batch      = torch.zeros(n, dtype=torch.long),
-    )
-
+# graph_to_pyg is imported from kubescan.utils.graph_builder (single source of truth).
 
 def run_gnn_ensemble(
     pyg_data: Data,

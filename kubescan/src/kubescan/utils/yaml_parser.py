@@ -61,9 +61,15 @@ WORKLOAD_KINDS: Final[frozenset[str]] = frozenset({
 
 YAML_GLOB_PATTERNS: Final[tuple[str, ...]] = ("**/*.yaml", "**/*.yml")
 
+# Kinds that support rolling-update strategy (must match training script guard)
+_ROLLING_UPDATE_KINDS: Final[frozenset[str]] = frozenset({
+    "Deployment", "StatefulSet", "DaemonSet",
+})
+
 # String constants for Kubernetes field names (avoids magic strings in logic)
-_DOCKER_SOCK_PATH:  Final[str]            = "docker.sock"
-_PROBE_KEYS:        Final[tuple[str, ...]] = ("livenessProbe", "readinessProbe")
+_DOCKER_SOCK_PATH:           Final[str]            = "docker.sock"
+_INSECURE_HTTP_PATTERN:      Final[str]            = "http://"
+_HTTP_LOCALHOST_EXCLUSIONS:  Final[frozenset[str]] = frozenset({"localhost", "127.0.0.1"})
 
 
 # ---------------------------------------------------------------------------
@@ -144,6 +150,23 @@ def _get_pod_spec(doc: dict[str, object]) -> dict[str, object] | None:
     return _safe_dict(tmpl.get("spec")) if isinstance(tmpl, dict) else None
 
 
+def _spec_has_insecure_http(value: object) -> bool:
+    """
+    Recursively scan a spec value for http:// URLs, excluding localhost references.
+    Matches the recursive leaf-value scan used by the research training extractor.
+    """
+    if isinstance(value, str):
+        lower = value.lower()
+        return _INSECURE_HTTP_PATTERN in lower and not any(
+            excl in lower for excl in _HTTP_LOCALHOST_EXCLUSIONS
+        )
+    if isinstance(value, dict):
+        return any(_spec_has_insecure_http(v) for v in value.values())
+    if isinstance(value, list):
+        return any(_spec_has_insecure_http(item) for item in value)
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Feature extraction helpers (one concern each)
 # ---------------------------------------------------------------------------
@@ -221,6 +244,9 @@ def _extract_container_features(
     has_run_as_root          = False
     has_writable_fs          = False
 
+    pod_sc = _safe_dict(pod_spec.get("securityContext"))
+    pod_run_as_non_root: bool = pod_sc.get("runAsNonRoot") is True
+
     for ctr in _iter_containers(pod_spec):
         resources = _safe_dict(ctr.get("resources"))
         if not resources.get("limits"):
@@ -243,7 +269,10 @@ def _extract_container_features(
         if "SYS_MODULE" in adds or "ALL" in adds:
             feats["CAP_SYS_MODULE"] = 1
 
-        if sc.get("runAsNonRoot") is not True or sc.get("runAsUser") == 0:
+        # Container may run as root only when neither the container nor the pod
+        # enforces runAsNonRoot, matching the training script's per-container
+        # short-circuit: `if ctr_non_root or pod_non_root: continue`.
+        if (sc.get("runAsNonRoot") is not True and not pod_run_as_non_root) or sc.get("runAsUser") == 0:
             has_run_as_root = True
         if sc.get("readOnlyRootFilesystem") is not True:
             has_writable_fs = True
@@ -252,7 +281,7 @@ def _extract_container_features(
         if seccomp.get("type") == "Unconfined":
             feats["SECCOMP_UNCONFINED"] = 1
 
-        ctr_mount   = ctr.get("automountServiceAccountToken")
+        ctr_mount    = ctr.get("automountServiceAccountToken")
         pod_no_mount = pod_spec.get("automountServiceAccountToken") is False
         if ctr_mount is True or (ctr_mount is not False and not pod_no_mount):
             feats["SA_AUTOMOUNT_TOKEN"] = 1
@@ -262,12 +291,6 @@ def _extract_container_features(
             feats["IMAGE_USES_LATEST"] = 1
         if _image_from_untrusted_registry(image):
             feats["UNTRUSTED_REGISTRY"] = 1
-
-        for probe_key in _PROBE_KEYS:
-            probe = _safe_dict(ctr.get(probe_key))
-            ha    = _safe_dict(probe.get("httpGet"))
-            if ha.get("scheme", "").upper() == "HTTP":
-                feats["INSECURE_HTTP"] = 1
 
         for env in (ctr.get("env") or []):
             if isinstance(env, dict) and _safe_dict(env.get("valueFrom")).get("secretKeyRef"):
@@ -291,10 +314,18 @@ def _extract_workload_metadata(
     if not ns or ns == "default":
         feats["NO_DEFAULT_NSPACE"] = 1
 
-    spec_dict    = _safe_dict(doc.get("spec"))
-    strategy_raw = spec_dict.get("strategy") or spec_dict.get("updateStrategy")
-    if not strategy_raw or str(_safe_dict(strategy_raw).get("type", "")).lower() == "recreate":
-        feats["NO_ROLLING_UPDATE"] = 1
+    # Only Deployment/StatefulSet/DaemonSet have rolling-update strategies —
+    # flagging CronJob/Job/Pod would cause systematic train/inference skew.
+    kind = str(doc.get("kind", ""))
+    if kind in _ROLLING_UPDATE_KINDS:
+        spec_dict    = _safe_dict(doc.get("spec"))
+        # Checked separately (not with `or`) so an explicit `strategy: {}`
+        # (falsy empty dict) is not mistaken for an absent strategy field.
+        strategy_raw = spec_dict.get("strategy")
+        if strategy_raw is None:
+            strategy_raw = spec_dict.get("updateStrategy")
+        if strategy_raw is None or str(_safe_dict(strategy_raw).get("type", "")).lower() == "recreate":
+            feats["NO_ROLLING_UPDATE"] = 1
 
 
 # ---------------------------------------------------------------------------
@@ -346,6 +377,10 @@ def _extract_file(yaml_path: Path) -> tuple[dict[str, object] | None, bool]:
             feats["NO_RUN_AS_NON_ROOT"] = 1
         if has_writable_fs or pod_writable_fs:
             feats["NO_READ_ONLY_ROOT_FS"] = 1
+        # Broad recursive scan matching the training extractor — covers http:// in
+        # env vars, args, and init-container commands, not just httpGet probes.
+        if _spec_has_insecure_http(_safe_dict(doc.get("spec"))):
+            feats["INSECURE_HTTP"] = 1
 
     if not has_workload:
         return None, has_net_policy
