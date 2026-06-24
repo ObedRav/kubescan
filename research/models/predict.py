@@ -98,6 +98,11 @@ RF_ALL_FEATURES = [*RF_RAHMAN_FEATURES, "cap_misuse", "all_secrets", "total_misc
 ESCAPE_FLAG_INDICES = [0, 1, 2, 3, 4, 5, 7, 24]
 
 LABEL_NAMES = {0: "CLEAN", 1: "ISOLATED_MISCONFIG", 2: "ATTACK_CHAIN"}
+
+# Fallback ensemble weights used when ga_weights.json is absent
+_DEFAULT_W_RF:     float = 0.36
+_DEFAULT_W_GNN:    float = 0.64
+_DEFAULT_W_ESCAPE: float = 0.0
 RISK_EMOJI  = {0: "✓", 1: "⚠", 2: "✗"}  # for text report
 
 
@@ -342,9 +347,9 @@ def compute_ensemble_score(
     escape_signal: float,
     weights:       dict,
 ) -> float:
-    w_rf     = weights.get("w_rf", 0.36)
-    w_gnn    = weights.get("w_gnn", 0.64)
-    w_escape = weights.get("w_escape", 0.0)
+    w_rf     = weights.get("w_rf",     _DEFAULT_W_RF)
+    w_gnn    = weights.get("w_gnn",    _DEFAULT_W_GNN)
+    w_escape = weights.get("w_escape", _DEFAULT_W_ESCAPE)
     total    = w_rf + w_gnn + w_escape
     if total <= 0:
         total = 1.0

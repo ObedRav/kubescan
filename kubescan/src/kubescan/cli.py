@@ -49,8 +49,9 @@ logger = logging.getLogger(__name__)
 
 # Default checkpoints location — relative to this package file
 _PKG_DIR:      Final[Path] = Path(__file__).parent
-_DEFAULT_CKPT: Final[Path] = _PKG_DIR.parent.parent / "checkpoints" / "trained"
-_SEP_WIDTH:    Final[int]  = 66
+_DEFAULT_CKPT:         Final[Path] = _PKG_DIR.parent.parent / "checkpoints" / "trained"
+_SEP_WIDTH:            Final[int]  = 66
+_KUBECTL_TIMEOUT_SECS: Final[int]  = 30
 
 _VERDICT_TEXT: Final[dict[int, str]] = {
     2: "ATTACK_CHAIN          ✗  HIGH RISK — review immediately",
@@ -235,7 +236,7 @@ def _fetch_live_manifests(
     for cmd, label in commands:
         try:
             proc = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=30
+                cmd, capture_output=True, text=True, timeout=_KUBECTL_TIMEOUT_SECS
             )
         except FileNotFoundError as exc:
             raise KubescanError(
@@ -243,8 +244,8 @@ def _fetch_live_manifests(
             ) from exc
         except subprocess.TimeoutExpired as exc:
             raise KubescanError(
-                f"kubectl timed out after 30 s ({' '.join(cmd[:3])}) — "
-                "check cluster connectivity"
+                f"kubectl timed out after {_KUBECTL_TIMEOUT_SECS} s "
+                f"({' '.join(cmd[:3])}) — check cluster connectivity"
             ) from exc
         if proc.returncode != 0:
             raise KubescanError(
