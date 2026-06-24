@@ -3,13 +3,16 @@ ga_ensemble.py
 ==============
 Ensemble scorer.
 
-Combines RF risk scores, GNN chain probabilities, and escape fraction using
+Combines RF risk scores, GNN chain probabilities, and escape signal using
 the weights produced by research/models/run_ga_ensemble.py (OOF mode).
 
 Score formula:
     score(C) = w_rf * mean_rf_risk(C)
              + w_gnn * gnn_chain_prob(C)
-             + w_escape * escape_fraction(C)
+             + w_escape * escape_signal(C)
+
+escape_signal(C) is BINARY — 1.0 if any node carries an escape flag, 0.0 otherwise.
+Pass compute_escape_signal() output, not compute_escape_fraction().
 """
 from __future__ import annotations
 
@@ -17,6 +20,8 @@ __all__ = [
     "ESCAPE_FLAG_INDICES",
     "LABEL_NAMES",
     "LATERAL_FLAG_INDICES",
+    "SCORE_HIGH_THRESHOLD",
+    "SCORE_MODERATE_THRESHOLD",
     "EnsembleScorer",
     "compute_escape_fraction",
     "compute_escape_signal",
@@ -58,8 +63,8 @@ LABEL_NAMES: Final[dict[int, str]] = {
 }
 
 # Fixed decision thresholds on the ensemble score (thesis §4: not re-optimised by the GA)
-_SCORE_HIGH_THRESHOLD:     Final[float] = 0.60
-_SCORE_MODERATE_THRESHOLD: Final[float] = 0.30
+SCORE_HIGH_THRESHOLD:     Final[float] = 0.60
+SCORE_MODERATE_THRESHOLD: Final[float] = 0.30
 
 
 class EnsembleScorer:
@@ -136,9 +141,9 @@ class EnsembleScorer:
         contributes w_escape to the score via the binary escape signal, so
         escape-bearing clusters land at ISOLATED or above by construction.
         """
-        if ensemble_score >= _SCORE_HIGH_THRESHOLD:
+        if ensemble_score >= SCORE_HIGH_THRESHOLD:
             return 2
-        if ensemble_score >= _SCORE_MODERATE_THRESHOLD:
+        if ensemble_score >= SCORE_MODERATE_THRESHOLD:
             return 1
         return 0
 

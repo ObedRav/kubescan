@@ -195,8 +195,8 @@ def _extract_pod_security_context(
     pod_seccomp = _safe_dict(pod_sc.get("seccompProfile"))
     if pod_seccomp.get("type") == "Unconfined":
         feats["SECCOMP_UNCONFINED"] = 1
-    pod_run_as_root = pod_sc.get("runAsNonRoot") is False or pod_sc.get("runAsUser") == 0
-    pod_writable_fs = pod_sc.get("readOnlyRootFilesystem") is False
+    pod_run_as_root = pod_sc.get("runAsNonRoot") is not True or pod_sc.get("runAsUser") == 0
+    pod_writable_fs = pod_sc.get("readOnlyRootFilesystem") is not True
     return pod_run_as_root, pod_writable_fs
 
 
@@ -209,20 +209,26 @@ def _extract_container_features(
 
     Returns
     -------
-    (has_resources, has_security_ctx, has_run_as_root, has_writable_fs)
+    (any_missing_limits, any_missing_security_ctx, has_run_as_root, has_writable_fs)
+
+    any_missing_limits       — True if ANY container lacks resource limits (matches training)
+    any_missing_security_ctx — True if ANY container lacks a securityContext (matches training)
+    has_run_as_root          — True if ANY container may run as root
+    has_writable_fs          — True if ANY container has a writable root filesystem
     """
-    has_resources    = False
-    has_security_ctx = False
-    has_run_as_root  = False
-    has_writable_fs  = False
+    any_missing_limits       = False
+    any_missing_security_ctx = False
+    has_run_as_root          = False
+    has_writable_fs          = False
 
     for ctr in _iter_containers(pod_spec):
-        if ctr.get("resources"):
-            has_resources = True
+        resources = _safe_dict(ctr.get("resources"))
+        if not resources.get("limits"):
+            any_missing_limits = True
 
         sc = _safe_dict(ctr.get("securityContext"))
-        if sc:
-            has_security_ctx = True
+        if not sc:
+            any_missing_security_ctx = True
 
         if sc.get("privileged"):
             feats["SEC_CONT_OVER_PRIVIL"] = 1
@@ -237,9 +243,9 @@ def _extract_container_features(
         if "SYS_MODULE" in adds or "ALL" in adds:
             feats["CAP_SYS_MODULE"] = 1
 
-        if sc.get("runAsNonRoot") is False or sc.get("runAsUser") == 0:
+        if sc.get("runAsNonRoot") is not True or sc.get("runAsUser") == 0:
             has_run_as_root = True
-        if sc.get("readOnlyRootFilesystem") is False:
+        if sc.get("readOnlyRootFilesystem") is not True:
             has_writable_fs = True
 
         seccomp = _safe_dict(sc.get("seccompProfile"))
@@ -267,7 +273,7 @@ def _extract_container_features(
             if isinstance(env, dict) and _safe_dict(env.get("valueFrom")).get("secretKeyRef"):
                 feats["WITHIN_MANIFEST_SECRET"] = 1
 
-    return has_resources, has_security_ctx, has_run_as_root, has_writable_fs
+    return any_missing_limits, any_missing_security_ctx, has_run_as_root, has_writable_fs
 
 
 def _extract_workload_metadata(
@@ -285,8 +291,9 @@ def _extract_workload_metadata(
     if not ns or ns == "default":
         feats["NO_DEFAULT_NSPACE"] = 1
 
-    strategy = _safe_dict(_safe_dict(doc.get("spec")).get("strategy"))
-    if strategy.get("type") == "Recreate":
+    spec_dict    = _safe_dict(doc.get("spec"))
+    strategy_raw = spec_dict.get("strategy") or spec_dict.get("updateStrategy")
+    if not strategy_raw or str(_safe_dict(strategy_raw).get("type", "")).lower() == "recreate":
         feats["NO_ROLLING_UPDATE"] = 1
 
 
@@ -327,13 +334,13 @@ def _extract_file(yaml_path: Path) -> tuple[dict[str, object] | None, bool]:
         _extract_workload_metadata(doc, pod_spec, feats)
 
         pod_run_as_root, pod_writable_fs = _extract_pod_security_context(pod_spec, feats)
-        has_resources, has_security_ctx, has_run_as_root, has_writable_fs = (
+        any_missing_limits, any_missing_security_ctx, has_run_as_root, has_writable_fs = (
             _extract_container_features(pod_spec, feats)
         )
 
-        if not has_security_ctx:
+        if any_missing_security_ctx:
             feats["NO_SECU_CONTEXT"] = 1
-        if not has_resources:
+        if any_missing_limits:
             feats["NO_RESO"] = 1
         if has_run_as_root or pod_run_as_root:
             feats["NO_RUN_AS_NON_ROOT"] = 1

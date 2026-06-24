@@ -38,7 +38,7 @@ try:
 except ImportError as exc:
     raise ImportError("PyYAML required: pip install pyyaml") from exc
 
-from kubescan.utils.yaml_parser import FEATURE_COLS  # single source of truth
+from kubescan.utils.yaml_parser import FEATURE_COLS, TRUSTED_REGISTRIES  # single source of truth
 
 # Features present in the original Rahman CSV (first 18) — used for backward compat
 RAHMAN_FEATURE_COLS = [
@@ -49,13 +49,6 @@ RAHMAN_FEATURE_COLS = [
     "NO_RESO", "NO_ROLLING_UPDATE",
 ]
 
-# Trusted registries — images from these are considered verified
-TRUSTED_REGISTRIES = {
-    "gcr.io", "k8s.gcr.io", "registry.k8s.io",
-    "quay.io", "docker.io", "ghcr.io",
-    "mcr.microsoft.com", "public.ecr.aws",
-    "registry.hub.docker.com",
-}
 
 # Workload kinds that wrap a pod spec (path to pod spec differs per kind)
 _WORKLOAD_WITH_TEMPLATE = {

@@ -47,9 +47,11 @@ except ImportError as e:
     sys.exit(f"Cannot import KubeGAT: {e}")
 
 try:
+    from kubescan.model.ga_ensemble import SCORE_HIGH_THRESHOLD, SCORE_MODERATE_THRESHOLD
     from kubescan.utils.device_utils import resolve_device
 except ImportError:
     sys.path.insert(0, str(PROJECT_ROOT.parent / "kubescan" / "src"))
+    from kubescan.model.ga_ensemble import SCORE_HIGH_THRESHOLD, SCORE_MODERATE_THRESHOLD
     from kubescan.utils.device_utils import resolve_device
 
 try:
@@ -335,10 +337,10 @@ def run_gnn_ensemble(
 # ---------------------------------------------------------------------------
 
 def compute_ensemble_score(
-    mean_rf_risk:   float,
-    chain_prob:     float,
-    escape_fraction: float,
-    weights:        dict,
+    mean_rf_risk:  float,
+    chain_prob:    float,
+    escape_signal: float,
+    weights:       dict,
 ) -> float:
     w_rf     = weights.get("w_rf", 0.36)
     w_gnn    = weights.get("w_gnn", 0.64)
@@ -346,7 +348,7 @@ def compute_ensemble_score(
     total    = w_rf + w_gnn + w_escape
     if total <= 0:
         total = 1.0
-    return (w_rf * mean_rf_risk + w_gnn * chain_prob + w_escape * escape_fraction) / total
+    return (w_rf * mean_rf_risk + w_gnn * chain_prob + w_escape * escape_signal) / total
 
 
 # ---------------------------------------------------------------------------
@@ -378,10 +380,10 @@ def print_text_report(
     sa_nodes:       list[int],
     show_nodes:     bool = False,
 ):
-    # Cluster-level verdict
-    if chain_prob >= 0.6:
+    # Cluster-level verdict — mirrors EnsembleScorer.predict_label thresholds
+    if ensemble_score >= SCORE_HIGH_THRESHOLD:
         verdict = "ATTACK_CHAIN  ✗ HIGH RISK"
-    elif chain_prob >= 0.3 or escape_fraction > 0:
+    elif ensemble_score >= SCORE_MODERATE_THRESHOLD:
         verdict = "ISOLATED / SUSPICIOUS  ⚠ REVIEW"
     else:
         verdict = "CLEAN  ✓ LOW RISK"
@@ -413,13 +415,14 @@ def print_text_report(
     if show_nodes:
         print(f"\n  {'Manifest':<45} {'Risk':>5}  {'Type':>8}  Flags")
         print(f"  {'-'*85}")
-        for idx, (nd, risk, path) in enumerate(
-            sorted(zip(node_data, risk_scores, yaml_paths),
-                   key=lambda t: t[1], reverse=True)
+        for orig_idx, (nd, risk, path) in sorted(
+            enumerate(zip(node_data, risk_scores, yaml_paths)),
+            key=lambda item: item[1][1],
+            reverse=True,
         ):
             flags  = _flag_summary(nd)
-            is_esc = idx in escape_nodes
-            is_lat = idx in sa_nodes
+            is_esc = orig_idx in escape_nodes
+            is_lat = orig_idx in sa_nodes
             tag    = ("ESC" if is_esc else "") + ("LAT" if is_lat else "")
             flag_str = ", ".join(flags[:5]) + ("…" if len(flags) > 5 else "")
             print(f"  {path.name:<45} {risk:>5.3f}  {tag:>8}  {flag_str}")
@@ -541,10 +544,11 @@ def main():
     escape_flags_matrix = np.array([
         [float(nd.get(ALL_FEATURE_COLS[i], 0)) for i in ESCAPE_FLAG_INDICES]
         for nd in node_data
-    ])
+    ]) if node_data else np.zeros((0, len(ESCAPE_FLAG_INDICES)))
     escape_fraction = float((escape_flags_matrix.max(axis=1) > 0).mean()) if node_data else 0.0
+    escape_signal   = 1.0 if node_data and (escape_flags_matrix.max(axis=1) > 0).any() else 0.0
 
-    ensemble_score = compute_ensemble_score(mean_rf_risk, chain_prob, escape_fraction, weights)
+    ensemble_score = compute_ensemble_score(mean_rf_risk, chain_prob, escape_signal, weights)
 
     # ------------------------------------------------------------------
     # Output
@@ -553,7 +557,7 @@ def main():
         output = {
             "cluster":          cluster_name,
             "cluster_dir":      str(cluster_dir),
-            "verdict":          LABEL_NAMES[2 if chain_prob >= 0.6 else (1 if chain_prob >= 0.3 or escape_fraction > 0 else 0)],
+            "verdict":          LABEL_NAMES[2 if ensemble_score >= SCORE_HIGH_THRESHOLD else (1 if ensemble_score >= SCORE_MODERATE_THRESHOLD else 0)],
             "ensemble_score":   round(ensemble_score, 6),
             "chain_probability": round(chain_prob, 6),
             "clean_probability": round(clean_prob, 6),

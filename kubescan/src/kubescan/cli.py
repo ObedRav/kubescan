@@ -31,7 +31,7 @@ import numpy as np
 import torch
 import yaml
 
-from .exceptions import CheckpointNotFoundError, KubescanError
+from .exceptions import CheckpointNotFoundError, KubescanError, ManifestParseError
 from .model.ga_ensemble import (
     LABEL_NAMES,
     EnsembleScorer,
@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 
 # Default checkpoints location — relative to this package file
 _PKG_DIR:      Final[Path] = Path(__file__).parent
-_DEFAULT_CKPT: Final[Path] = _PKG_DIR.parent.parent.parent / "checkpoints" / "trained"
+_DEFAULT_CKPT: Final[Path] = _PKG_DIR.parent.parent / "checkpoints" / "trained"
 _SEP_WIDTH:    Final[int]  = 66
 
 _VERDICT_TEXT: Final[dict[int, str]] = {
@@ -198,8 +198,8 @@ def _expand_yaml_to_files(yaml_text: str, out_dir: Path, prefix: str) -> None:
     """
     try:
         docs = list(yaml.safe_load_all(yaml_text))
-    except yaml.YAMLError:
-        return
+    except yaml.YAMLError as exc:
+        raise ManifestParseError(Path("<kubectl live output>"), str(exc)) from exc
     counter = 0
     for doc in docs:
         if not isinstance(doc, dict):

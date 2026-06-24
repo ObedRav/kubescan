@@ -103,7 +103,7 @@ def _infer_dataset(model, dataset, device):
             probs = F.softmax(out, dim=-1).cpu().numpy()
 
             for g in range(batch.num_graphs):
-                mask  = (batch.batch == g).cpu()
+                mask  = (batch.batch == g)
                 feats = batch.x[mask].cpu().numpy()
 
                 rf_mean_risk = float(feats[:, -1].mean())
