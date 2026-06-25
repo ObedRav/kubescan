@@ -138,7 +138,7 @@ def load_val_predictions(
 
     model = _build_model(in_channels, hidden, heads, num_layers, device)
     model.load_state_dict(
-        torch.load(model_path, map_location=device, weights_only=True)
+        torch.load(model_path, map_location=device, weights_only=True),
     )
 
     labels, probs, risks, escs = _infer_dataset(model, val_dataset, device)
@@ -187,7 +187,7 @@ def load_oof_predictions(
 
         model = _build_model(in_channels, hidden, heads, num_layers, device)
         model.load_state_dict(
-            torch.load(model_path, map_location=device, weights_only=True)
+            torch.load(model_path, map_location=device, weights_only=True),
         )
 
         labels, probs, risks, escs = _infer_dataset(model, val_dataset, device)
@@ -416,7 +416,7 @@ def main():
     model_path  = checkpoints / "gnn_best.pt"
 
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--val",          dest="oof", action="store_false",
                         help="Use val.txt + gnn_best.pt instead of OOF mode (not recommended)")

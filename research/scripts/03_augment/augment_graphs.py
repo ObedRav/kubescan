@@ -261,7 +261,7 @@ def main():
     default_manifest = default_graphs / "graph_manifest.csv"
 
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--graphs-dir",  type=Path, default=default_graphs)
     parser.add_argument("--variants",    type=int,  default=15,

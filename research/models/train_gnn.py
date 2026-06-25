@@ -31,15 +31,15 @@ import numpy as np
 
 try:
     import torch
-    import torch.nn as nn
     import torch.nn.functional as F
     from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
+    from torch import nn
     from torch_geometric.loader import DataLoader
     from torch_geometric.nn import GCNConv, global_max_pool, global_mean_pool
 except ImportError as e:
     sys.exit(
         f"Missing dependency: {e}\n"
-        "Install with: pip install torch torch-geometric scikit-learn"
+        "Install with: pip install torch torch-geometric scikit-learn",
     )
 
 # Add dataset/scripts to path for gnn_dataset import
@@ -219,7 +219,7 @@ def evaluate(
     # Precision@K: rank by predicted chain probability, check top-K are truly chains
     chain_scores = [p[chain_class] for p in all_probs]
     ranked_true  = [y for _, y in sorted(
-        zip(chain_scores, all_true), reverse=True
+        zip(chain_scores, all_true), reverse=True,
     )]
 
     def precision_at_k(ranked: list[int], k: int, positive_label: int) -> float:
@@ -280,10 +280,10 @@ def train_fold(
     criterion = nn.CrossEntropyLoss(weight=class_weights)
 
     optimizer = torch.optim.AdamW(
-        model.parameters(), lr=args.lr, weight_decay=args.weight_decay
+        model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
     )
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=args.epochs, eta_min=1e-5
+        optimizer, T_max=args.epochs, eta_min=1e-5,
     )
     # AMP: float16 + GradScaler on CUDA; other devices run in full precision
     scaler: torch.cuda.amp.GradScaler | None = (
@@ -353,7 +353,7 @@ def main():
     default_out    = project_root / "models" / "checkpoints"
 
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     # Data
     parser.add_argument("--graphs-dir",  type=Path, default=default_graphs)
@@ -420,7 +420,7 @@ def main():
                   f"P@5={fm['precision_at_5']:.2f}  acc={fm['accuracy']:.4f}")
             print("  Per-class F1: "
                   + " | ".join(f"{label_names[i]}={fm['per_class_f1'][i]:.3f}"
-                                for i in range(num_classes) if i < len(fm['per_class_f1'])))
+                                for i in range(num_classes) if i < len(fm["per_class_f1"])))
 
             # Save fold model
             ckpt_path = args.out_dir / f"gnn_fold_{fold_idx}.pt"
@@ -519,7 +519,7 @@ def main():
         test_in_channels = test_set[0].x.shape[1]
         test_model = make_model(args, test_in_channels, num_classes).to(device)
         test_model.load_state_dict(
-            {k: v.to(device) for k, v in result["model_state"].items()}
+            {k: v.to(device) for k, v in result["model_state"].items()},
         )
         test_metrics = evaluate(test_model, test_loader, device, num_classes)
 

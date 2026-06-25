@@ -30,8 +30,20 @@ jobs:
       - name: Ruff lint
         run: ruff check kubescan/src kubescan/tests research/models research/scripts
 
+      - name: Ruff extended (audit ruleset)
+        run: |
+          ruff check kubescan/src kubescan/tests research/models research/scripts \
+            --select ALL \
+            --ignore ANN,D,ERA,FBT,TRY,RUF,N,EM,G,T20,S101,PLR2004,SLF001,PD,NPY
+
+      - name: Mypy type check
+        run: mypy kubescan/src --strict --ignore-missing-imports
+
       - name: Regenerate CI fixtures
         run: python kubescan/tests/fixtures/make_fixtures.py
 
-      - name: Run test suite
-        run: cd kubescan && pytest tests/ -q
+      - name: Run test suite with coverage
+        run: cd kubescan && pytest tests/ -q --cov=kubescan --cov-report=term-missing
+
+      - name: Radon complexity
+        run: radon cc kubescan/src research/models research/scripts -s -a --min B

@@ -327,7 +327,7 @@ def main() -> None:
                 n_skipped += 1
                 continue
             cluster_rows.append(
-                build_row(next_id, cluster_name, ypath, feats, fieldnames, cluster_def["note"])
+                build_row(next_id, cluster_name, ypath, feats, fieldnames, cluster_def["note"]),
             )
             next_id += 1
 

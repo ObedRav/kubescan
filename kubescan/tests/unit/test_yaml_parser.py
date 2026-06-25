@@ -94,7 +94,7 @@ def _pod_with_image(tmp_path: Path, image: str) -> Path:
     p = tmp_path / "pod.yaml"
     p.write_text(
         "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\nspec:\n"
-        f"  containers:\n    - name: c\n      image: {image}\n"
+        f"  containers:\n    - name: c\n      image: {image}\n",
     )
     return p
 
@@ -131,7 +131,7 @@ def test_image_untagged_behind_port_registry_uses_latest(tmp_path: Path) -> None
 
 def test_image_digest_pinned_not_latest(tmp_path: Path) -> None:
     feats = extract_features_from_file(
-        _pod_with_image(tmp_path, "gcr.io/proj/app@sha256:deadbeef")
+        _pod_with_image(tmp_path, "gcr.io/proj/app@sha256:deadbeef"),
     )
     assert feats is not None
     assert feats["IMAGE_USES_LATEST"] == 0
@@ -192,7 +192,7 @@ def test_extract_features_empty_strategy_dict_sets_no_rolling_update(tmp_path: P
     p.write_text(
         "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: d\n"
         "spec:\n  strategy: {}\n  template:\n    spec:\n      containers:\n"
-        "        - name: c\n          image: nginx:1.0\n"
+        "        - name: c\n          image: nginx:1.0\n",
     )
     feats = extract_features_from_file(p)
     assert feats is not None
@@ -204,7 +204,7 @@ def test_extract_features_cronjob_kind_does_not_set_no_rolling_update(tmp_path: 
     p.write_text(
         "apiVersion: batch/v1\nkind: CronJob\nmetadata:\n  name: cj\n"
         "spec:\n  schedule: '* * * * *'\n  jobTemplate:\n    spec:\n      template:\n"
-        "        spec:\n          containers:\n            - name: c\n              image: nginx:1.0\n"
+        "        spec:\n          containers:\n            - name: c\n              image: nginx:1.0\n",
     )
     feats = extract_features_from_file(p)
     assert feats is not None
@@ -222,7 +222,7 @@ def test_extract_features_pod_level_run_as_non_root_inherited_by_container_clear
     p.write_text(
         "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
         "spec:\n  securityContext:\n    runAsUser: 1000\n"
-        "  containers:\n    - name: c\n      image: nginx:1.0\n"
+        "  containers:\n    - name: c\n      image: nginx:1.0\n",
     )
     feats = extract_features_from_file(p)
     assert feats is not None
@@ -238,7 +238,7 @@ def test_extract_features_http_url_in_env_var_sets_insecure_http(tmp_path: Path)
     p.write_text(
         "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
         "spec:\n  containers:\n    - name: c\n      image: nginx:1.0\n"
-        "      env:\n        - name: BACKEND_URL\n          value: 'http://internal-svc:8080'\n"
+        "      env:\n        - name: BACKEND_URL\n          value: 'http://internal-svc:8080'\n",
     )
     feats = extract_features_from_file(p)
     assert feats is not None

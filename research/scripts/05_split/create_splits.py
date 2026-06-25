@@ -42,7 +42,7 @@ from pathlib import Path
 
 def base_cluster(name: str) -> str:
     """Origin cluster of a graph name: 'foo_aug_03' → 'foo', 'foo' → 'foo'."""
-    return name.split("_aug_")[0]
+    return name.split("_aug_", maxsplit=1)[0]
 
 
 def augmented_for(
@@ -146,7 +146,7 @@ def main():
     default_out      = project_root / "data" / "splits"
 
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--manifest",   type=Path, default=default_manifest)
     parser.add_argument("--out-dir",    type=Path, default=default_out)

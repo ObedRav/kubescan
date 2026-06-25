@@ -207,7 +207,7 @@ def main():
     default_weights = checkpoints / "ga_weights.json"
 
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--weights",       type=Path, default=default_weights,
                         help="Path to ga_weights.json")
@@ -284,7 +284,7 @@ def main():
             dropout=0.3,
         ).to(device)
         model.load_state_dict(
-            torch.load(model_path, map_location=device, weights_only=True)
+            torch.load(model_path, map_location=device, weights_only=True),
         )
         fold_models.append(model)
 
@@ -297,7 +297,7 @@ def main():
     # Inference — fold ensemble
     # ------------------------------------------------------------------
     true_labels, mean_probs, rf_risks, escape_signals, escape_fracs = ensemble_predict(
-        test_dataset, fold_models, device
+        test_dataset, fold_models, device,
     )
     gnn_chain_probs = [float(p[2]) for p in mean_probs]
     n_test = len(true_labels)

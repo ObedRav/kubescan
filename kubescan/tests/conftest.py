@@ -56,21 +56,21 @@ _ATTACK_MANIFEST = textwrap.dedent("""\
 """)
 
 
-@pytest.fixture()
+@pytest.fixture
 def clean_yaml(tmp_path: Path) -> Path:
     p = tmp_path / "clean.yaml"
     p.write_text(_CLEAN_MANIFEST)
     return p
 
 
-@pytest.fixture()
+@pytest.fixture
 def attack_yaml(tmp_path: Path) -> Path:
     p = tmp_path / "attack.yaml"
     p.write_text(_ATTACK_MANIFEST)
     return p
 
 
-@pytest.fixture()
+@pytest.fixture
 def cluster_dir(tmp_path: Path, clean_yaml: Path, attack_yaml: Path) -> Path:
     """Directory containing both a clean and an attack manifest."""
     return tmp_path

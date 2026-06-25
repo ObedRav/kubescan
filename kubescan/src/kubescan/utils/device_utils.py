@@ -17,7 +17,7 @@ class KubescanDependencyError(KubescanError):
     def __init__(self, package: str) -> None:
         super().__init__(
             f"Optional dependency '{package}' is not installed. "
-            f"Install it with: pip install {package}"
+            f"Install it with: pip install {package}",
         )
         self.package = package
 

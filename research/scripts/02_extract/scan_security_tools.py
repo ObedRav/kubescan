@@ -105,7 +105,7 @@ def run_checkov(yaml_path: Path) -> dict:
         proc = subprocess.run(
             ["checkov", "-f", str(yaml_path), "--framework", "kubernetes",
              "-o", "json", "--quiet", "--compact"],
-            capture_output=True, text=True, timeout=30
+            capture_output=True, text=True, timeout=30,
         )
         if not proc.stdout.strip():
             return result
@@ -138,7 +138,7 @@ def run_kube_linter(yaml_path: Path) -> int:
     try:
         proc = subprocess.run(
             ["kube-linter", "lint", str(yaml_path)],
-            capture_output=True, text=True, timeout=30
+            capture_output=True, text=True, timeout=30,
         )
         # kube-linter outputs one line per error
         error_lines = [line for line in proc.stdout.splitlines() if "check:" in line.lower()]

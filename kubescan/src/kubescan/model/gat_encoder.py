@@ -22,9 +22,8 @@ from pathlib import Path
 from typing import Final
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
+from torch import Tensor, nn
 from torch_geometric.nn import GATConv, global_max_pool, global_mean_pool
 
 from ..exceptions import ModelLoadError
@@ -91,7 +90,7 @@ class KubeGAT(nn.Module):
                     dropout=dropout,
                     edge_dim=edge_emb_dim,
                     concat=concat,
-                )
+                ),
             )
             out_size = out_dim * heads if concat else out_dim
             self.norms.append(nn.LayerNorm(out_size))
@@ -189,7 +188,7 @@ def load_fold_ensemble(
             edge_emb_dim=cfg.edge_emb_dim,
         ).to(device)
         model.load_state_dict(
-            torch.load(path, map_location=device, weights_only=True)
+            torch.load(path, map_location=device, weights_only=True),
         )
         model.eval()
         models.append(model)

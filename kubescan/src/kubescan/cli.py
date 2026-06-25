@@ -154,7 +154,7 @@ def _print_text_report(
     click.echo(f"  Mean RF risk      : {mean_rf_risk:.4f}")
     click.echo(
         f"  Escape fraction   : {escape_frac:.4f}   "
-        f"({len(escape_nodes)}/{len(node_data)} manifests have escape flags)"
+        f"({len(escape_nodes)}/{len(node_data)} manifests have escape flags)",
     )
     click.echo(f"  Lateral fraction  : {len(sa_nodes)}/{len(node_data)} manifests have lateral flags")
     click.echo(f"\n  Weights: w_rf={scorer.w_rf:.3f}  w_gnn={scorer.w_gnn:.3f}  w_escape={scorer.w_escape:.3f}")
@@ -236,20 +236,20 @@ def _fetch_live_manifests(
     for cmd, label in commands:
         try:
             proc = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=_KUBECTL_TIMEOUT_SECS
+                cmd, capture_output=True, text=True, timeout=_KUBECTL_TIMEOUT_SECS,
             )
         except FileNotFoundError as exc:
             raise KubescanError(
-                "kubectl not found — install kubectl and ensure it is in PATH"
+                "kubectl not found — install kubectl and ensure it is in PATH",
             ) from exc
         except subprocess.TimeoutExpired as exc:
             raise KubescanError(
                 f"kubectl timed out after {_KUBECTL_TIMEOUT_SECS} s "
-                f"({' '.join(cmd[:3])}) — check cluster connectivity"
+                f"({' '.join(cmd[:3])}) — check cluster connectivity",
             ) from exc
         if proc.returncode != 0:
             raise KubescanError(
-                f"kubectl failed ({' '.join(cmd[:3])}): {proc.stderr.strip()}"
+                f"kubectl failed ({' '.join(cmd[:3])}): {proc.stderr.strip()}",
             )
         _expand_yaml_to_files(proc.stdout, tmp_dir, label)
 
@@ -479,7 +479,7 @@ def live(
 
     if output_format == "text":
         click.echo(
-            f"Fetching live cluster state ({ns_label}, {len(gnn_fold)} GNN fold models)…"
+            f"Fetching live cluster state ({ns_label}, {len(gnn_fold)} GNN fold models)…",
         )
     logger.info("Live scan: namespace=%s all=%s", namespace, all_namespaces)
 

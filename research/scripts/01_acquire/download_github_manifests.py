@@ -238,13 +238,13 @@ class YamlDownloader:
                     log(f"  [ok]  {repo_name}/{local_path.name} ({len(resp.content)} bytes)")
                     break
 
-                elif resp.status_code == 404:
+                if resp.status_code == 404:
                     result["error"] = "404 Not Found"
                     result["status"] = "not_found"
                     log(f"  [404] {raw_url}")
                     break  # Don't retry 404s
 
-                elif resp.status_code == 429:
+                if resp.status_code == 429:
                     retry_after = int(resp.headers.get("Retry-After", 60))
                     log(f"  [rate-limit] Sleeping {retry_after}s...")
                     time.sleep(retry_after)

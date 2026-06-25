@@ -41,7 +41,7 @@ def make_rf() -> RandomForestClassifier:
     X = np.vstack([clean, misconf])
     y = np.array([0] * 40 + [1] * 40)
     rf = RandomForestClassifier(
-        n_estimators=16, max_depth=4, random_state=SEED, class_weight="balanced"
+        n_estimators=16, max_depth=4, random_state=SEED, class_weight="balanced",
     )
     rf.fit(X, y)
     return rf

@@ -99,7 +99,7 @@ def extract_cluster_features(cluster_dir: Path) -> list[dict]:
     if not results:
         sys.exit(
             f"No workload resources found in {cluster_dir}.\n"
-            "Ensure the directory contains Kubernetes manifest YAML files."
+            "Ensure the directory contains Kubernetes manifest YAML files.",
         )
     return results
 
@@ -346,7 +346,7 @@ def main():
     default_weights = checkpoints / "ga_weights.json"
 
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--cluster-dir",  type=Path, required=True,
                         help="Directory containing Kubernetes YAML manifests")

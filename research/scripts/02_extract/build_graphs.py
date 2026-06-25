@@ -467,7 +467,7 @@ def graph_to_arrays(result: dict) -> dict[str, np.ndarray]:
         dst = np.array([e[1] for e in edges], dtype=np.int64)
         edge_index = np.stack([src, dst])
         edge_attr = np.array(
-            [e[2].get("edge_type", 0) for e in edges], dtype=np.int64
+            [e[2].get("edge_type", 0) for e in edges], dtype=np.int64,
         ).reshape(-1, 1)
     else:
         edge_index = np.zeros((2, 0), dtype=np.int64)
@@ -587,7 +587,7 @@ def main():
     default_urls     = project_root / "original-dataset" / "rahman" / "DATASET" / "GITHUB-URLS.csv"
 
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--rf-dataset",   type=Path, default=default_rf)
     parser.add_argument("--out-dir",      type=Path, default=default_out)

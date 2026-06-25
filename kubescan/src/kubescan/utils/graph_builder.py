@@ -416,7 +416,7 @@ def graph_to_pyg(graph_result: GraphResult) -> Data:
         dst        = np.array([e[1] for e in edges], dtype=np.int64)
         edge_index = np.stack([src, dst])
         edge_attr  = np.array(
-            [e[2].get("edge_type", 0) for e in edges], dtype=np.int64
+            [e[2].get("edge_type", 0) for e in edges], dtype=np.int64,
         ).reshape(-1, 1)
     else:
         edge_index = np.zeros((2, 0), dtype=np.int64)

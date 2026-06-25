@@ -30,7 +30,7 @@ class CheckpointNotFoundError(KubescanError):
             "Options:\n"
             "  1. Pass --checkpoints-dir /path/to/research/models/checkpoints\n"
             "  2. Set KUBESCAN_CHECKPOINTS env var\n"
-            "  3. Run from TFE root (symlink kubescan/checkpoints/trained/ is auto-detected)"
+            "  3. Run from TFE root (symlink kubescan/checkpoints/trained/ is auto-detected)",
         )
         self.checkpoints_dir = checkpoints_dir
 

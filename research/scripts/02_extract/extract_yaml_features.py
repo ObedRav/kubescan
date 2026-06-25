@@ -457,7 +457,7 @@ def _check_within_manifest_secret(resource: dict) -> int:
                 if _SECRET_KEY_PATTERNS.search(str(k)):
                     if isinstance(v, str) and _is_plausible_secret(v):
                         return True
-                    elif isinstance(v, list):
+                    if isinstance(v, list):
                         for item in v:
                             if isinstance(item, dict):
                                 val_ = item.get("value", "")

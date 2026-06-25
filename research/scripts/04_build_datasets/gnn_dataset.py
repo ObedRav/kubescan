@@ -39,7 +39,7 @@ except ImportError as exc:
     raise ImportError(
         "PyTorch and PyTorch Geometric are required:\n"
         "  pip install torch\n"
-        "  pip install torch-geometric"
+        "  pip install torch-geometric",
     ) from exc
 
 

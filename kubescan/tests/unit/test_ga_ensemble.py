@@ -28,7 +28,7 @@ from kubescan.model.gat_encoder import KubeGAT
 
 
 def _scorer(
-    tmp_path: Path, w_rf: float = 1.0, w_gnn: float = 1.0, w_esc: float = 1.0
+    tmp_path: Path, w_rf: float = 1.0, w_gnn: float = 1.0, w_esc: float = 1.0,
 ) -> EnsembleScorer:
     p = tmp_path / "ga_weights.json"
     p.write_text(json.dumps({"w_rf": w_rf, "w_gnn": w_gnn, "w_escape": w_esc}))
@@ -90,7 +90,7 @@ def test_predict_label_escape_weight_alone_reaches_isolated(tmp_path: Path) -> N
 # run_gnn_ensemble — direct-tensor forward path (no DataLoader)
 # ---------------------------------------------------------------------------
 
-@pytest.fixture()
+@pytest.fixture
 def tiny_gat() -> KubeGAT:
     """Minimal KubeGAT matching NODE_FEATURE_DIM=26; small dims for speed."""
     torch.manual_seed(0)
@@ -108,7 +108,7 @@ def tiny_gat() -> KubeGAT:
     return model
 
 
-@pytest.fixture()
+@pytest.fixture
 def tiny_graph() -> Data:
     """Three-node cluster graph with four directed edges and 26-dim features."""
     torch.manual_seed(0)
@@ -136,7 +136,7 @@ def test_run_gnn_ensemble_all_probs_in_unit_interval(tiny_gat: KubeGAT, tiny_gra
 
 
 def test_run_gnn_ensemble_two_identical_models_matches_single_model(
-    tiny_gat: KubeGAT, tiny_graph: Data
+    tiny_gat: KubeGAT, tiny_graph: Data,
 ) -> None:
     clone = copy.deepcopy(tiny_gat)
     single = run_gnn_ensemble(tiny_graph, [tiny_gat], torch.device("cpu"))

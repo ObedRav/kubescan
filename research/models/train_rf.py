@@ -344,7 +344,7 @@ def main():
     default_out  = project_root / "models" / "checkpoints"
 
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--rf-dataset", type=Path, default=default_csv)
     parser.add_argument("--out-dir",    type=Path, default=default_out)
@@ -362,7 +362,7 @@ def main():
 
     print(f"Loading dataset: {args.rf_dataset}")
     X_raw, y_binary, y_severity, feature_names, repo_names, cluster_ids = load_dataset(
-        args.rf_dataset
+        args.rf_dataset,
     )
     print(f"  X shape (pre-imputation): {X_raw.shape}")
 
@@ -398,7 +398,7 @@ def main():
 
     X_train_raw, X_test_raw, y_train, y_test = train_test_split(
         X_raw, y_binary, test_size=args.test_size,
-        stratify=y_binary, random_state=args.seed
+        stratify=y_binary, random_state=args.seed,
     )
     # Impute using only training medians (FIN-040: no leakage from test set)
     X_train, X_test, _ = impute_with_medians(X_train_raw, X_test_raw, feature_names)
@@ -481,7 +481,7 @@ def main():
 
     X_tr2_raw, X_te2_raw, y_tr2, y_te2 = train_test_split(
         X_raw, y_severity, test_size=args.test_size,
-        stratify=y_severity, random_state=args.seed
+        stratify=y_severity, random_state=args.seed,
     )
     X_tr2, X_te2, _ = impute_with_medians(X_tr2_raw, X_te2_raw, feature_names)
     print(f"  Train: {len(X_tr2)}  Test: {len(X_te2)}")
