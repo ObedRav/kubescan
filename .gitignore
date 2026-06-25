@@ -39,12 +39,13 @@ research/models/checkpoints_legacy_pre_fix/
 research/models/checkpoints_ablation/
 research/models/checkpoints/test_results.json.bak
 
-# Legacy pickle checkpoints — superseded by .skops (pickle executes code on load)
+# ── Trained model checkpoints (large binary, regenerable via train_*.py) ────────
+# Stored outside git to avoid iCloud eviction causing SIGBUS in pack-objects.
+# Reproduce: python research/models/train_rf.py && train_gnn.py && run_ga_ensemble.py
+research/models/checkpoints/*.pt
+research/models/checkpoints/*.skops
 research/models/checkpoints/*.pkl
-
-# 3-class severity RF — research-only (11 MB, regenerable via train_rf.py);
-# the package consumes only rf_model.skops
-research/models/checkpoints/rf_severity.*
+research/models/checkpoints/gnn_best.pt
 
 # Personal thesis working notes (not part of the deliverable; some predate the
 # 2026-06 group-aware protocol correction and contain superseded numbers)
