@@ -8,6 +8,9 @@ KUBESCAN    := kubescan/
 RESEARCH    := research
 SEED        := 42
 GNN_EPOCHS  := 300
+GNN_HIDDEN  := 64
+GNN_HEADS   := 4
+GNN_LAYERS  := 3
 PDFLATEX    := /Library/TeX/texbin/pdflatex
 BIBTEX      := /Library/TeX/texbin/bibtex
 THESIS_DIR  := thesis/latex
@@ -56,8 +59,10 @@ data:        ## augment → consolidate cache → group-aware splits
 
 reproduce: data   ## full pipeline: data → RF → GNN(5-fold) → GA → test eval → provenance
 	$(PYTHON) $(RESEARCH)/models/train_rf.py --seed $(SEED)
-	cd $(RESEARCH)/models && $(PYTHON) train_gnn.py --cv-folds 5 --epochs $(GNN_EPOCHS) --seed $(SEED)
-	cd $(RESEARCH)/models && $(PYTHON) train_gnn.py --cv-folds 0 --epochs $(GNN_EPOCHS) --seed $(SEED)
+	cd $(RESEARCH)/models && $(PYTHON) train_gnn.py \
+	  --cv-folds 5 --epochs $(GNN_EPOCHS) \
+	  --hidden $(GNN_HIDDEN) --heads $(GNN_HEADS) --layers $(GNN_LAYERS) \
+	  --seed $(SEED)
 	cd $(RESEARCH)/models && $(PYTHON) run_ga_ensemble.py --oof --seed $(SEED)
 	cd $(RESEARCH)/models && $(PYTHON) evaluate_test_set.py --show-rankings
 	$(PYTHON) $(RESEARCH)/scripts/snapshot_run_manifest.py
