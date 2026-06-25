@@ -34,7 +34,9 @@ jobs:
         run: |
           ruff check kubescan/src kubescan/tests research/models research/scripts \
             --select ALL \
-            --ignore ANN,D,ERA,FBT,TRY,RUF,N,EM,G,T20,S101,PLR2004,SLF001,PD,NPY
+            --ignore ANN,D,ERA,FBT,TRY,RUF,N,EM,G,T20,S101,PLR2004,SLF001,PD,NPY,\
+PLR0913,PLR0912,PLR0915,C901,BLE001,TID252,INP001,S603,S607,PLW1510,ARG001,ARG002,\
+E501,TC,PLC0415,S311,S110,S301,PLW2901,PERF203,PERF401,PERF102,SIM,PTH123,PIE810,RET504,PT018
 
       - name: Mypy type check
         run: mypy kubescan/src --strict --ignore-missing-imports

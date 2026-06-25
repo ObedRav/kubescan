@@ -264,11 +264,7 @@ def compute_ensemble_score(
 
 def _flag_summary(nd: dict) -> list[str]:
     """Return list of security flag names that are set for this node."""
-    flags = []
-    for col in ALL_FEATURE_COLS:
-        if nd.get(col, 0):
-            flags.append(col)
-    return flags
+    return [col for col in ALL_FEATURE_COLS if nd.get(col, 0)]
 
 
 def print_text_report(
@@ -445,7 +441,10 @@ def main():
         output = {
             "cluster":          cluster_name,
             "cluster_dir":      str(cluster_dir),
-            "verdict":          LABEL_NAMES[2 if ensemble_score >= SCORE_HIGH_THRESHOLD else (1 if ensemble_score >= SCORE_MODERATE_THRESHOLD else 0)],
+            "verdict":          LABEL_NAMES[
+                2 if ensemble_score >= SCORE_HIGH_THRESHOLD
+                else (1 if ensemble_score >= SCORE_MODERATE_THRESHOLD else 0)
+            ],
             "ensemble_score":   round(ensemble_score, 6),
             "chain_probability": round(chain_prob, 6),
             "clean_probability": round(clean_prob, 6),
@@ -454,7 +453,9 @@ def main():
             "n_manifests":      len(feats_list),
             "n_escape_capable": len(escape_nodes),
             "n_lateral_capable": len(sa_nodes),
-            "weights":          {k: weights[k] for k in ("w_rf", "w_gnn", "w_escape") if k in weights},
+            "weights":          {
+                k: weights[k] for k in ("w_rf", "w_gnn", "w_escape") if k in weights
+            },
             "manifests": [
                 {
                     "file":           node_data[i]["file_name"],

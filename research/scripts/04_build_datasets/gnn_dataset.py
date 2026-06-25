@@ -50,7 +50,7 @@ LABEL_NAMES = {0: "clean", 1: "isolated_misconfig", 2: "attack_chain"}
 NODE_FEATURE_DIM = 26
 
 # NPZ key for the per-edge type code array (shape [E]).
-_EDGE_TYPE_NPZ_KEY: Final[str] = "edge_type"
+_EDGE_TYPE_NPZ_KEY: Final[str] = "edge_attr"
 
 # Required keys every .npz graph file must contain.
 _REQUIRED_NPZ_KEYS: Final[frozenset[str]] = frozenset({

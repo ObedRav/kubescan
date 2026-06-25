@@ -24,12 +24,14 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 import click
 import numpy as np
-import torch
 import yaml
+
+if TYPE_CHECKING:
+    import torch
 
 from .exceptions import CheckpointNotFoundError, KubescanError, ManifestParseError
 from .model.ga_ensemble import (
@@ -156,8 +158,14 @@ def _print_text_report(
         f"  Escape fraction   : {escape_frac:.4f}   "
         f"({len(escape_nodes)}/{len(node_data)} manifests have escape flags)",
     )
-    click.echo(f"  Lateral fraction  : {len(sa_nodes)}/{len(node_data)} manifests have lateral flags")
-    click.echo(f"\n  Weights: w_rf={scorer.w_rf:.3f}  w_gnn={scorer.w_gnn:.3f}  w_escape={scorer.w_escape:.3f}")
+    click.echo(
+        f"  Lateral fraction  : {len(sa_nodes)}/{len(node_data)} manifests have lateral flags",
+    )
+    click.echo(
+        f"\n  Weights: w_rf={scorer.w_rf:.3f}"
+        f"  w_gnn={scorer.w_gnn:.3f}"
+        f"  w_escape={scorer.w_escape:.3f}",
+    )
 
     if show_nodes:
         _print_node_table(node_data, risk_scores, yaml_paths, escape_nodes, sa_nodes)
@@ -237,6 +245,7 @@ def _fetch_live_manifests(
         try:
             proc = subprocess.run(
                 cmd, capture_output=True, text=True, timeout=_KUBECTL_TIMEOUT_SECS,
+                check=False,
             )
         except FileNotFoundError as exc:
             raise KubescanError(
@@ -362,8 +371,7 @@ def _run_inference_pipeline(
 @click.group()
 @click.option("--verbose", "-v", is_flag=True, help="Enable debug logging")
 @click.version_option(package_name="kubescan")
-@click.pass_context
-def main(ctx: click.Context, verbose: bool) -> None:
+def main(verbose: bool) -> None:
     """Kubernetes attack-chain risk scanner using GNN + Random Forest ensemble."""
     logging.basicConfig(
         level=logging.DEBUG if verbose else logging.WARNING,

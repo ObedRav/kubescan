@@ -36,13 +36,14 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 import torch
 import torch.nn.functional as F
-from torch_geometric.data import Data
 
 from ..exceptions import ModelLoadError
 from ..utils.graph_builder import ESCAPE_FLAGS, LATERAL_FLAGS
 from ..utils.yaml_parser import FEATURE_COLS
 
 if TYPE_CHECKING:
+    from torch_geometric.data import Data
+
     from .gat_encoder import KubeGAT
 
 logger = logging.getLogger(__name__)

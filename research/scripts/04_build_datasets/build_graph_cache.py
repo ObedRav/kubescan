@@ -74,8 +74,10 @@ def main() -> None:
             if done % 50 == 0:
                 print(f"  {done}/{len(rows)} graphs  ({time.time() - t0:.0f}s)")
 
-    # Atomic write: save to .tmp then rename so a crash never leaves a partial file.
-    tmp_path = CACHE_PATH.with_suffix(".tmp")
+    # Atomic write: save to _tmp.npz then rename so a crash never leaves a partial file.
+    # np.savez_compressed appends ".npz" if the path doesn't already end in it,
+    # so use an explicit _tmp.npz name to avoid a double-suffix mismatch.
+    tmp_path = CACHE_PATH.with_name("graphs_cache_tmp.npz")
     np.savez_compressed(tmp_path, **arrays)
     # Post-write validation: verify the cache is readable before committing.
     _verify_cache(tmp_path)
