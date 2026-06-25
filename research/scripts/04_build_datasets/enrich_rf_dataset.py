@@ -49,6 +49,9 @@ import argparse
 import csv
 import sys
 from pathlib import Path
+from typing import Final
+
+from constants import MAX_RISK, SEVERITY_WEIGHTS
 
 # Allow importing from same scripts/ directory
 sys.path.insert(0, str(Path(__file__).parent.parent / "02_extract"))
@@ -61,34 +64,16 @@ from extract_yaml_features import (
 # Severity classification
 # ---------------------------------------------------------------------------
 
-CRITICAL_FLAGS = {
+CRITICAL_FLAGS: Final[frozenset[str]] = frozenset({
     "TRUE_HOST_PID", "TRUE_HOST_IPC", "TRUE_HOST_NET",
     "DOCKERSOCK_PATH", "CAP_SYS_ADMIN", "CAP_SYS_MODULE",
     "WITHIN_MANIFEST_SECRET", "SEC_CONT_OVER_PRIVIL",
     "ALLOW_PRIVI", "SECCOMP_UNCONFINED",
-}
+})
 
-SEVERITY_WEIGHTS = {
-    "TRUE_HOST_PID":         3.0,
-    "TRUE_HOST_IPC":         3.0,
-    "TRUE_HOST_NET":         3.0,
-    "DOCKERSOCK_PATH":       3.0,
-    "CAP_SYS_ADMIN":         3.0,
-    "CAP_SYS_MODULE":        3.0,
-    "WITHIN_MANIFEST_SECRET":3.0,
-    "SEC_CONT_OVER_PRIVIL":  2.5,
-    "ALLOW_PRIVI":           2.5,
-    "SECCOMP_UNCONFINED":    2.0,
-    "VALID_TAINT_SECRET":    2.0,
-    "INSECURE_HTTP":         1.5,
-    "NO_SECU_CONTEXT":       1.5,
-    "NO_NETWORK_POLICY":     1.0,
-    "HOST_ALIAS":            1.0,
-    "NO_DEFAULT_NSPACE":     0.5,
-    "NO_RESO":               0.5,
-    "NO_ROLLING_UPDATE":     0.3,
-}
-MAX_RISK = sum(SEVERITY_WEIGHTS.values())
+# Minimum weighted severity to consider a manifest misconfigured (label=1).
+# A single low-weight flag (e.g. NO_ROLLING_UPDATE=0.3) does not reach this threshold.
+LABEL_THRESHOLD: Final[float] = 2.0
 
 
 def compute_severity_class(row: dict) -> int:
@@ -307,7 +292,7 @@ def process_kubernetes_goat(goat_dir: Path, start_id: int) -> list[dict]:
 
             flags = {c: feats[c] for c in FEATURE_COLS}
             total_critical = sum(flags.get(f, 0) for f in CRITICAL_FLAGS)
-            total_any = sum(flags.values())
+            weighted_score = sum(SEVERITY_WEIGHTS.get(f, 0) * flags.get(f, 0) for f in FEATURE_COLS)
 
             # Labeling: clean scanners / bench jobs have no attack surface → label=0
             non_attack_scenarios = {
@@ -317,7 +302,7 @@ def process_kubernetes_goat(goat_dir: Path, start_id: int) -> list[dict]:
             if scenario in non_attack_scenarios and total_critical == 0:
                 label = 0
             else:
-                label = 1 if total_any > 0 else 0
+                label = int(weighted_score >= LABEL_THRESHOLD)
 
             row = flags_to_row(
                 manifest_id=manifest_id,
@@ -357,14 +342,16 @@ def main():
 
     # ---- Load existing dataset ----
     print(f"Loading {args.rf_dataset}...")
-    with open(args.rf_dataset, newline="", encoding="utf-8") as f:
+    with args.rf_dataset.open(newline="", encoding="utf-8") as f:
         existing_rows = list(csv.DictReader(f))
 
     # Add new columns to existing rows (severity_class, mitre_technique, attack_description)
+    # Also recompute total_misconfigs over all FEATURE_COLS for consistency (FIN-006).
     for row in existing_rows:
-        row["severity_class"]    = compute_severity_class(row)
-        row["mitre_technique"]   = ""
-        row["attack_description"]= ""
+        row["severity_class"]     = compute_severity_class(row)
+        row["mitre_technique"]    = ""
+        row["attack_description"] = ""
+        row["total_misconfigs"]   = sum(int(row.get(c, 0) or 0) for c in FEATURE_COLS)
 
     print(f"  Existing rows: {len(existing_rows)}")
     sc_counts = {0: 0, 1: 0, 2: 0}
@@ -432,7 +419,7 @@ def main():
 
     # ---- Write updated CSV ----
     fieldnames = list(all_rows[0].keys())
-    with open(args.rf_dataset, "w", newline="", encoding="utf-8") as f:
+    with args.rf_dataset.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(all_rows)

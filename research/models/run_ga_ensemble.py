@@ -70,8 +70,9 @@ from provenance import provenance
 
 # Escape-flag indices in the 26-dim node feature vector — canonical
 # definition derived in the kubescan package (single source of truth).
-from kubescan.model.ga_ensemble import ESCAPE_FLAG_INDICES
+from kubescan.model.ga_ensemble import compute_escape_signal
 from kubescan.utils.device_utils import dataloader_kwargs, resolve_device
+from kubescan.utils.seed_utils import set_global_seed
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -108,8 +109,7 @@ def _infer_dataset(model, dataset, device):
 
                 rf_mean_risk = float(feats[:, -1].mean())
 
-                esc_flags  = feats[:, ESCAPE_FLAG_INDICES]
-                esc_signal = 1.0 if (esc_flags.max(axis=1) > 0).any() else 0.0
+                esc_signal = compute_escape_signal(list(feats))
 
                 true_labels.append(int(batch.y[g].item()))
                 gnn_probs.append(float(probs[g, 2]))
@@ -247,7 +247,9 @@ def compute_objective(
     ranked_idx = sorted(range(n), key=lambda i: ensemble[i], reverse=True)
     top_k_idx  = ranked_idx[:k]
 
-    p_at_k    = sum(1 for i in top_k_idx if true_labels[i] == chain_label) / k
+    hits      = sum(1 for i in top_k_idx if true_labels[i] == chain_label)
+    n_pos     = sum(1 for y in true_labels if y == chain_label)
+    p_at_k    = hits / min(k, n_pos) if n_pos > 0 else 0.0
     fpr_clean = sum(1 for i in top_k_idx if true_labels[i] == clean_label) / k
     objective = alpha * p_at_k + beta * (1.0 - fpr_clean)
 
@@ -416,10 +418,11 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--oof",          action="store_true",
-                        help="Use out-of-fold predictions from all 5 fold models (recommended)")
+    parser.add_argument("--val",          dest="oof", action="store_false",
+                        help="Use val.txt + gnn_best.pt instead of OOF mode (not recommended)")
     parser.add_argument("--model",        type=Path, default=model_path,
-                        help="Path to GNN model (used only without --oof)")
+                        help="Path to GNN model (used only with --val)")
+    parser.set_defaults(oof=True)
     parser.add_argument("--generations",  type=int,   default=150)
     parser.add_argument("--pop-size",     type=int,   default=60)
     parser.add_argument("--k",            type=int,   default=5)
@@ -431,6 +434,7 @@ def main():
     parser.add_argument("--seed",         type=int,   default=42)
     args = parser.parse_args()
 
+    set_global_seed(args.seed)
     device = resolve_device()
 
     # ------------------------------------------------------------------
@@ -559,7 +563,7 @@ def main():
             generations=args.generations, pop_size=args.pop_size,
         ),
     }
-    with open(weights_out, "w") as f:
+    with weights_out.open("w", encoding="utf-8") as f:
         json.dump(weights, f, indent=2)
 
     ga_result_serializable = {
@@ -568,7 +572,7 @@ def main():
         "pop_size":     args.pop_size,
         "history":      ga_result["history"],
     }
-    with open(results_out, "w") as f:
+    with results_out.open("w", encoding="utf-8") as f:
         json.dump(ga_result_serializable, f, indent=2)
 
     print(f"\n  Saved: {weights_out}")

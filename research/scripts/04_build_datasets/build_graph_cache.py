@@ -27,6 +27,11 @@ PROJECT_ROOT = SCRIPT_DIR.parent.parent  # research/
 GRAPHS_DIR   = PROJECT_ROOT / "data" / "graphs"
 CACHE_PATH   = GRAPHS_DIR / "graphs_cache.npz"
 
+# Pipeline ordering constraint: each .npz "x" tensor has shape [N, 26] where
+# column 25 is the RF risk_score appended by build_graphs.py.  This cache must
+# therefore be rebuilt AFTER train_rf.py and build_graphs.py have run so that
+# x[:, 25] reflects the current RF model, not a stale one.
+
 # Parallel reads matter on iCloud-synced volumes: evicted (dataless) files are
 # materialised on first read, and the CloudDocs daemon serves concurrent
 # requests in parallel. Reading also snapshots the bytes into memory before
@@ -52,7 +57,7 @@ def _read_one(row: dict) -> tuple[str, dict[str, np.ndarray] | None]:
 
 def main() -> None:
     manifest = GRAPHS_DIR / "graph_manifest.csv"
-    with open(manifest, newline="", encoding="utf-8") as f:
+    with manifest.open(newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
 
     arrays: dict[str, np.ndarray] = {}
@@ -69,11 +74,28 @@ def main() -> None:
             if done % 50 == 0:
                 print(f"  {done}/{len(rows)} graphs  ({time.time() - t0:.0f}s)")
 
-    np.savez_compressed(CACHE_PATH, **arrays)
+    # Atomic write: save to .tmp then rename so a crash never leaves a partial file.
+    tmp_path = CACHE_PATH.with_suffix(".tmp")
+    np.savez_compressed(tmp_path, **arrays)
+    # Post-write validation: verify the cache is readable before committing.
+    _verify_cache(tmp_path)
+    tmp_path.rename(CACHE_PATH)
+
     n_graphs = len({k.split("::")[0] for k in arrays})
     print(f"Wrote {CACHE_PATH.name}: {n_graphs} graphs, "
           f"{len(arrays)} arrays, {CACHE_PATH.stat().st_size / 1e6:.1f} MB "
           f"in {time.time() - t0:.0f}s")
+
+
+def _verify_cache(path: Path) -> None:
+    """Assert cache is readable; raise RuntimeError if not."""
+    try:
+        cache = np.load(path, allow_pickle=False)
+    except Exception as exc:
+        raise RuntimeError(f"Cache validation failed for {path}: {exc}") from exc
+    n_graphs = len({k.split("::")[0] for k in cache.files})
+    if n_graphs == 0:
+        raise RuntimeError(f"Cache at {path} contains no graphs")
 
 
 if __name__ == "__main__":

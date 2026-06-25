@@ -24,7 +24,7 @@ import torch
 from sklearn.ensemble import RandomForestClassifier
 from skops.io import dump as skops_dump
 
-from kubescan.model.gat_encoder import GATConfig, KubeGAT
+from kubescan.model.gat_encoder import NUM_FOLDS, GATConfig, KubeGAT
 
 OUT = Path(__file__).parent / "checkpoints"
 SEED = 0
@@ -32,8 +32,9 @@ SEED = 0
 
 def make_rf() -> RandomForestClassifier:
     """Tiny RF that learns 'more flags set → misconfigured'."""
+    from kubescan.model.rf_classifier import _ALL_RF_FEATURES
     rng = np.random.default_rng(SEED)
-    n_feat = 25
+    n_feat = len(_ALL_RF_FEATURES)
     # Clean rows: mostly zeros. Misconfigured rows: several flags set.
     clean   = (rng.random((40, n_feat)) < 0.05).astype(np.float32)
     misconf = (rng.random((40, n_feat)) < 0.6).astype(np.float32)
@@ -53,9 +54,9 @@ def main() -> None:
 
     skops_dump(make_rf(), OUT / "rf_model.skops")
 
-    # Two GAT folds at the production dimensions (random init is fine for a
-    # smoke fixture; predictions need only be valid probabilities).
-    for fold in range(2):
+    # All NUM_FOLDS GAT folds at the production dimensions (random init is fine for
+    # a smoke fixture; predictions need only be valid probabilities).
+    for fold in range(NUM_FOLDS):
         torch.manual_seed(SEED + fold)
         model = KubeGAT(
             in_channels=GATConfig.in_channels,
@@ -65,14 +66,14 @@ def main() -> None:
         )
         torch.save(model.state_dict(), OUT / f"gnn_fold_{fold}.pt")
 
-    with open(OUT / "ga_weights.json", "w", encoding="utf-8") as f:
+    with (OUT / "ga_weights.json").open("w", encoding="utf-8") as f:
         json.dump(
             {"w_rf": 1 / 3, "w_gnn": 1 / 3, "w_escape": 1 / 3,
              "_note": "fixture weights — equal thirds, not trained"},
             f, indent=2,
         )
 
-    print(f"Wrote fixtures to {OUT}/ (rf_model.skops, gnn_fold_0..1.pt, ga_weights.json)")
+    print(f"Wrote fixtures to {OUT}/ (rf_model.skops, gnn_fold_0..{NUM_FOLDS-1}.pt, ga_weights.json)")
 
 
 if __name__ == "__main__":

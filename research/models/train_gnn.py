@@ -9,7 +9,7 @@ Task        : Graph-level 3-class classification (clean / isolated / chain).
 Evaluation  : Macro-F1 across 5-fold cross-validation.
 
 Input graphs (from graph_builder.py):
-  Node features : 25-dim vector (18 Rahman flags + 6 extended + risk_score)
+  Node features : 26-dim vector (18 Rahman flags + 7 extended + risk_score)
   Edge types    : 0-3 (directory proximity, privilege reach, SA lateral, namespace)
   Graph labels  : 0=clean, 1=isolated_misconfig, 2=attack_chain
 
@@ -51,12 +51,14 @@ from gnn_dataset import LABEL_NAMES, KubeClusterDataset, load_split
 # Single source of truth for the production architecture: the kubescan package.
 # Research may import from kubescan (never the reverse).
 try:
-    from kubescan.model.gat_encoder import KubeGAT
+    from kubescan.model.gat_encoder import GATConfig, KubeGAT
     from kubescan.utils.device_utils import dataloader_kwargs, resolve_device
+    from kubescan.utils.seed_utils import set_global_seed
 except ImportError:
     sys.path.insert(0, str(PROJECT_ROOT.parent / "kubescan" / "src"))
-    from kubescan.model.gat_encoder import KubeGAT
+    from kubescan.model.gat_encoder import GATConfig, KubeGAT
     from kubescan.utils.device_utils import dataloader_kwargs, resolve_device
+    from kubescan.utils.seed_utils import set_global_seed
 
 from provenance import provenance
 
@@ -222,7 +224,9 @@ def evaluate(
 
     def precision_at_k(ranked: list[int], k: int, positive_label: int) -> float:
         top_k = ranked[:k]
-        return sum(1 for y in top_k if y == positive_label) / k if k else 0.0
+        hits  = sum(1 for y in top_k if y == positive_label)
+        n_pos = sum(1 for y in ranked if y == positive_label)
+        return hits / min(k, n_pos) if n_pos > 0 else 0.0
 
     p_at_1  = precision_at_k(ranked_true, 1,  chain_class)
     p_at_3  = precision_at_k(ranked_true, 3,  chain_class)
@@ -261,7 +265,10 @@ def train_fold(
 
     num_classes = 2 if args.binary else 3
     dl_kwargs    = dataloader_kwargs(device)
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True,  **dl_kwargs)
+    _fold_gen    = torch.Generator()
+    _fold_gen.manual_seed(args.seed + fold_idx)
+    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True,
+                              generator=_fold_gen, **dl_kwargs)
     val_loader   = DataLoader(val_set,   batch_size=args.batch_size, shuffle=False, **dl_kwargs)
 
     in_channels = train_set[0].x.shape[1]
@@ -284,6 +291,7 @@ def train_fold(
     )
 
     best_f1     = 0.0
+    best_epoch  = 0
     best_state  = None
     patience    = args.patience
     no_improve  = 0
@@ -300,6 +308,7 @@ def train_fold(
 
         if val_f1 > best_f1:
             best_f1    = val_f1
+            best_epoch = epoch
             best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
             no_improve = 0
         else:
@@ -324,6 +333,7 @@ def train_fold(
     return {
         "fold":          fold_idx,
         "best_val_f1":   best_f1,
+        "best_epoch":    best_epoch,
         "final_metrics": final_metrics,
         "history":       history,
         "model_state":   best_state,
@@ -376,8 +386,7 @@ def main():
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     device = resolve_device()
-    torch.manual_seed(args.seed)
-    np.random.seed(args.seed)
+    set_global_seed(args.seed)
     print(f"Device: {device}")
     print(f"Mode: {'binary' if args.binary else '3-class'}  "
           f"| hidden={args.hidden}, heads={args.heads}, layers={args.layers}")
@@ -416,6 +425,26 @@ def main():
             # Save fold model
             ckpt_path = args.out_dir / f"gnn_fold_{fold_idx}.pt"
             torch.save(result["model_state"], ckpt_path)
+
+            # Write gnn_config.json once (config is identical for every fold)
+            if fold_idx == 0:
+                _in_ch = train_set[0].x.shape[1]
+                gnn_cfg = {
+                    "in_channels":    _in_ch,
+                    "hidden_dim":     args.hidden,
+                    "num_heads":      args.heads,
+                    "num_layers":     args.layers,
+                    "num_classes":    num_classes,
+                    "dropout":        args.dropout,
+                    "num_edge_types": GATConfig.num_edge_types,
+                    "edge_emb_dim":   GATConfig.edge_emb_dim,
+                    "_best_epoch":    result["best_epoch"],
+                    "_best_val_f1":   round(result["best_val_f1"], 4),
+                }
+                config_path = args.out_dir / "gnn_config.json"
+                with config_path.open("w", encoding="utf-8") as f:
+                    json.dump(gnn_cfg, f, indent=2)
+                print(f"  gnn_config.json written to {config_path}")
 
         # ------------------------------------------------------------------
         # Aggregate CV results
@@ -467,7 +496,7 @@ def main():
                 ),
             }
             summary_path = args.out_dir / "cv_results.json"
-            with open(summary_path, "w", encoding="utf-8") as f:
+            with summary_path.open("w", encoding="utf-8") as f:
                 json.dump(cv_summary, f, indent=2)
             print(f"\n  Results saved to {summary_path}")
 

@@ -26,6 +26,7 @@ Requirements:
 
 from collections.abc import Callable
 from pathlib import Path
+from typing import Final
 
 import numpy as np
 
@@ -47,6 +48,14 @@ except ImportError as exc:
 # ---------------------------------------------------------------------------
 LABEL_NAMES = {0: "clean", 1: "isolated_misconfig", 2: "attack_chain"}
 NODE_FEATURE_DIM = 26
+
+# NPZ key for the per-edge type code array (shape [E]).
+_EDGE_TYPE_NPZ_KEY: Final[str] = "edge_type"
+
+# Required keys every .npz graph file must contain.
+_REQUIRED_NPZ_KEYS: Final[frozenset[str]] = frozenset({
+    "x", "edge_index", _EDGE_TYPE_NPZ_KEY, "y", "node_labels", "risk_scores",
+})
 
 FEATURE_NAMES = [
     # indices 0-17: Rahman binary flags
@@ -74,7 +83,7 @@ def arrays_to_data(d: dict, cluster_name: str | None = None) -> Data:
     data = Data(
         x          = torch.FloatTensor(d["x"]),
         edge_index = torch.LongTensor(d["edge_index"]),
-        edge_attr  = torch.LongTensor(d["edge_attr"]),
+        edge_attr  = torch.LongTensor(d[_EDGE_TYPE_NPZ_KEY]),
         y          = torch.LongTensor(d["y"]),
         node_y     = torch.LongTensor(d["node_labels"]),
         risk       = torch.FloatTensor(d["risk_scores"]),
@@ -89,16 +98,19 @@ def npz_to_data(npz_path: Path, cluster_name: str | None = None) -> Data:
     Load a single .npz graph file and return a PyG Data object.
 
     Fields set on Data:
-      x           FloatTensor [N, 25]  – node feature matrix
+      x           FloatTensor [N, 26]  – node feature matrix (25 flags + risk_score)
       edge_index  LongTensor  [2, E]   – COO edge list
-      edge_attr   LongTensor  [E, 1]   – edge type codes
+      edge_attr   LongTensor  [E]      – edge type codes
       y           LongTensor  [1]      – graph-level label (0/1/2)
       node_y      LongTensor  [N]      – per-node binary label
-      risk        FloatTensor [N]      – per-node risk score
+      risk        FloatTensor [N]      – per-node risk score (mirrors x[:, 25])
       cluster     str                  – cluster name (if provided)
     """
-    d = np.load(npz_path, allow_pickle=False)
-    return arrays_to_data({k: d[k] for k in d.files}, cluster_name=cluster_name)
+    raw = np.load(npz_path, allow_pickle=False)
+    missing = _REQUIRED_NPZ_KEYS - set(raw.files)
+    if missing:
+        raise KeyError(f"{npz_path}: missing npz keys {missing}")
+    return arrays_to_data({k: raw[k] for k in raw.files}, cluster_name=cluster_name)
 
 
 # ---------------------------------------------------------------------------
@@ -156,7 +168,7 @@ class KubeClusterDataset(InMemoryDataset):
         # Build name → safe_name mapping from manifest
         name_to_safe: dict[str, str] = {}
         if manifest_path.exists():
-            with open(manifest_path, newline="", encoding="utf-8") as f:
+            with manifest_path.open(newline="", encoding="utf-8") as f:
                 for row in csv_mod.DictReader(f):
                     name_to_safe[row["cluster"]] = row["safe_name"]
 
@@ -178,7 +190,7 @@ class KubeClusterDataset(InMemoryDataset):
             if cache is not None and f"{safe}::x" in cache.files:
                 data = arrays_to_data(
                     {k: cache[f"{safe}::{k}"] for k in
-                     ("x", "edge_index", "edge_attr", "y", "node_labels", "risk_scores")},
+                     ("x", "edge_index", _EDGE_TYPE_NPZ_KEY, "y", "node_labels", "risk_scores")},
                     cluster_name=cluster,
                 )
             else:
@@ -228,7 +240,7 @@ def load_split(
         train_set = load_split("dataset/graphs", "dataset/splits/train.txt")
     """
     split_path = Path(split_file)
-    with open(split_path, encoding="utf-8") as f:
+    with split_path.open(encoding="utf-8") as f:
         names = [line.strip() for line in f if line.strip()]
     return KubeClusterDataset(
         graphs_dir=graphs_dir,

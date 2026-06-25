@@ -99,24 +99,14 @@ CLUSTERS = [
         "recurse":  True,
         "note":     "quarkslab: CTF challenges with privileged and hostPath pods",
     },
-    {
-        "cluster":  "kubeaudit-fixtures",
-        "dir":      ATTACK_REPOS_DIR / "kubeaudit-fixtures",
-        "recurse":  True,
-        "note":     "Shopify/kubeaudit: auditor test fixtures with escape patterns",
-    },
-    {
-        "cluster":  "gatekeeper-library",
-        "dir":      ATTACK_REPOS_DIR / "gatekeeper-library" / "library" / "pod-security-policy",
-        "recurse":  True,
-        "note":     "OPA gatekeeper PSP constraint library: deny-case Pods with escape flags (privileged, hostPath, hostPID, etc.)",
-    },
-    {
-        "cluster":  "datree-tests",
-        "dir":      ATTACK_REPOS_DIR / "datree-tests",
-        "recurse":  True,
-        "note":     "datreeio: K8s policy validation test manifests including escape patterns",
-    },
+    # NOTE: kubeaudit-fixtures, gatekeeper-library, and datree-tests are intentionally
+    # excluded from training. Each repo mixes allowed/pass manifests (no escape flags →
+    # label=0) with denied/fail manifests (escape flags → label=2) inside the same
+    # directory tree, so a single cluster label is semantically invalid. Per-subdir
+    # splitting would require subdirectory-level labeling heuristics that are fragile
+    # and hard to validate.  Excluding avoids injecting corrupted cluster-level signal.
+    # If coverage of these repos is needed, split them manually and create per-subdir
+    # entries with explicit `label` overrides in CLUSTERS.
     {
         "cluster":  "securekubernetes",
         "dir":      ATTACK_REPOS_DIR / "securekubernetes",
@@ -178,7 +168,7 @@ def main():
     args = parser.parse_args()
 
     # Load existing dataset
-    with open(rf_csv, newline="", encoding="utf-8") as f:
+    with rf_csv.open(newline="", encoding="utf-8") as f:
         existing_rows = list(csv.DictReader(f))
     fieldnames = list(existing_rows[0].keys())
     next_id = max(int(r.get("manifest_id", 0) or 0) for r in existing_rows) + 1
@@ -276,7 +266,7 @@ def main():
         return
 
     updated = existing_rows + new_rows
-    with open(rf_csv, "w", newline="", encoding="utf-8") as f:
+    with rf_csv.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(updated)

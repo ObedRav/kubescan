@@ -15,6 +15,7 @@ from __future__ import annotations
 
 __all__ = ["NUM_FOLDS", "GATConfig", "KubeGAT", "load_fold_ensemble"]
 
+import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -132,21 +133,44 @@ class KubeGAT(nn.Module):
         return self.classifier(torch.cat([x_mean, x_max], dim=-1))
 
 
+def _load_gat_config(checkpoints_dir: Path) -> GATConfig:
+    """
+    Load GATConfig from gnn_config.json if present (written by train_gnn.py).
+    Falls back to GATConfig() defaults for backward compatibility with checkpoints
+    that pre-date config serialisation.
+    """
+    config_path = Path(checkpoints_dir) / "gnn_config.json"
+    if not config_path.exists():
+        logger.debug("gnn_config.json not found in %s — using GATConfig defaults", checkpoints_dir)
+        return GATConfig()
+    with config_path.open(encoding="utf-8") as f:
+        raw = json.load(f)
+    cfg_fields = {
+        "in_channels", "hidden_dim", "num_heads", "num_layers",
+        "num_classes", "dropout", "num_edge_types", "edge_emb_dim",
+    }
+    kwargs = {k: v for k, v in raw.items() if k in cfg_fields}
+    logger.debug("Loaded GATConfig from %s: %s", config_path.name, kwargs)
+    return GATConfig(**kwargs)
+
+
 def load_fold_ensemble(
     checkpoints_dir: Path,
-    in_channels: int          = GATConfig.in_channels,
-    hidden:      int          = GATConfig.hidden_dim,
-    heads:       int          = GATConfig.num_heads,
-    num_layers:  int          = GATConfig.num_layers,
     device:      torch.device | None = None,
 ) -> list[KubeGAT]:
     """
     Load all NUM_FOLDS fold models (gnn_fold_0.pt … gnn_fold_4.pt).
     Returns a list of KubeGAT instances in eval() mode.
     Averaging predictions across folds reduces variance (implicit ensemble).
+
+    Architecture hyperparameters are read from gnn_config.json (written by
+    train_gnn.py). If the JSON is absent, GATConfig defaults are used so that
+    checkpoints from earlier training runs still load.
     """
     if device is None:
         device = resolve_device()
+
+    cfg = _load_gat_config(checkpoints_dir)
 
     models: list[KubeGAT] = []
     for fold_idx in range(NUM_FOLDS):
@@ -155,12 +179,14 @@ def load_fold_ensemble(
             logger.debug("Fold checkpoint not found, skipping: %s", path)
             continue
         model = KubeGAT(
-            in_channels=in_channels,
-            hidden=hidden,
-            heads=heads,
-            num_layers=num_layers,
-            num_classes=GATConfig.num_classes,
-            dropout=GATConfig.dropout,
+            in_channels=cfg.in_channels,
+            hidden=cfg.hidden_dim,
+            heads=cfg.num_heads,
+            num_layers=cfg.num_layers,
+            num_classes=cfg.num_classes,
+            dropout=cfg.dropout,
+            num_edge_types=cfg.num_edge_types,
+            edge_emb_dim=cfg.edge_emb_dim,
         ).to(device)
         model.load_state_dict(
             torch.load(path, map_location=device, weights_only=True)

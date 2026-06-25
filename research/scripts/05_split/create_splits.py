@@ -148,19 +148,28 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--manifest",  type=Path, default=default_manifest)
-    parser.add_argument("--out-dir",   type=Path, default=default_out)
-    parser.add_argument("--val-frac",  type=float, default=0.15)
-    parser.add_argument("--test-frac", type=float, default=0.15)
-    parser.add_argument("--folds",     type=int,   default=5)
-    parser.add_argument("--seed",      type=int,   default=42)
+    parser.add_argument("--manifest",   type=Path, default=default_manifest)
+    parser.add_argument("--out-dir",    type=Path, default=default_out)
+    parser.add_argument("--val-frac",   type=float, default=0.15)
+    parser.add_argument("--test-frac",  type=float, default=0.15)
+    parser.add_argument("--folds",      type=int,   default=5)
+    parser.add_argument("--seed",       type=int,   default=42)
+    parser.add_argument(
+        "--split-val",
+        action="store_true",
+        help=(
+            "Split val.txt into val_gnn.txt (first 8) and val_ga.txt (rest). "
+            "Redundant when run_ga_ensemble uses --oof (the default); add this "
+            "flag only if you need a separate held-out GA validation set."
+        ),
+    )
     args = parser.parse_args()
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     # Load graph manifest
     print(f"Loading {args.manifest}...")
-    with open(args.manifest, newline="", encoding="utf-8") as f:
+    with args.manifest.open(newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
 
     # Separate originals from augmented (augmented have '_aug_' in cluster name)
@@ -195,13 +204,21 @@ def main():
     print(f"  Augmented: {len(aug_train_names)} join train, "
           f"{n_aug_dropped} excluded (base cluster in val/test)")
 
-    def write_list(path: Path, names: list[str]):
-        with open(path, "w", encoding="utf-8") as f:
+    def write_list(path: Path, names: list[str]) -> None:
+        with path.open("w", encoding="utf-8") as f:
             f.write("\n".join(names) + "\n")
 
     write_list(args.out_dir / "train.txt", train)
     write_list(args.out_dir / "val.txt",   val)
     write_list(args.out_dir / "test.txt",  test)
+
+    if args.split_val:
+        # Split val into GNN-validation and GA-validation halves.
+        # Only useful when NOT using --oof in run_ga_ensemble (which is the default).
+        _val_gnn_size = min(8, len(val))
+        write_list(args.out_dir / "val_gnn.txt", val[:_val_gnn_size])
+        write_list(args.out_dir / "val_ga.txt",  val[_val_gnn_size:])
+        print(f"  --split-val: val_gnn={_val_gnn_size}, val_ga={len(val) - _val_gnn_size}")
 
     lbl_map = dict(originals + augmented)
     print(f"\nTrain/Val/Test split (seed={args.seed}):")
@@ -267,7 +284,7 @@ def main():
     }
 
     config_path = args.out_dir / "splits_config.json"
-    with open(config_path, "w", encoding="utf-8") as f:
+    with config_path.open("w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
 
     print(f"\nSplits written to {args.out_dir}/")

@@ -105,7 +105,7 @@ def _load_all_docs(path: Path) -> list[dict]:
     """Load all YAML documents from a file, skipping None/invalid ones."""
     docs = []
     try:
-        with open(path, encoding="utf-8", errors="ignore") as f:
+        with path.open(encoding="utf-8", errors="ignore") as f:
             for doc in yaml.safe_load_all(f):
                 if doc and isinstance(doc, dict):
                     docs.append(doc)
@@ -428,7 +428,7 @@ def _check_untrusted_registry(pod_spec: dict) -> int:
     CKV_K8S_15
     """
     for ctr in _iter_containers(pod_spec):
-        image = str(ctr.get("image", "")).split(":")[0]  # strip tag
+        image = str(ctr.get("image", ""))
         if not image:
             continue
         parts = image.split("/")

@@ -47,11 +47,14 @@ def _validate_skops_types(model_path: Path, untrusted_types: frozenset[str]) -> 
 
 
 # Feature layout — must exactly match research/models/train_rf.py
+# All 18 Rahman flags (including SECCOMP_UNCONFINED, VALID_TAINT_SECRET,
+# NO_NETWORK_POLICY which were previously absent from this list).
 _RAHMAN_FEATURES: list[str] = [
     "TRUE_HOST_PID", "TRUE_HOST_IPC", "TRUE_HOST_NET", "DOCKERSOCK_PATH",
     "CAP_SYS_ADMIN", "CAP_SYS_MODULE", "WITHIN_MANIFEST_SECRET",
-    "SEC_CONT_OVER_PRIVIL", "ALLOW_PRIVI", "INSECURE_HTTP",
-    "NO_SECU_CONTEXT", "HOST_ALIAS", "NO_DEFAULT_NSPACE",
+    "SEC_CONT_OVER_PRIVIL", "ALLOW_PRIVI", "SECCOMP_UNCONFINED",
+    "VALID_TAINT_SECRET", "INSECURE_HTTP",
+    "NO_SECU_CONTEXT", "NO_NETWORK_POLICY", "HOST_ALIAS", "NO_DEFAULT_NSPACE",
     "NO_RESO", "NO_ROLLING_UPDATE",
 ]
 _EXTENDED_FEATURES: list[str] = [
@@ -98,19 +101,30 @@ class RFClassifier:
         This becomes the risk_score node feature (index 25) in the graph.
     """
 
+    # Pickle loading is disabled by default — it executes arbitrary code.
+    # Set to True only when loading a checkpoint from a fully trusted source
+    # and a .skops equivalent is not available.
+    _ALLOW_PICKLE: bool = False
+
     def __init__(self, model_path: Path) -> None:
         if model_path.suffix == ".skops":
             untrusted = get_untrusted_types(file=model_path)
             _validate_skops_types(model_path, untrusted)
             self._model = skops_load(model_path, trusted=untrusted)
-        else:
+        elif self._ALLOW_PICKLE:
             logger.warning(
                 "Loading RF from pickle (%s) — pickle executes arbitrary code on "
                 "load; only use checkpoints from a trusted source. Prefer .skops.",
                 model_path,
             )
-            with open(model_path, "rb") as f:
+            with model_path.open("rb") as f:
                 self._model = pickle.load(f)
+        else:
+            raise ModelLoadError(
+                model_path,
+                "Refusing to load RF from pickle: set RFClassifier._ALLOW_PICKLE = True "
+                "only for checkpoints from a trusted source. Prefer .skops.",
+            )
         logger.debug("RF model loaded from %s", model_path)
 
     def predict_risk_scores(self, feats_list: list[dict[str, int | float]]) -> list[float]:

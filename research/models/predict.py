@@ -24,7 +24,6 @@ Usage:
 
 import argparse
 import json
-import pickle
 import sys
 from pathlib import Path
 
@@ -35,23 +34,14 @@ PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts" / "02_extract"))
 
 try:
-    import torch
-    import torch.nn.functional as F
-    from torch_geometric.data import Data
-except ImportError as e:
-    sys.exit(f"Missing dependency: {e}\nInstall: pip install torch torch-geometric")
-
-try:
-    from train_gnn import KubeGAT
-except ImportError as e:
-    sys.exit(f"Cannot import KubeGAT: {e}")
-
-try:
     from kubescan.model.ga_ensemble import (
         ESCAPE_FLAG_INDICES,
         SCORE_HIGH_THRESHOLD,
         SCORE_MODERATE_THRESHOLD,
+        run_gnn_ensemble,
     )
+    from kubescan.model.gat_encoder import load_fold_ensemble
+    from kubescan.model.rf_classifier import RFClassifier
     from kubescan.utils.device_utils import resolve_device
     from kubescan.utils.graph_builder import graph_to_pyg
 except ImportError:
@@ -60,12 +50,15 @@ except ImportError:
         ESCAPE_FLAG_INDICES,
         SCORE_HIGH_THRESHOLD,
         SCORE_MODERATE_THRESHOLD,
+        run_gnn_ensemble,
     )
+    from kubescan.model.gat_encoder import load_fold_ensemble
+    from kubescan.model.rf_classifier import RFClassifier
     from kubescan.utils.device_utils import resolve_device
     from kubescan.utils.graph_builder import graph_to_pyg
 
 try:
-    from extract_yaml_features import FEATURE_COLS, extract_features_from_dir
+    from extract_yaml_features import extract_features_from_dir
 except ImportError as e:
     sys.exit(f"Cannot import extract_yaml_features: {e}")
 
@@ -86,23 +79,6 @@ try:
 except ImportError as e:
     sys.exit(f"Cannot import graph_builder: {e}")
 
-
-# ---------------------------------------------------------------------------
-# RF feature layout (must match train_rf.py)
-# ---------------------------------------------------------------------------
-
-RF_RAHMAN_FEATURES = [
-    "TRUE_HOST_PID", "TRUE_HOST_IPC", "TRUE_HOST_NET", "DOCKERSOCK_PATH",
-    "CAP_SYS_ADMIN", "CAP_SYS_MODULE", "WITHIN_MANIFEST_SECRET",
-    "SEC_CONT_OVER_PRIVIL", "ALLOW_PRIVI", "INSECURE_HTTP",
-    "NO_SECU_CONTEXT", "HOST_ALIAS", "NO_DEFAULT_NSPACE",
-    "NO_RESO", "NO_ROLLING_UPDATE",
-]
-RF_EXTENDED_FEATURES = [
-    "NO_RUN_AS_NON_ROOT", "NO_READ_ONLY_ROOT_FS", "IMAGE_USES_LATEST",
-    "SA_AUTOMOUNT_TOKEN", "USES_DEFAULT_SA", "UNTRUSTED_REGISTRY", "HOSTPATH_MOUNT",
-]
-RF_ALL_FEATURES = [*RF_RAHMAN_FEATURES, "cap_misuse", "all_secrets", "total_misconfigs", *RF_EXTENDED_FEATURES]
 
 LABEL_NAMES = {0: "CLEAN", 1: "ISOLATED_MISCONFIG", 2: "ATTACK_CHAIN"}
 
@@ -129,37 +105,8 @@ def extract_cluster_features(cluster_dir: Path) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Step 2: RF inference — risk_score per manifest
+# Step 2: RF inference — risk_score per manifest (via RFClassifier)
 # ---------------------------------------------------------------------------
-
-def _build_rf_input(feats: dict) -> np.ndarray:
-    """
-    Map yaml_feature_extractor output to the 25-dim RF input vector.
-    Derives: cap_misuse, all_secrets, total_misconfigs.
-    """
-    # Derived features
-    cap_misuse      = int(feats.get("CAP_SYS_ADMIN", 0)) | int(feats.get("CAP_SYS_MODULE", 0))
-    all_secrets     = int(feats.get("WITHIN_MANIFEST_SECRET", 0)) | int(feats.get("VALID_TAINT_SECRET", 0))
-    total_misconfigs = sum(int(feats.get(c, 0)) for c in FEATURE_COLS)
-
-    extended = {
-        "cap_misuse":       cap_misuse,
-        "all_secrets":      all_secrets,
-        "total_misconfigs": total_misconfigs,
-    }
-    merged = {**feats, **extended}
-
-    vec = np.zeros(len(RF_ALL_FEATURES), dtype=np.float32)
-    for i, col in enumerate(RF_ALL_FEATURES):
-        vec[i] = float(merged.get(col, 0) or 0)
-    return vec
-
-
-def run_rf(feats_list: list[dict], rf_model) -> list[float]:
-    """Return per-manifest risk_score (class-1 probability from RF binary classifier)."""
-    X = np.stack([_build_rf_input(f) for f in feats_list])
-    proba = rf_model.predict_proba(X)      # [N, 2]
-    return proba[:, 1].tolist()            # probability of label=1 (misconfigured)
 
 
 # ---------------------------------------------------------------------------
@@ -289,36 +236,8 @@ def build_graph(
 
 
 # ---------------------------------------------------------------------------
-# Step 4: GNN fold ensemble inference
+# Step 4: GNN fold ensemble inference (run_gnn_ensemble from kubescan.model.ga_ensemble)
 # ---------------------------------------------------------------------------
-
-# graph_to_pyg is imported from kubescan.utils.graph_builder (single source of truth).
-
-def run_gnn_ensemble(
-    pyg_data: Data,
-    fold_models: list,
-    device: torch.device,
-) -> tuple[float, float, float]:
-    """
-    Run all fold models and return averaged predictions.
-    Returns (chain_prob, clean_prob, isolated_prob).
-    """
-    x          = pyg_data.x.to(device)
-    edge_index = pyg_data.edge_index.to(device)
-    edge_attr  = pyg_data.edge_attr.to(device)
-    batch      = torch.zeros(x.size(0), dtype=torch.long, device=device)
-
-    all_probs = []
-    with torch.inference_mode():
-        for model in fold_models:
-            model.eval()
-            out   = model(x, edge_index, edge_attr, batch)
-            probs = F.softmax(out, dim=-1).cpu().numpy()[0]
-            all_probs.append(probs)
-
-    mean_probs = np.mean(all_probs, axis=0)
-    return float(mean_probs[2]), float(mean_probs[0]), float(mean_probs[1])
-
 
 # ---------------------------------------------------------------------------
 # Step 5: Ensemble score
@@ -435,11 +354,8 @@ def main():
                         help="Human-readable cluster name (defaults to directory name)")
     parser.add_argument("--weights",      type=Path, default=default_weights,
                         help="Path to ga_weights.json")
-    parser.add_argument("--rf-model",     type=Path,
-                        default=checkpoints / "rf_model.pkl")
-    parser.add_argument("--hidden",       type=int,   default=64)
-    parser.add_argument("--heads",        type=int,   default=4)
-    parser.add_argument("--layers",       type=int,   default=3)
+    parser.add_argument("--checkpoints-dir", type=Path, default=checkpoints,
+                        help="Directory containing rf_model.skops and gnn_fold_*.pt")
     parser.add_argument("--format",       choices=["text", "json"], default="text")
     parser.add_argument("--show-nodes",   action="store_true",
                         help="Show per-manifest risk breakdown in text report")
@@ -448,6 +364,7 @@ def main():
     cluster_dir  = args.cluster_dir.resolve()
     cluster_name = args.cluster_name or cluster_dir.name
     device       = resolve_device()
+    ckpt_dir     = args.checkpoints_dir
 
     if not cluster_dir.is_dir():
         sys.exit(f"Cluster directory not found: {cluster_dir}")
@@ -455,37 +372,20 @@ def main():
     # ------------------------------------------------------------------
     # Load models
     # ------------------------------------------------------------------
-    if not args.rf_model.exists():
-        sys.exit(f"RF model not found: {args.rf_model}. Run train_rf.py first.")
-    with open(args.rf_model, "rb") as f:
-        rf_model = pickle.load(f)
+    try:
+        rf_model = RFClassifier.from_checkpoints(ckpt_dir)
+    except Exception as exc:
+        sys.exit(f"RF model load failed: {exc}. Run train_rf.py first.")
 
     if not args.weights.exists():
-        sys.exit(f"Ensemble weights not found: {args.weights}. Run layer3_ga.py first.")
-    with open(args.weights) as f:
+        sys.exit(f"Ensemble weights not found: {args.weights}. Run run_ga_ensemble.py first.")
+    with args.weights.open(encoding="utf-8") as f:
         weights = json.load(f)
 
-    fold_models = []
-    in_channels = 26   # NODE_FEATURE_DIM
-    for fold_idx in range(5):
-        model_path = checkpoints / f"gnn_fold_{fold_idx}.pt"
-        if not model_path.exists():
-            continue
-        model = KubeGAT(
-            in_channels=in_channels,
-            hidden=args.hidden,
-            heads=args.heads,
-            num_layers=args.layers,
-            num_classes=3,
-            dropout=0.3,
-        ).to(device)
-        model.load_state_dict(
-            torch.load(model_path, map_location=device, weights_only=True)
-        )
-        fold_models.append(model)
-
-    if not fold_models:
-        sys.exit("No trained GNN fold models found. Run train_gnn.py first.")
+    try:
+        fold_models = load_fold_ensemble(ckpt_dir, device=device)
+    except Exception as exc:
+        sys.exit(f"GNN fold models load failed: {exc}. Run train_gnn.py first.")
 
     # ------------------------------------------------------------------
     # Step 1: Extract features
@@ -506,9 +406,9 @@ def main():
         print(f"  Found {len(feats_list)} manifest(s) with workload resources")
 
     # ------------------------------------------------------------------
-    # Step 2: RF inference → risk_score
+    # Step 2: RF inference → risk_score (RFClassifier handles derived features)
     # ------------------------------------------------------------------
-    risk_scores = run_rf(feats_list, rf_model)
+    risk_scores = rf_model.predict_risk_scores(feats_list)
 
     # ------------------------------------------------------------------
     # Step 3: Build graph

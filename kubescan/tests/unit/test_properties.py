@@ -65,7 +65,7 @@ def test_extractor_never_crashes_on_arbitrary_text(tmp_path_factory, raw: str) -
     p.write_text(raw)
     # Must return a dict or None — never raise — on any byte soup.
     result = extract_features_from_file(p)
-    assert result is None or isinstance(result, dict)
+    assert result is None or isinstance(result, dict)  # never raises
 
 
 @settings(max_examples=120, suppress_health_check=[HealthCheck.too_slow], deadline=None)
@@ -74,8 +74,7 @@ def test_extractor_features_are_binary_and_complete(tmp_path_factory, manifest: 
     p: Path = tmp_path_factory.mktemp("p") / "pod.yaml"
     p.write_text(manifest)
     result = extract_features_from_file(p)
-    if result is None:
-        return
+    assert result is not None
     for col in FEATURE_COLS:
         assert col in result, f"missing feature {col}"
         assert result[col] in (0, 1), f"{col} not binary: {result[col]!r}"

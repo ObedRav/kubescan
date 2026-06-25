@@ -48,37 +48,7 @@ import re
 import sys
 from pathlib import Path
 
-# ---------------------------------------------------------------------------
-# Severity weights for risk_score computation
-# Based on CIS Kubernetes Benchmark v1.8 + MITRE ATT&CK for Containers severity
-# ---------------------------------------------------------------------------
-SEVERITY_WEIGHTS: dict[str, float] = {
-    # Critical — direct container breakout / secrets exposure
-    "TRUE_HOST_PID":         3.0,  # T1611 Escape to Host via hostPID
-    "TRUE_HOST_IPC":         3.0,  # T1611 Escape to Host via hostIPC
-    "TRUE_HOST_NET":         3.0,  # T1611 host network namespace access
-    "DOCKERSOCK_PATH":       3.0,  # T1611 Docker socket mount → full node control
-    "CAP_SYS_ADMIN":         3.0,  # T1611 CAP_SYS_ADMIN → near-root privileges
-    "CAP_SYS_MODULE":        3.0,  # T1611 kernel module loading
-    "WITHIN_MANIFEST_SECRET":3.0,  # T1552 hard-coded credentials in manifest
-    # High — privilege escalation paths
-    "SEC_CONT_OVER_PRIVIL":  2.5,  # privileged: true  (full node access)
-    "ALLOW_PRIVI":           2.5,  # allowPrivilegeEscalation: true
-    "SECCOMP_UNCONFINED":    2.0,  # unconfined seccomp → arbitrary syscalls
-    "VALID_TAINT_SECRET":    2.0,  # taint-based secret exposure
-    # Medium — common misconfigs with meaningful attack surface
-    "INSECURE_HTTP":         1.5,  # T1040 plaintext traffic sniffing
-    "NO_SECU_CONTEXT":       1.5,  # absent securityContext → defaults unsafe
-    "NO_NETWORK_POLICY":     1.0,  # T1570 unrestricted lateral movement
-    "HOST_ALIAS":            1.0,  # DNS spoofing risk via hostAliases
-    # Low — operational/hardening gaps (real but not directly exploitable)
-    "NO_DEFAULT_NSPACE":     0.5,  # default namespace leaks workloads
-    "NO_RESO":               0.5,  # missing resource limits (DoS risk)
-    "NO_ROLLING_UPDATE":     0.3,  # availability risk, not direct security
-}
-
-# Maximum possible weighted sum (all flags set = 1) — used for normalisation
-MAX_RISK = sum(SEVERITY_WEIGHTS.values())
+from constants import MAX_RISK, SEVERITY_WEIGHTS
 
 # Misconfiguration columns in the order they appear in the source CSVs
 MISC_COLS = list(SEVERITY_WEIGHTS.keys())
@@ -134,7 +104,7 @@ def compute_risk_score(row_bin: dict[str, int]) -> float:
 
 
 def load_csv(path: Path) -> list[dict]:
-    with open(path, newline="", encoding="utf-8") as f:
+    with path.open(newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
@@ -282,7 +252,7 @@ def build_dataset(
         sys.exit(1)
 
     fieldnames = list(records[0].keys())
-    with open(out_path, "w", newline="", encoding="utf-8") as f:
+    with out_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(records)

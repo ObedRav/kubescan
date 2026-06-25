@@ -20,8 +20,8 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
-from yaml_feature_extractor import _check_hostpath_mount
+sys.path.insert(0, str(Path(__file__).parent.parent / "02_extract"))
+from extract_yaml_features import _check_hostpath_mount
 
 try:
     import yaml
@@ -32,7 +32,7 @@ except ImportError:
 def _load_docs(path: Path) -> list:
     docs = []
     try:
-        with open(path, encoding="utf-8", errors="ignore") as f:
+        with path.open(encoding="utf-8", errors="ignore") as f:
             for doc in yaml.safe_load_all(f):
                 if doc and isinstance(doc, dict):
                     docs.append(doc)
@@ -99,7 +99,7 @@ def _build_gitlab_lookup(project_root: Path) -> dict[str, str]:
 
     # Step 1: relpath (after GITLAB_K8S_REPOS_RAW_UNFILTERED/) → YAML_URL
     relpath_to_url: dict[str, str] = {}
-    with open(gitlab_urls_csv, newline="", encoding="utf-8") as f:
+    with gitlab_urls_csv.open(newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             m = re.search(r"GITLAB_K8S_REPOS_RAW_UNFILTERED/(.+)", row.get("YAML_PATH", ""))
             if m:
@@ -107,7 +107,7 @@ def _build_gitlab_lookup(project_root: Path) -> dict[str, str]:
 
     # Step 2: YAML_URL → local_path (from download manifest)
     url_to_local: dict[str, str] = {}
-    with open(dl_manifest_csv, newline="", encoding="utf-8") as f:
+    with dl_manifest_csv.open(newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             if row.get("status") == "ok" and row.get("source") == "gitlab":
                 url_to_local[row["yaml_url"]] = row["local_path"]
@@ -139,7 +139,7 @@ def main():
     key_to_url:  dict[tuple, str] = {}
     dl_manifest = downloads_dir / "manifest.csv" if downloads_dir.exists() else None
     if dl_manifest and dl_manifest.exists():
-        with open(dl_manifest, newline="", encoding="utf-8") as f:
+        with dl_manifest.open(newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 if row.get("status") == "ok":
                     manifest_ok[row["url"]] = row["local_path"]
@@ -152,7 +152,7 @@ def main():
     print(f"GitLab lookup: {len(gitlab_lookup)} paths resolved to local files")
 
     print(f"Loading {args.rf_dataset}...")
-    with open(args.rf_dataset, newline="", encoding="utf-8") as f:
+    with args.rf_dataset.open(newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     fieldnames = list(rows[0].keys())
 
@@ -208,7 +208,7 @@ def main():
         print("[dry-run] Not writing.")
         return
 
-    with open(args.rf_dataset, "w", newline="", encoding="utf-8") as f:
+    with args.rf_dataset.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)

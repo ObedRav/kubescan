@@ -181,3 +181,65 @@ def test_single_file_without_netpol_sets_flag(attack_yaml: Path) -> None:
     feats = extract_features_from_file(attack_yaml)
     assert feats is not None
     assert feats["NO_NETWORK_POLICY"] == 1
+
+
+# ---------------------------------------------------------------------------
+# NO_ROLLING_UPDATE — edge cases
+# ---------------------------------------------------------------------------
+
+def test_extract_features_empty_strategy_dict_sets_no_rolling_update(tmp_path: Path) -> None:
+    p = tmp_path / "deploy.yaml"
+    p.write_text(
+        "apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: d\n"
+        "spec:\n  strategy: {}\n  template:\n    spec:\n      containers:\n"
+        "        - name: c\n          image: nginx:1.0\n"
+    )
+    feats = extract_features_from_file(p)
+    assert feats is not None
+    assert feats["NO_ROLLING_UPDATE"] == 1
+
+
+def test_extract_features_cronjob_kind_does_not_set_no_rolling_update(tmp_path: Path) -> None:
+    p = tmp_path / "cj.yaml"
+    p.write_text(
+        "apiVersion: batch/v1\nkind: CronJob\nmetadata:\n  name: cj\n"
+        "spec:\n  schedule: '* * * * *'\n  jobTemplate:\n    spec:\n      template:\n"
+        "        spec:\n          containers:\n            - name: c\n              image: nginx:1.0\n"
+    )
+    feats = extract_features_from_file(p)
+    assert feats is not None
+    assert feats["NO_ROLLING_UPDATE"] == 0
+
+
+# ---------------------------------------------------------------------------
+# NO_RUN_AS_NON_ROOT — pod-level runAsUser inheritance
+# ---------------------------------------------------------------------------
+
+def test_extract_features_pod_level_run_as_non_root_inherited_by_container_clears_flag(
+    tmp_path: Path,
+) -> None:
+    p = tmp_path / "pod.yaml"
+    p.write_text(
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  securityContext:\n    runAsUser: 1000\n"
+        "  containers:\n    - name: c\n      image: nginx:1.0\n"
+    )
+    feats = extract_features_from_file(p)
+    assert feats is not None
+    assert feats["NO_RUN_AS_NON_ROOT"] == 0
+
+
+# ---------------------------------------------------------------------------
+# INSECURE_HTTP — env var value
+# ---------------------------------------------------------------------------
+
+def test_extract_features_http_url_in_env_var_sets_insecure_http(tmp_path: Path) -> None:
+    p = tmp_path / "pod.yaml"
+    p.write_text(
+        "apiVersion: v1\nkind: Pod\nmetadata:\n  name: p\n"
+        "spec:\n  containers:\n    - name: c\n      image: nginx:1.0\n"
+        "      env:\n        - name: BACKEND_URL\n          value: 'http://internal-svc:8080'\n"
+    )
+    feats = extract_features_from_file(p)
+    assert feats is not None
+    assert feats["INSECURE_HTTP"] == 1

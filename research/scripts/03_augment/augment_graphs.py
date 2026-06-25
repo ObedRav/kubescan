@@ -115,7 +115,7 @@ def augment_feature_mask(
     """
     Randomly zero-out a fraction of maskable node feature dimensions.
     """
-    x = arrays["x"].copy()   # [N, 25]
+    x = arrays["x"].copy()   # [N, 26]
     n_nodes = x.shape[0]
 
     for feat_idx in MASKABLE_FEATURES:

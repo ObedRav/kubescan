@@ -41,20 +41,28 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold, train_test_split
 from skops.io import dump as skops_dump
+
+try:
+    from kubescan.utils.seed_utils import set_global_seed
+except ImportError:
+    import sys as _sys
+    _sys.path.insert(0, str(Path(__file__).parent.parent.parent / "kubescan" / "src"))
+    from kubescan.utils.seed_utils import set_global_seed
 
 # ---------------------------------------------------------------------------
 # Feature configuration
 # ---------------------------------------------------------------------------
 
-# 15 Rahman binary flags (dropping 0-variance and near-constant cols)
+# 18 Rahman binary flags (15 original + 3 that were in training data but missed in v1)
 RAHMAN_FEATURES = [
     "TRUE_HOST_PID", "TRUE_HOST_IPC", "TRUE_HOST_NET", "DOCKERSOCK_PATH",
     "CAP_SYS_ADMIN", "CAP_SYS_MODULE", "WITHIN_MANIFEST_SECRET",
     "SEC_CONT_OVER_PRIVIL", "ALLOW_PRIVI", "INSECURE_HTTP",
     "NO_SECU_CONTEXT", "HOST_ALIAS", "NO_DEFAULT_NSPACE",
     "NO_RESO", "NO_ROLLING_UPDATE",
+    "SECCOMP_UNCONFINED", "VALID_TAINT_SECRET", "NO_NETWORK_POLICY",
 ]
 
 DERIVED_FEATURES = ["cap_misuse", "all_secrets", "total_misconfigs"]
@@ -77,35 +85,33 @@ CHECKOV_FILL = {
 }
 
 ALL_FEATURES = RAHMAN_FEATURES + DERIVED_FEATURES + EXTENDED_FEATURES
-# Total: 15 + 3 + 7 = 25 features
+# Total: 18 + 3 + 7 = 28 features
 
 
 # ---------------------------------------------------------------------------
 # Data loading and preprocessing
 # ---------------------------------------------------------------------------
 
-def load_dataset(csv_path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str], list[str]]:
+def load_dataset(
+    csv_path: Path,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[str], list[str], list[str]]:
     """
-    Load rf_dataset.csv and return (X, y_binary, y_severity, feature_names).
-    Extended features are filled from checkov equivalents, then median-imputed.
+    Load rf_dataset.csv and return (X_raw, y_binary, y_severity, feature_names,
+    repo_names, cluster_ids).  X_raw contains NaN for missing values — call
+    impute_with_medians() on the training split before fitting.
     """
-    with open(csv_path, newline="", encoding="utf-8") as f:
+    with csv_path.open(newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
 
     print(f"  Loaded {len(rows)} rows")
 
-    # ------------------------------------------------------------------
-    # Step 1: Fill extended features from checkov equivalents
-    #         (for rows where has_yaml=1)
-    # ------------------------------------------------------------------
+    # Fill extended features from checkov equivalents (for rows where has_yaml=1)
     for row in rows:
         for ext_col, ckv_col in CHECKOV_FILL.items():
             if row.get(ext_col, "") == "" and row.get(ckv_col, "") != "":
                 row[ext_col] = row[ckv_col]
 
-    # ------------------------------------------------------------------
-    # Step 2: Build raw matrix (NaN for still-empty cells)
-    # ------------------------------------------------------------------
+    # Build raw matrix (NaN for still-empty cells)
     X_raw = np.full((len(rows), len(ALL_FEATURES)), np.nan, dtype=np.float32)
     for i, row in enumerate(rows):
         for j, col in enumerate(ALL_FEATURES):
@@ -116,23 +122,7 @@ def load_dataset(csv_path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, li
                 except (ValueError, TypeError):
                     pass
 
-    # ------------------------------------------------------------------
-    # Step 3: Median imputation per column
-    # ------------------------------------------------------------------
-    col_medians = np.nanmedian(X_raw, axis=0)
-    # Conservative overrides (from dataset_config.json)
-    for j, col in enumerate(ALL_FEATURES):
-        if col == "SA_AUTOMOUNT_TOKEN":
-            col_medians[j] = 1.0   # default K8s: automount on
-        elif col == "UNTRUSTED_REGISTRY":
-            col_medians[j] = 0.0   # assume trusted unless known otherwise
-
-    inds = np.where(np.isnan(X_raw))
-    X_raw[inds] = np.take(col_medians, inds[1])
-
-    # ------------------------------------------------------------------
-    # Step 4: Build label arrays
-    # ------------------------------------------------------------------
+    # Build label arrays
     y_binary = np.array([int(r.get("label", 0) or 0) for r in rows], dtype=np.int64)
 
     y_severity = np.zeros(len(rows), dtype=np.int64)
@@ -146,20 +136,41 @@ def load_dataset(csv_path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, li
         else:
             y_severity[i] = y_binary[i]
 
-    # Log imputation stats
     filled_from_checkov = sum(
         1 for row in rows
         for ext_col in EXTENDED_FEATURES
         if ext_col in CHECKOV_FILL
         and row.get(ext_col, "") != "" and row.get(CHECKOV_FILL[ext_col], "") != ""
     )
-    print(f"  Extended features: filled from Checkov for ~{filled_from_checkov//6} rows; "
-          f"remainder imputed with column median")
+    print(f"  Extended features: filled from Checkov for ~{filled_from_checkov//6} rows")
     print(f"  label=0: {sum(y_binary==0)}, label=1: {sum(y_binary==1)}")
     print(f"  severity 0/1/2: {sum(y_severity==0)}/{sum(y_severity==1)}/{sum(y_severity==2)}")
 
-    repo_names = [r.get("repo_name", "unknown") for r in rows]
-    return X_raw, y_binary, y_severity, ALL_FEATURES, repo_names
+    repo_names  = [r.get("repo_name",  "unknown") for r in rows]
+    cluster_ids = [r.get("cluster_id", "")        for r in rows]
+    return X_raw, y_binary, y_severity, ALL_FEATURES, repo_names, cluster_ids
+
+
+def impute_with_medians(
+    X_train: np.ndarray,
+    X_test: np.ndarray,
+    feature_names: list[str],
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Compute column medians from X_train only; apply to both X_train and X_test."""
+    col_medians = np.nanmedian(X_train, axis=0)
+    for j, col in enumerate(feature_names):
+        if col == "SA_AUTOMOUNT_TOKEN":
+            col_medians[j] = 1.0
+        elif col == "UNTRUSTED_REGISTRY":
+            col_medians[j] = 0.0
+
+    def _fill(X: np.ndarray) -> np.ndarray:
+        X = X.copy()
+        nans = np.where(np.isnan(X))
+        X[nans] = np.take(col_medians, nans[1])
+        return X
+
+    return _fill(X_train), _fill(X_test), col_medians
 
 
 # ---------------------------------------------------------------------------
@@ -199,13 +210,26 @@ def run_cv(
     n_splits: int = 5,
     seed: int = 42,
     num_classes: int = 2,
+    groups: np.ndarray | None = None,
+    feature_names: list[str] | None = None,
 ) -> dict:
-    skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    if groups is not None:
+        splitter = StratifiedGroupKFold(n_splits=n_splits)
+        split_iter = splitter.split(X, y, groups=groups)
+    else:
+        splitter = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+        split_iter = splitter.split(X, y)
     fold_results = []
 
-    for fold_idx, (train_idx, val_idx) in enumerate(skf.split(X, y)):
-        X_tr, X_val = X[train_idx], X[val_idx]
+    for fold_idx, (train_idx, val_idx) in enumerate(split_iter):
+        X_tr_raw, X_val_raw = X[train_idx], X[val_idx]
         y_tr, y_val = y[train_idx], y[val_idx]
+
+        # Impute using only training fold medians (no leakage from val)
+        if feature_names is not None:
+            X_tr, X_val, _ = impute_with_medians(X_tr_raw, X_val_raw, feature_names)
+        else:
+            X_tr, X_val = X_tr_raw, X_val_raw
 
         clf = RandomForestClassifier(**rf_params)
         clf.fit(X_tr, y_tr)
@@ -334,19 +358,22 @@ def main():
     args = parser.parse_args()
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
+    set_global_seed(args.seed)
 
     print(f"Loading dataset: {args.rf_dataset}")
-    X, y_binary, y_severity, feature_names, repo_names = load_dataset(args.rf_dataset)
-    print(f"  X shape: {X.shape}")
+    X_raw, y_binary, y_severity, feature_names, repo_names, cluster_ids = load_dataset(
+        args.rf_dataset
+    )
+    print(f"  X shape (pre-imputation): {X_raw.shape}")
 
     # Ablation: drop total_misconfigs feature
     if args.ablation:
         if "total_misconfigs" in feature_names:
             drop_idx = feature_names.index("total_misconfigs")
-            X = np.delete(X, drop_idx, axis=1)
+            X_raw = np.delete(X_raw, drop_idx, axis=1)
             feature_names = [f for f in feature_names if f != "total_misconfigs"]
             print(f"  [ABLATION] Removed total_misconfigs (was index {drop_idx}). "
-                  f"New shape: {X.shape}")
+                  f"New shape: {X_raw.shape}")
         else:
             print("  [ABLATION] total_misconfigs not found — skipping")
 
@@ -369,10 +396,12 @@ def main():
     print("BINARY CLASSIFICATION  (secure vs. misconfigured)")
     print(f"{'='*60}")
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y_binary, test_size=args.test_size,
+    X_train_raw, X_test_raw, y_train, y_test = train_test_split(
+        X_raw, y_binary, test_size=args.test_size,
         stratify=y_binary, random_state=args.seed
     )
+    # Impute using only training medians (FIN-040: no leakage from test set)
+    X_train, X_test, _ = impute_with_medians(X_train_raw, X_test_raw, feature_names)
     print(f"  Train: {len(X_train)} ({sum(y_train==1)} misconfigured)  "
           f"Test: {len(X_test)} ({sum(y_test==1)} misconfigured)")
 
@@ -405,11 +434,15 @@ def main():
         print(f"    {feature_names[i]:30s}: {importances[i]:.4f}")
 
     # Cross-validation
+    # Use StratifiedGroupKFold when cluster_id is present in the CSV (FIN-029)
+    _cv_groups = np.array(cluster_ids) if any(cluster_ids) else None
+
     cv_results_bin = {}
     if not args.no_cv:
         print("\n  5-fold cross-validation (binary):")
-        cv_results_bin = run_cv(X, y_binary, rf_params, n_splits=5,
-                                 seed=args.seed, num_classes=2)
+        cv_results_bin = run_cv(X_raw, y_binary, rf_params, n_splits=5,
+                                 seed=args.seed, num_classes=2,
+                                 groups=_cv_groups, feature_names=feature_names)
         print("\n  CV summary:")
         print(f"    Macro-F1  : {cv_results_bin['macro_f1_mean']:.4f} ± {cv_results_bin['macro_f1_std']:.4f}")
         print(f"    Accuracy  : {cv_results_bin['accuracy_mean']:.4f} ± {cv_results_bin['accuracy_std']:.4f}")
@@ -420,7 +453,9 @@ def main():
     loco_results_bin = {}
     if args.loco_cv:
         print("\n  Leave-one-repo-out CV (binary):")
-        loco_results_bin = run_loco_cv(X, y_binary, repo_names, rf_params, num_classes=2)
+        # LOCO CV needs the full dataset; impute using train-split medians.
+        X_full_imputed, _, _ = impute_with_medians(X_raw, X_raw, feature_names)
+        loco_results_bin = run_loco_cv(X_full_imputed, y_binary, repo_names, rf_params, num_classes=2)
         if "error" not in loco_results_bin:
             print(f"    Folds evaluated: {loco_results_bin['n_folds']}  "
                   f"(skipped: {len(loco_results_bin['skipped'])})")
@@ -444,10 +479,11 @@ def main():
     print("SEVERITY CLASSIFICATION  (clean / low-medium / high-critical)")
     print(f"{'='*60}")
 
-    X_tr2, X_te2, y_tr2, y_te2 = train_test_split(
-        X, y_severity, test_size=args.test_size,
+    X_tr2_raw, X_te2_raw, y_tr2, y_te2 = train_test_split(
+        X_raw, y_severity, test_size=args.test_size,
         stratify=y_severity, random_state=args.seed
     )
+    X_tr2, X_te2, _ = impute_with_medians(X_tr2_raw, X_te2_raw, feature_names)
     print(f"  Train: {len(X_tr2)}  Test: {len(X_te2)}")
 
     rf_sev = RandomForestClassifier(**rf_params)
@@ -471,8 +507,9 @@ def main():
     cv_results_sev = {}
     if not args.no_cv:
         print("\n  5-fold cross-validation (severity):")
-        cv_results_sev = run_cv(X, y_severity, rf_params, n_splits=5,
-                                 seed=args.seed, num_classes=3)
+        cv_results_sev = run_cv(X_raw, y_severity, rf_params, n_splits=5,
+                                 seed=args.seed, num_classes=3,
+                                 groups=_cv_groups, feature_names=feature_names)
         print("\n  CV summary:")
         print(f"    Macro-F1  : {cv_results_sev['macro_f1_mean']:.4f} ± {cv_results_sev['macro_f1_std']:.4f}")
         print(f"    Accuracy  : {cv_results_sev['accuracy_mean']:.4f} ± {cv_results_sev['accuracy_std']:.4f}")
@@ -511,7 +548,7 @@ def main():
     }
 
     results_path = args.out_dir / "rf_results.json"
-    with open(results_path, "w", encoding="utf-8") as f:
+    with results_path.open("w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, default=str)
 
     print(f"\n{'='*60}")

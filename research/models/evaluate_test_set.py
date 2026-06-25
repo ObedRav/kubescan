@@ -70,6 +70,7 @@ except ImportError as e:
 # Canonical escape-flag indices from the kubescan package (single source of truth)
 from kubescan.model.ga_ensemble import ESCAPE_FLAG_INDICES
 from kubescan.utils.device_utils import dataloader_kwargs, resolve_device
+from kubescan.utils.seed_utils import set_global_seed
 
 LABEL_MAP = {0: "clean", 1: "isolated", 2: "attack_chain"}
 
@@ -137,7 +138,9 @@ def ensemble_predict(
 
 def precision_at_k(ranked_true: list[int], k: int, positive_label: int = 2) -> float:
     top_k = ranked_true[:k]
-    return sum(1 for y in top_k if y == positive_label) / k if k else 0.0
+    hits  = sum(1 for y in top_k if y == positive_label)
+    n_pos = sum(1 for y in ranked_true if y == positive_label)
+    return hits / min(k, n_pos) if n_pos > 0 else 0.0
 
 
 def rank_metrics(
@@ -213,8 +216,11 @@ def main():
     parser.add_argument("--layers",        type=int,   default=3)
     parser.add_argument("--show-rankings", action="store_true",
                         help="Print per-cluster ranked scores")
+    parser.add_argument("--seed", type=int, default=42,
+                        help="Random seed for bootstrap CIs (default: 42)")
     args = parser.parse_args()
 
+    set_global_seed(args.seed)
     device = resolve_device()
 
     # ------------------------------------------------------------------
@@ -223,7 +229,7 @@ def main():
     if not args.weights.exists():
         sys.exit(f"ga_weights.json not found at {args.weights}. Run layer3_ga.py first.")
 
-    with open(args.weights) as f:
+    with args.weights.open(encoding="utf-8") as f:
         weights = json.load(f)
 
     w_rf     = weights["w_rf"]
@@ -358,7 +364,7 @@ def main():
     # ------------------------------------------------------------------
     # Bootstrap confidence intervals (95%, resampling test graphs)
     # ------------------------------------------------------------------
-    cis = bootstrap_cis(ensemble_scores, true_labels, preds)
+    cis = bootstrap_cis(ensemble_scores, true_labels, preds, seed=args.seed)
 
     # ------------------------------------------------------------------
     # Print report
@@ -459,7 +465,7 @@ def main():
     }
 
     out_path = checkpoints / "test_results.json"
-    with open(out_path, "w") as f:
+    with out_path.open("w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
 
     print(f"\n  Results saved to {out_path}")

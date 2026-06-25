@@ -415,16 +415,19 @@ def scan(
         click.echo(f"Scanning {cluster_dir} ({len(gnn_fold)} GNN fold models loaded)…")
     logger.info("Scanning %s with %d GNN folds", cluster_dir, len(gnn_fold))
 
-    _run_inference_pipeline(
-        cluster_dir=cluster_dir,
-        cluster_name=cluster_name,
-        rf=rf,
-        scorer=scorer,
-        gnn_fold=gnn_fold,
-        device=device,
-        output_format=output_format,
-        show_nodes=show_nodes,
-    )
+    try:
+        _run_inference_pipeline(
+            cluster_dir=cluster_dir,
+            cluster_name=cluster_name,
+            rf=rf,
+            scorer=scorer,
+            gnn_fold=gnn_fold,
+            device=device,
+            output_format=output_format,
+            show_nodes=show_nodes,
+        )
+    except KubescanError as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
 @main.command()
@@ -487,13 +490,16 @@ def live(
         except KubescanError as exc:
             raise click.ClickException(str(exc)) from exc
 
-        _run_inference_pipeline(
-            cluster_dir=tmp_dir,
-            cluster_name=report_name,
-            rf=rf,
-            scorer=scorer,
-            gnn_fold=gnn_fold,
-            device=device,
-            output_format=output_format,
-            show_nodes=show_nodes,
-        )
+        try:
+            _run_inference_pipeline(
+                cluster_dir=tmp_dir,
+                cluster_name=report_name,
+                rf=rf,
+                scorer=scorer,
+                gnn_fold=gnn_fold,
+                device=device,
+                output_format=output_format,
+                show_nodes=show_nodes,
+            )
+        except KubescanError as exc:
+            raise click.ClickException(str(exc)) from exc

@@ -8,10 +8,10 @@ Graph model
 -----------
   One graph per cluster (repo_name).
   Each node = one K8s manifest row from rf_dataset.csv.
-  Node features (NODE_FEATURE_DIM = 25):
+  Node features (NODE_FEATURE_DIM = 26):
       indices 0-17  : 18 Rahman binary misconfiguration flags
-      indices 18-23 : 6 extended security features (NO_RUN_AS_NON_ROOT …)
-      index 24      : risk_score (float, 0-1)
+      indices 18-24 : 7 extended security features (NO_RUN_AS_NON_ROOT … HOSTPATH_MOUNT)
+      index 25      : risk_score (float, 0-1)
 
   Edges (directed):
       type 0 – directory_proximity  : manifests in same YAML sub-directory
@@ -47,7 +47,6 @@ from pathlib import Path
 
 import networkx as nx
 import numpy as np
-import yaml
 
 from kubescan.utils.graph_builder import (
     EDGE_DIR_PROXIMITY,
@@ -58,8 +57,14 @@ from kubescan.utils.graph_builder import (
     ESCAPE_FLAGS,
     LATERAL_FLAGS,
     NODE_FEATURE_DIM,
+    _collect_privileged_roles,
 )
-from kubescan.utils.yaml_parser import FEATURE_COLS, WORKLOAD_KINDS
+from kubescan.utils.yaml_parser import (
+    FEATURE_COLS,
+    WORKLOAD_KINDS,
+    _get_pod_spec,
+    _safe_load_all,
+)
 
 try:
     import torch
@@ -77,40 +82,10 @@ EXTENDED_FLAGS   = ALL_FEATURE_COLS[18:]  # last 7 (extended gap-fill)
 # YAML semantic parser
 # ---------------------------------------------------------------------------
 
-def _safe_load_all(path: Path) -> list[dict]:
-    """Load all YAML documents from a file; skip non-dict items silently."""
-    docs = []
-    try:
-        with open(path, encoding="utf-8", errors="replace") as f:
-            raw = f.read()
-        for doc in yaml.safe_load_all(raw):
-            if isinstance(doc, dict):
-                docs.append(doc)
-    except Exception:
-        pass
-    return docs
-
-
-def _get_pod_spec(doc: dict) -> dict | None:
-    """Return the PodSpec for any workload kind."""
-    kind = doc.get("kind", "")
-    spec = doc.get("spec") or {}
-    if not isinstance(spec, dict):
-        return None
-    if kind == "Pod":
-        return spec
-    if kind == "CronJob":
-        jt = (spec.get("jobTemplate") or {})
-        jt_spec = (jt.get("spec") or {})
-        tmpl = (jt_spec.get("template") or {})
-        return (tmpl.get("spec") or {}) if isinstance(tmpl, dict) else {}
-    template = spec.get("template") or {}
-    if not isinstance(template, dict):
-        return None
-    return template.get("spec") or {}
-
-
-def parse_yaml_semantics(local_path: str) -> dict:
+def parse_yaml_semantics(
+    local_path: str,
+    privileged_roles: frozenset[str] | None = None,
+) -> dict:
     """
     Parse a downloaded K8s YAML file and return semantic metadata:
       namespace, serviceAccountName, rbac_subjects, rbac_roleref
@@ -157,13 +132,16 @@ def parse_yaml_semantics(local_path: str) -> dict:
 
         if kind in ("RoleBinding", "ClusterRoleBinding"):
             roleref = doc.get("roleRef", {})
-            result["rbac_roleref"] = roleref.get("name")
-            subjects = doc.get("subjects") or []
-            for s in subjects:
-                if isinstance(s, dict) and s.get("kind") == "ServiceAccount":
-                    name = s.get("name")
-                    if name:
-                        result["rbac_subjects"].append(name)
+            role_name = roleref.get("name", "")
+            result["rbac_roleref"] = role_name
+            # Only add subjects bound to privileged roles (FIN-014 — match inference)
+            if privileged_roles is None or role_name in privileged_roles:
+                subjects = doc.get("subjects") or []
+                for s in subjects:
+                    if isinstance(s, dict) and s.get("kind") == "ServiceAccount":
+                        name = s.get("name")
+                        if name:
+                            result["rbac_subjects"].append(name)
 
     return result
 
@@ -264,25 +242,35 @@ def build_cluster_graph(
     pod_sa:    dict[int, str] = {}          # idx → serviceAccountName
     elevated_sas: set[str]   = set()        # SA names with elevated RoleBindings
 
+    # Pre-pass: identify privileged roles from all cluster manifests (FIN-014)
+    _local_docs: list[list[dict]] = []
+    for row in rows:
+        local = _resolve_local(row.get("yaml_path", ""), key_to_url, manifest_ok)
+        if local:
+            _local_docs.append(_safe_load_all(Path(local)))
+    privileged_roles: frozenset[str] = _collect_privileged_roles(_local_docs)
+
     for idx, row in enumerate(rows):
         local = _resolve_local(row.get("yaml_path", ""), key_to_url, manifest_ok)
         if not local:
             ns_groups["_default"].append(idx)
             continue
-        sem = parse_yaml_semantics(local)
+        sem = parse_yaml_semantics(local, privileged_roles)
         ns = sem.get("namespace") or "_default"
         ns_groups[ns].append(idx)
 
         # HOSTPATH_MOUNT: from YAML, override CSV value for escape detection
         if sem.get("hostpath_mount"):
             node_data[idx]["HOSTPATH_MOUNT"] = 1
+            # Also update the feature vector so PRIV_REACH edges pick it up (FIN-005)
+            G.nodes[idx]["features"][ALL_FEATURE_COLS.index("HOSTPATH_MOUNT")] = 1.0
 
         # Collect SA name used by this pod
         sa = sem.get("service_account")
         if sa:
             pod_sa[idx] = sa
 
-        # Collect elevated SA names from any RoleBindings in this file
+        # Collect elevated SA names from RoleBindings targeting privileged roles (FIN-014)
         for subj in (sem.get("rbac_subjects") or []):
             if subj:
                 elevated_sas.add(subj)
@@ -312,9 +300,10 @@ def build_cluster_graph(
         idx for idx, nd in enumerate(node_data)
         if any(nd.get(f, 0) for f in ESCAPE_FLAGS)
     ]
+    # PRIV_REACH always overwrites lower-priority edge types (FIN-004: no has_edge guard)
     for src in escape_nodes:
         for dst in range(n):
-            if dst != src and not G.has_edge(src, dst):
+            if dst != src:
                 G.add_edge(src, dst, edge_type=EDGE_PRIV_REACH)
 
     # ------------------------------------------------------------------
@@ -459,9 +448,9 @@ def graph_to_arrays(result: dict) -> dict[str, np.ndarray]:
     Convert a cluster graph result to numpy arrays for saving.
 
     Arrays:
-      x           [N, 25]  node features
+      x           [N, 26]  node features
       edge_index  [2, E]   edge (src, dst) pairs
-      edge_attr   [E, 1]   edge type code
+      edge_type   [E]      edge type code
       y           [1]      graph label
       node_labels [N]      per-node binary label (for node-level tasks)
       risk_scores [N]      per-node risk score
@@ -558,7 +547,7 @@ def build_lookups(
     for csv_path in [urls_csv, urls_csv.parent / "GITLAB-URLS.csv"]:
         if not csv_path.exists():
             continue
-        with open(csv_path, newline="", encoding="utf-8") as f:
+        with csv_path.open(newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 orig = row.get("YAML_PATH", "").strip()
                 url  = row.get("YAML_URL",  "").strip()
@@ -574,7 +563,7 @@ def build_lookups(
 
     manifest_ok: dict[str, str] = {}
     if manifest_csv.exists():
-        with open(manifest_csv, newline="", encoding="utf-8") as f:
+        with manifest_csv.open(newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 url   = row.get("yaml_url",   "").strip()
                 local = row.get("local_path",  "").strip()
@@ -618,7 +607,7 @@ def main():
     # Load dataset
     # ------------------------------------------------------------------
     print(f"Loading {args.rf_dataset}...")
-    with open(args.rf_dataset, newline="", encoding="utf-8") as f:
+    with args.rf_dataset.open(newline="", encoding="utf-8") as f:
         all_rows = list(csv.DictReader(f))
     print(f"  {len(all_rows)} rows")
 
@@ -697,7 +686,7 @@ def main():
 
         if args.json:
             json_path = args.out_dir / f"{safe_name}.json"
-            with open(json_path, "w", encoding="utf-8") as f:
+            with json_path.open("w", encoding="utf-8") as f:
                 json.dump(graph_to_json(result), f, indent=2)
 
         manifest_rows.append({
@@ -718,7 +707,7 @@ def main():
     # ------------------------------------------------------------------
     manifest_path = args.out_dir / "graph_manifest.csv"
     fieldnames = list(manifest_rows[0].keys())
-    with open(manifest_path, "w", newline="", encoding="utf-8") as f:
+    with manifest_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(manifest_rows)

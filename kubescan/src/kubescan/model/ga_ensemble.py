@@ -77,7 +77,7 @@ class EnsembleScorer:
     """
 
     def __init__(self, weights_path: Path) -> None:
-        with open(weights_path) as f:
+        with weights_path.open(encoding="utf-8") as f:
             w = json.load(f)
         try:
             total = w["w_rf"] + w["w_gnn"] + w.get("w_escape", 0.0)

@@ -19,6 +19,7 @@ __all__ = [
 ]
 
 import logging
+import re
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -67,9 +68,22 @@ _ROLLING_UPDATE_KINDS: Final[frozenset[str]] = frozenset({
 })
 
 # String constants for Kubernetes field names (avoids magic strings in logic)
-_DOCKER_SOCK_PATH:           Final[str]            = "docker.sock"
+_DOCKER_SOCK_MAIN_PATH:      Final[str]            = "/var/run/docker.sock"
+_DOCKER_SOCK_ALT_PATH:       Final[str]            = "/docker.sock"
 _INSECURE_HTTP_PATTERN:      Final[str]            = "http://"
 _HTTP_LOCALHOST_EXCLUSIONS:  Final[frozenset[str]] = frozenset({"localhost", "127.0.0.1"})
+
+# Credential detection patterns (mirror extract_yaml_features.py — single logic)
+_SECRET_KEY_PATTERNS: Final[re.Pattern[str]] = re.compile(
+    r"(password|passwd|pass|secret|token|credential|api[_\-]?key|private[_\-]?key|"
+    r"access[_\-]?key|auth[_\-]?key|client[_\-]?secret|db[_\-]?pass|"
+    r"redis[_\-]?pass|mysql[_\-]?pass|postgres[_\-]?pass)",
+    re.IGNORECASE,
+)
+_PLACEHOLDER_PATTERNS: Final[re.Pattern[str]] = re.compile(
+    r"^\s*$|^\$\{|^\{\{|^<|^CHANGE_ME$|^changeme$|^todo|^tbd|^xxx|^placeholder|^dummy|^fake|^test|^your",
+    re.IGNORECASE,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -83,7 +97,7 @@ def _safe_dict(obj: object) -> dict[str, object]:
 
 def _safe_load_all(path: Path) -> list[dict[str, object]]:
     try:
-        with open(path, encoding="utf-8", errors="replace") as f:
+        with path.open(encoding="utf-8", errors="replace") as f:
             raw = f.read()
         return [d for d in yaml.safe_load_all(raw) if isinstance(d, dict)]
     except Exception as exc:
@@ -176,14 +190,18 @@ def _extract_host_features(
     feats:    dict[str, int],
 ) -> None:
     """Set host-namespace flags (TRUE_HOST_PID, TRUE_HOST_IPC, TRUE_HOST_NET, HOST_ALIAS)."""
-    if pod_spec.get("hostPID"):
+    if pod_spec.get("hostPID") is True:
         feats["TRUE_HOST_PID"] = 1
-    if pod_spec.get("hostIPC"):
+    if pod_spec.get("hostIPC") is True:
         feats["TRUE_HOST_IPC"] = 1
-    if pod_spec.get("hostNetwork"):
+    if pod_spec.get("hostNetwork") is True:
         feats["TRUE_HOST_NET"] = 1
     if pod_spec.get("hostAliases"):
         feats["HOST_ALIAS"] = 1
+
+
+def _is_docker_sock(path_val: str) -> bool:
+    return _DOCKER_SOCK_MAIN_PATH in path_val or _DOCKER_SOCK_ALT_PATH in path_val
 
 
 def _extract_volume_features(
@@ -198,7 +216,7 @@ def _extract_volume_features(
         if not hp:
             continue
         path_val = str(hp.get("path", ""))
-        if _DOCKER_SOCK_PATH in path_val:
+        if _is_docker_sock(path_val):
             feats["DOCKERSOCK_PATH"] = 1
         else:
             feats["HOSTPATH_MOUNT"] = 1
@@ -207,20 +225,25 @@ def _extract_volume_features(
 def _extract_pod_security_context(
     pod_spec: dict[str, object],
     feats:    dict[str, int],
-) -> tuple[bool, bool]:
+) -> bool:
     """
     Check pod-level securityContext for root-user and seccomp settings.
 
-    Returns (pod_run_as_root, pod_writable_fs). Container-level values are
-    checked separately in _extract_container_features and OR-ed with these.
+    Returns pod_run_as_root. Container-level NO_READ_ONLY_ROOT_FS is checked
+    exclusively in _extract_container_features (readOnlyRootFilesystem is not
+    a valid pod-level field, so checking it at pod level always fires).
     """
     pod_sc = _safe_dict(pod_spec.get("securityContext"))
     pod_seccomp = _safe_dict(pod_sc.get("seccompProfile"))
     if pod_seccomp.get("type") == "Unconfined":
         feats["SECCOMP_UNCONFINED"] = 1
-    pod_run_as_root = pod_sc.get("runAsNonRoot") is not True or pod_sc.get("runAsUser") == 0
-    pod_writable_fs = pod_sc.get("readOnlyRootFilesystem") is not True
-    return pod_run_as_root, pod_writable_fs
+    # Pod runs as root only when neither runAsNonRoot nor a non-zero runAsUser is set.
+    pod_run_as_user = pod_sc.get("runAsUser")
+    pod_run_as_root = (
+        pod_sc.get("runAsNonRoot") is not True
+        and (pod_run_as_user is None or pod_run_as_user == 0)
+    )
+    return pod_run_as_root
 
 
 def _extract_container_features(
@@ -246,6 +269,7 @@ def _extract_container_features(
 
     pod_sc = _safe_dict(pod_spec.get("securityContext"))
     pod_run_as_non_root: bool = pod_sc.get("runAsNonRoot") is True
+    pod_run_as_user = pod_sc.get("runAsUser")
 
     for ctr in _iter_containers(pod_spec):
         resources = _safe_dict(ctr.get("resources"))
@@ -256,10 +280,10 @@ def _extract_container_features(
         if not sc:
             any_missing_security_ctx = True
 
-        if sc.get("privileged"):
+        if sc.get("privileged") is True:
             feats["SEC_CONT_OVER_PRIVIL"] = 1
             feats["ALLOW_PRIVI"]          = 1
-        if sc.get("allowPrivilegeEscalation"):
+        if sc.get("allowPrivilegeEscalation") is True:
             feats["ALLOW_PRIVI"] = 1
 
         caps = _safe_dict(sc.get("capabilities"))
@@ -270,10 +294,12 @@ def _extract_container_features(
             feats["CAP_SYS_MODULE"] = 1
 
         # Container may run as root only when neither the container nor the pod
-        # enforces runAsNonRoot, matching the training script's per-container
-        # short-circuit: `if ctr_non_root or pod_non_root: continue`.
-        if (sc.get("runAsNonRoot") is not True and not pod_run_as_non_root) or sc.get("runAsUser") == 0:
-            has_run_as_root = True
+        # enforces runAsNonRoot, and no non-zero runAsUser is set at either level.
+        ctr_run_as_user = sc.get("runAsUser")
+        uid = ctr_run_as_user if ctr_run_as_user is not None else pod_run_as_user
+        if sc.get("runAsNonRoot") is not True and not pod_run_as_non_root:
+            if uid is None or uid == 0:
+                has_run_as_root = True
         if sc.get("readOnlyRootFilesystem") is not True:
             has_writable_fs = True
 
@@ -281,20 +307,15 @@ def _extract_container_features(
         if seccomp.get("type") == "Unconfined":
             feats["SECCOMP_UNCONFINED"] = 1
 
-        ctr_mount    = ctr.get("automountServiceAccountToken")
-        pod_no_mount = pod_spec.get("automountServiceAccountToken") is False
-        if ctr_mount is True or (ctr_mount is not False and not pod_no_mount):
-            feats["SA_AUTOMOUNT_TOKEN"] = 1
-
         image = str(ctr.get("image", ""))
         if _image_uses_latest(image):
             feats["IMAGE_USES_LATEST"] = 1
         if _image_from_untrusted_registry(image):
             feats["UNTRUSTED_REGISTRY"] = 1
 
-        for env in (ctr.get("env") or []):
-            if isinstance(env, dict) and _safe_dict(env.get("valueFrom")).get("secretKeyRef"):
-                feats["WITHIN_MANIFEST_SECRET"] = 1
+        for mount in (ctr.get("volumeMounts") or []):
+            if isinstance(mount, dict) and _is_docker_sock(str(mount.get("mountPath", ""))):
+                feats["DOCKERSOCK_PATH"] = 1
 
     return any_missing_limits, any_missing_security_ctx, has_run_as_root, has_writable_fs
 
@@ -309,23 +330,72 @@ def _extract_workload_metadata(
     ns      = str(meta.get("namespace") or "")
     sa_name = str(pod_spec.get("serviceAccountName") or "")
 
-    if not sa_name or sa_name == "default":
+    if not sa_name or sa_name.lower() == "default":
         feats["USES_DEFAULT_SA"] = 1
-    if not ns or ns == "default":
+    if not ns or ns.lower() == "default":
         feats["NO_DEFAULT_NSPACE"] = 1
+
+    # Pod-level SA automount default: True unless explicitly disabled.
+    if pod_spec.get("automountServiceAccountToken") is not False:
+        feats["SA_AUTOMOUNT_TOKEN"] = 1
+
+    # Old-style seccomp annotation (pre-1.19 Kubernetes).
+    annotations = _safe_dict(meta.get("annotations"))
+    for ann_key, ann_val in annotations.items():
+        if "seccomp" in str(ann_key).lower() and "unconfined" in str(ann_val).lower():
+            feats["SECCOMP_UNCONFINED"] = 1
 
     # Only Deployment/StatefulSet/DaemonSet have rolling-update strategies —
     # flagging CronJob/Job/Pod would cause systematic train/inference skew.
     kind = str(doc.get("kind", ""))
     if kind in _ROLLING_UPDATE_KINDS:
         spec_dict    = _safe_dict(doc.get("spec"))
-        # Checked separately (not with `or`) so an explicit `strategy: {}`
-        # (falsy empty dict) is not mistaken for an absent strategy field.
         strategy_raw = spec_dict.get("strategy")
         if strategy_raw is None:
             strategy_raw = spec_dict.get("updateStrategy")
-        if strategy_raw is None or str(_safe_dict(strategy_raw).get("type", "")).lower() == "recreate":
+        # Flag when strategy is absent (None), empty ({}), or Recreate type.
+        if (strategy_raw is None or not strategy_raw
+                or str(_safe_dict(strategy_raw).get("type", "")).lower() == "recreate"):
             feats["NO_ROLLING_UPDATE"] = 1
+
+
+# ---------------------------------------------------------------------------
+# Credential detection (FIN-001 — mirrors extract_yaml_features.py logic)
+# ---------------------------------------------------------------------------
+
+def _is_plausible_secret(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    v = value.strip()
+    if len(v) < 3:
+        return False
+    if _PLACEHOLDER_PATTERNS.search(v):
+        return False
+    if v.startswith("$") or v.startswith("%("):
+        return False
+    return True
+
+
+def _scan_resource_for_secrets(obj: object) -> bool:
+    """Recursively scan a resource dict for hard-coded credentials."""
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if _SECRET_KEY_PATTERNS.search(str(k)):
+                if isinstance(v, str) and _is_plausible_secret(v):
+                    return True
+                if isinstance(v, list):
+                    for item in v:
+                        if isinstance(item, dict):
+                            val_ = item.get("value", "")
+                            if _is_plausible_secret(str(val_)):
+                                return True
+            if _scan_resource_for_secrets(v):
+                return True
+    elif isinstance(obj, list):
+        for item in obj:
+            if _scan_resource_for_secrets(item):
+                return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -364,7 +434,7 @@ def _extract_file(yaml_path: Path) -> tuple[dict[str, object] | None, bool]:
         _extract_volume_features(pod_spec, feats)
         _extract_workload_metadata(doc, pod_spec, feats)
 
-        pod_run_as_root, pod_writable_fs = _extract_pod_security_context(pod_spec, feats)
+        pod_run_as_root = _extract_pod_security_context(pod_spec, feats)
         any_missing_limits, any_missing_security_ctx, has_run_as_root, has_writable_fs = (
             _extract_container_features(pod_spec, feats)
         )
@@ -375,12 +445,12 @@ def _extract_file(yaml_path: Path) -> tuple[dict[str, object] | None, bool]:
             feats["NO_RESO"] = 1
         if has_run_as_root or pod_run_as_root:
             feats["NO_RUN_AS_NON_ROOT"] = 1
-        if has_writable_fs or pod_writable_fs:
+        if has_writable_fs:
             feats["NO_READ_ONLY_ROOT_FS"] = 1
-        # Broad recursive scan matching the training extractor — covers http:// in
-        # env vars, args, and init-container commands, not just httpGet probes.
         if _spec_has_insecure_http(_safe_dict(doc.get("spec"))):
             feats["INSECURE_HTTP"] = 1
+        if _scan_resource_for_secrets(doc):
+            feats["WITHIN_MANIFEST_SECRET"] = 1
 
     if not has_workload:
         return None, has_net_policy
