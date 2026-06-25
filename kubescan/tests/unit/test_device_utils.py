@@ -60,13 +60,13 @@ def test_dataloader_kwargs_cuda_pin_memory_is_true() -> None:
     assert kwargs["pin_memory"] is True
 
 
-def test_dataloader_kwargs_num_workers_is_at_least_one() -> None:
+def test_dataloader_kwargs_num_workers_is_zero_on_cpu() -> None:
     kwargs = dataloader_kwargs(torch.device("cpu"))
-    assert kwargs["num_workers"] >= 1
+    assert kwargs["num_workers"] == 0
 
 
-def test_dataloader_kwargs_num_workers_does_not_exceed_cap() -> None:
-    kwargs = dataloader_kwargs(torch.device("cpu"))
+def test_dataloader_kwargs_num_workers_does_not_exceed_cap_on_cuda() -> None:
+    kwargs = dataloader_kwargs(torch.device("cuda"))
     assert kwargs["num_workers"] <= _MAX_DATALOADER_WORKERS
 
 
