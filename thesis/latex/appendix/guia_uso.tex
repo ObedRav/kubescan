@@ -33,7 +33,32 @@ manifiestos: un \textit{pod} con montaje del sistema de ficheros del anfitrión
 y contenedor privilegiado (\texttt{pod-privilegiado.yaml}, adaptado de
 \textit{BishopFox BadPods}), y un \textit{Deployment} sin
 \texttt{securityContext} ni \texttt{NetworkPolicy} definidos
-(\texttt{deployment-web.yaml}, adaptado de \textit{Kubernetes Goat}):
+(\texttt{deployment-web.yaml}, adaptado de \textit{Kubernetes Goat}).
+
+La Figura~\ref{fig:cli_pipeline} traza el recorrido completo de esta
+invocación: extracción de características, construcción del grafo, las tres
+señales de entrada al \textit{ensemble} (RF, \ac{GAT} y escape) fusionadas por
+\texttt{EnsembleScorer.score()}, y la clasificación final mediante los
+umbrales de la Sección~\ref{sec:capa3_diseno}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig_cli_pipeline}
+  \caption{Flujo de ejecución de \texttt{kubescan scan} sobre el ejemplo
+           \texttt{produccion-web}, desde la invocación por \ac{CLI} hasta el
+           veredicto final.}
+  \label{fig:cli_pipeline}
+  \fuentepropia
+\end{figure}
+
+Como se observa en la Figura~\ref{fig:cli_pipeline}, las tres señales
+convergen ponderadas por \(w_{\text{rf}}\), \(w_{\text{gnn}}\) y
+\(w_{\text{esc}}\) (optimizados por el \ac{GA}) en un único
+\textit{ensemble\_score}; en este caso, la
+presencia de un nodo con flags de escape activas
+(\texttt{pod-privilegiado.yaml}) lo sitúa muy por encima del umbral de 0,60,
+resultando en el veredicto \texttt{ATTACK\_CHAIN}. La transcripción completa
+de esta ejecución es la siguiente:
 
 {\footnotesize\begin{verbatim}
 $ kubescan scan /tmp/manifests-ejemplo --cluster-name produccion-web
@@ -59,14 +84,6 @@ Scanning /tmp/manifests-ejemplo (5 GNN fold models loaded)...
 
 ==================================================================
 \end{verbatim}}
-
-La salida reporta las tres señales de entrada al ensemble (\textit{mean RF
-risk}, \textit{chain probability} y \textit{escape fraction}, ponderadas por
-\(w_{\text{rf}}\), \(w_{\text{gnn}}\) y \(w_{\text{esc}}\) respectivamente,
-optimizados por el \ac{GA} — ver Sección~\ref{sec:capa3_diseno}), y clasifica el
-clúster mediante los umbrales fijos definidos en esa misma sección. En este
-caso, la presencia de un nodo con flags de escape activas (\texttt{pod-privilegiado.yaml})
-eleva el \textit{ensemble\_score} muy por encima del umbral de 0,60.
 
 El indicador \texttt{--show-nodes} añade un desglose por manifiesto (\textit{risk
 score}, tipo de nodo y flags activas); \texttt{--format json} produce el mismo

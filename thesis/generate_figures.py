@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 generate_figures.py
-Genera las 6 figuras del TFE kubescan con datos reales del proyecto.
+Genera las 7 figuras del TFE kubescan con datos reales del proyecto.
 Ejecutar desde: /Users/obedrayo/Documents/UNIR/TFE/
     python3 thesis/generate_figures.py
 """
@@ -11,7 +11,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.patches import FancyBboxPatch
+from matplotlib.patches import FancyBboxPatch, RegularPolygon, Circle, Rectangle
 import numpy as np
 
 OUT = os.path.join(os.path.dirname(__file__), "figures")
@@ -203,5 +203,151 @@ plt.tight_layout()
 plt.savefig(os.path.join(OUT, 'fig_ensemble_pat_k.pdf'), bbox_inches='tight')
 plt.close()
 print("fig_ensemble_pat_k.pdf OK")
+
+# ── FIG C.1  CLI pipeline (fusion tree) ─────────────────────────────────────
+# Traza el mismo ejemplo real ejecutado en el Apendice C (kubescan scan sobre
+# produccion-web/, ver appendix/guia_uso.tex): dos manifiestos, veredicto
+# ATTACK_CHAIN, ensemble_score = 0.9037.
+BLUE, GREEN, PURPLE, RED, ORANGE, GRAY, DARK = (
+    '#2980b9', '#27ae60', '#8e44ad', '#e74c3c', '#e67e22', '#7f8c8d', '#2c3e50',
+)
+
+
+def _varrow(ax, x, y1, y2, color=DARK, lw=1.8):
+    ax.annotate('', xy=(x, y2), xytext=(x, y1),
+                arrowprops=dict(arrowstyle='-|>', color=color, lw=lw, mutation_scale=14))
+
+
+def _diag_arrow(ax, x1, y1, x2, y2, color=DARK, lw=1.6, label=None, label_dx=0.0):
+    ax.annotate('', xy=(x2, y2), xytext=(x1, y1),
+                arrowprops=dict(arrowstyle='-|>', color=color, lw=lw, mutation_scale=12))
+    if label:
+        mx, my = (x1 + x2) / 2 + label_dx, (y1 + y2) / 2
+        ax.text(mx, my, label, ha='center', va='center', fontsize=7.3, color=color,
+                fontweight='bold',
+                bbox=dict(boxstyle='round,pad=0.12', facecolor='white',
+                          edgecolor=color, linewidth=0.8, alpha=0.95), zorder=6)
+
+
+def _box(ax, x, y, w, h, label, sublabel, color, fs=9):
+    rect = FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.07",
+                           facecolor=color, edgecolor=DARK, linewidth=1.4, zorder=3)
+    ax.add_patch(rect)
+    ax.text(x + w / 2, y + h / 2 + 0.11, label, ha='center', va='center',
+            fontsize=fs, fontweight='bold', color='white', zorder=4)
+    if sublabel:
+        ax.text(x + w / 2, y + h / 2 - 0.16, sublabel, ha='center', va='center',
+                fontsize=7.2, color='#ecf0f1', zorder=4)
+
+
+def _terminal_bar(ax, x, y, w, h, text):
+    rect = FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.05,rounding_size=0.12",
+                           facecolor=DARK, edgecolor='#111a22', linewidth=1.2, zorder=3)
+    ax.add_patch(rect)
+    for i, c in enumerate(['#e74c3c', '#f1c40f', '#2ecc71']):
+        ax.add_patch(Circle((x + 0.28 + i * 0.26, y + h - 0.26), 0.07, color=c, zorder=4))
+    ax.text(x + w / 2, y + h / 2 - 0.13, text, ha='center', va='center', fontsize=9,
+            color='#2ecc71', family='monospace', fontweight='bold', zorder=4)
+
+
+def _file_stack(ax, x, y, color, n=3, label=None):
+    for i in range(n):
+        dx = dy = i * 0.11
+        rect = FancyBboxPatch((x + dx, y + dy), 0.8, 1.0, boxstyle="round,pad=0.02",
+                               facecolor='white', edgecolor=color, linewidth=1.3,
+                               zorder=3 + i)
+        ax.add_patch(rect)
+    fold_x, fold_y = x + (n - 1) * 0.11 + 0.8, y + (n - 1) * 0.11 + 1.0
+    ax.plot([fold_x - 0.2, fold_x, fold_x], [fold_y, fold_y, fold_y - 0.2],
+            color=color, lw=1.3, zorder=4 + n)
+    for i in range(3):
+        yy = y + (n - 1) * 0.11 + 0.75 - i * 0.19
+        ax.plot([x + (n - 1) * 0.11 + 0.13, x + (n - 1) * 0.11 + 0.67], [yy, yy],
+                color=color, lw=1.0, alpha=0.6, zorder=4 + n)
+    if label:
+        cy = y + (n - 1) * 0.055 + 0.5
+        ax.text(x + (n - 1) * 0.11 + 1.0, cy, label, ha='left', va='center',
+                fontsize=7.8, color=color, fontweight='bold')
+
+
+def _hexagon(ax, cx, cy, r, label, sublabel, color):
+    hexpatch = RegularPolygon((cx, cy), numVertices=6, radius=r, orientation=np.pi / 6,
+                               facecolor=color, edgecolor=DARK, linewidth=1.8, zorder=5)
+    ax.add_patch(hexpatch)
+    ax.text(cx, cy + 0.13, label, ha='center', va='center', fontsize=9.5,
+            fontweight='bold', color='white', zorder=6)
+    ax.text(cx, cy - 0.19, sublabel, ha='center', va='center', fontsize=7.4,
+            color='#ecf0f1', zorder=6)
+
+
+def _gauge(ax, x, y, w, h, score, t1=0.30, t2=0.60):
+    for a, b, c in [(0, t1, GREEN), (t1, t2, ORANGE), (t2, 1.0, RED)]:
+        ax.add_patch(Rectangle((x + a * w, y), (b - a) * w, h, facecolor=c,
+                                edgecolor='none', alpha=0.85, zorder=3))
+    ax.add_patch(Rectangle((x, y), w, h, facecolor='none', edgecolor=DARK,
+                            linewidth=1.3, zorder=5))
+    for t, lbl in [(0, '0'), (t1, '0,30'), (t2, '0,60'), (1.0, '1')]:
+        ax.plot([x + t * w, x + t * w], [y, y - 0.08], color=DARK, lw=1.0, zorder=5)
+        ax.text(x + t * w, y - 0.22, lbl, ha='center', va='top', fontsize=7, color=DARK)
+    mx = x + score * w
+    ax.plot([mx, mx], [y - 0.05, y + h + 0.05], color='white', lw=2.6, zorder=6)
+    ax.plot([mx, mx], [y - 0.05, y + h + 0.05], color=DARK, lw=1.1, zorder=7)
+    ax.plot(mx, y + h + 0.22, marker='v', color=DARK, markersize=8, zorder=7)
+    score_str = f'{score:.3f}'.replace('.', ',')
+    ax.text(mx, y + h + 0.42, f'ensemble_score = {score_str}', ha='center', va='bottom',
+            fontsize=7.6, color=DARK, fontweight='bold')
+
+
+fig, ax = plt.subplots(figsize=(7.6, 9.3))
+ax.set_xlim(0, 10)
+ax.set_ylim(-1.5, 12.3)
+ax.axis('off')
+
+_terminal_bar(ax, 2.4, 11.15, 5.2, 0.85, '$ kubescan scan produccion-web/')
+_varrow(ax, 5.0, 11.15, 8.85)
+
+_file_stack(ax, 6.1, 9.55, GRAY, n=3, label='N manifiestos\nYAML')
+ax.plot([5.0, 6.1], [9.95, 9.95], color=GRAY, lw=1.2, linestyle=(0, (2, 1.5)), zorder=2)
+
+_box(ax, 3.4, 7.85, 3.2, 0.9, 'extract_cluster_features()',
+     'yaml_parser.py  ·  26 features/nodo', GRAY, fs=8.3)
+_varrow(ax, 5.0, 7.85, 6.95)
+
+_box(ax, 3.4, 6.05, 3.2, 0.9, 'build_cluster_graph()',
+     'graph_builder.py  ·  G = (V, E)', PURPLE, fs=8.3)
+
+y_branch = 4.35
+_diag_arrow(ax, 4.2, 6.05, 1.6, y_branch + 0.9, color=BLUE)
+_diag_arrow(ax, 5.0, 6.05, 5.0, y_branch + 0.9, color=GREEN)
+_diag_arrow(ax, 5.8, 6.05, 8.4, y_branch + 0.9, color=RED)
+
+_box(ax, 0.5, y_branch, 2.2, 0.9, 'Capa 1 · RF', 'predict_risk_scores()', BLUE, fs=8.3)
+_box(ax, 3.9, y_branch, 2.2, 0.9, 'Capa 2 · GAT', 'run_gnn_ensemble()', GREEN, fs=8.3)
+_box(ax, 7.3, y_branch, 2.2, 0.9, 'Señal de escape', 'compute_escape_signal()', RED, fs=8.3)
+
+ax.text(1.6, y_branch - 0.26, 'mean_rf_risk = 0,996', ha='center', fontsize=7.3,
+        color=BLUE, style='italic')
+ax.text(5.0, y_branch - 0.26, 'chain_probability = 0,710', ha='center', fontsize=7.3,
+        color=GREEN, style='italic')
+ax.text(8.4, y_branch - 0.26, 'escape_signal = 1,0', ha='center', fontsize=7.3,
+        color=RED, style='italic')
+
+fx, fy = 5.0, 1.75
+_diag_arrow(ax, 1.6, y_branch - 0.46, fx - 0.62, fy + 0.5, color=BLUE, label='w_rf', label_dx=-0.35)
+_diag_arrow(ax, 5.0, y_branch - 0.46, fx, fy + 0.85, color=GREEN, label='w_gnn', label_dx=0.42)
+_diag_arrow(ax, 8.4, y_branch - 0.46, fx + 0.62, fy + 0.5, color=RED, label='w_esc', label_dx=0.36)
+
+_hexagon(ax, fx, fy, 0.95, 'EnsembleScorer', '.score()', DARK)
+_varrow(ax, fx, fy - 0.95, 0.75)
+
+_gauge(ax, 2.2, -0.05, 5.6, 0.5, score=0.904)
+_varrow(ax, fx, -0.15, -0.95)
+
+_box(ax, 3.3, -1.45, 3.4, 0.9, 'ATTACK_CHAIN', 'informe text / JSON', RED, fs=9.5)
+
+plt.tight_layout()
+plt.savefig(os.path.join(OUT, 'fig_cli_pipeline.pdf'), bbox_inches='tight')
+plt.close()
+print("fig_cli_pipeline.pdf OK")
 
 print(f"\nTodas las figuras generadas en: {OUT}")
