@@ -418,6 +418,8 @@ def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    parser.add_argument("--oof",          dest="oof", action="store_true",
+                        help="Use fold_X_val.txt + gnn_fold_X.pt out-of-fold predictions (default)")
     parser.add_argument("--val",          dest="oof", action="store_false",
                         help="Use val.txt + gnn_best.pt instead of OOF mode (not recommended)")
     parser.add_argument("--model",        type=Path, default=model_path,
