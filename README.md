@@ -18,6 +18,19 @@ Evaluation uses group-aware splits (augmented graph variants never cross
 train/eval boundaries; the 15 test clusters are excluded from CV folds and GA
 tuning). See `research/data/DATASET.md` for the full protocol.
 
+## System requirements
+
+| Resource | Minimum | Notes |
+|----------|---------|-------|
+| Python | 3.10+ | |
+| RAM | 8 GB | 16 GB recommended for MPS/CUDA training |
+| Disk | **40 GB free** | PyTorch + PyG wheels (~2.5 GB site-packages), Metal shader cache built on first MPS run (~12 GB in `/var/folders/`), raw manifest data (~4 GB), training artefacts |
+| GPU | optional | MPS (Apple Silicon) or CUDA auto-detected; CPU fallback always works |
+
+> **macOS / MPS note:** the first `train_gnn.py` run compiles Metal shader libraries into
+> `/var/folders/` — this cache alone can reach **~12 GB** and grows with each new model
+> configuration. Ensure at least **40 GB free** on the boot volume before training.
+
 ## Repository layout
 
 ```
