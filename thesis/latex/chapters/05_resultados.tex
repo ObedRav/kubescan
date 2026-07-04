@@ -164,15 +164,15 @@ metodológicamente válidas, y son las que se reportan como resultado final de e
 trabajo.
 
 \begin{table}[htbp]
-\centering
+\centering\small
 \caption{Evolución de resultados de la Capa~2 (\ac{GAT}, 5-fold \ac{CV}).
          Las fases 1--4 emplean el protocolo de particionado preliminar (con fuga
          por variantes aumentadas) y se reportan como registro histórico; la
          fase~5 es el resultado final con protocolo \textit{group-aware}.}
 \label{tab:gnn_evolution}
-\begin{tabular}{@{}p{4.5cm}rrrrr@{}}
+\begin{tabular}{@{}p{3.6cm}rrrrc@{}}
 \toprule
-Fase & Grafos & Cadenas & F1 macro & P@5 & Cobert.\ techo \\
+Fase & Grafos & Cadenas & F1 macro & P@5 & \shortstack{Cobert.\\techo} \\
 \midrule
 Línea base & 82 & 13 & 0,829 \(\pm\) 0,098 & 0,400 \(\pm\) 0,179 & 2/5 \\
 Tras aumentación & 277 & 13 & 0,915 \(\pm\) 0,059 & 0,520 \(\pm\) 0,098 & 5/5 \\

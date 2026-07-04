@@ -108,10 +108,10 @@ cinco fuentes (agrupadas en cuatro categorías, dado que Rahman et~al.\ aporta d
 plataformas distintas con características de distribución diferentes; ver Tabla~\ref{tab:dataset}):
 
 \begin{table}[htbp]
-\centering
+\centering\small
 \caption{Composición del conjunto de datos de manifiestos Kubernetes}
 \label{tab:dataset}
-\begin{tabular}{@{}lrl@{}}
+\begin{tabular}{@{}p{5.4cm}rp{4.9cm}@{}}
 \toprule
 Fuente & Filas & Rol \\
 \midrule
@@ -147,6 +147,7 @@ El extractor de características aplica 28 reglas de análisis estático a cada 
 \ac{YAML}, organizadas en tres grupos:
 
 \begin{itemize}
+\raggedright
   \item \textbf{18 flags Rahman} (subconjunto del trabajo original): \texttt{TRUE\_HOST\_PID},
     \texttt{CAP\_SYS\_ADMIN}, \texttt{SEC\_CONT\_OVER\_PRIVIL}, \texttt{INSECURE\_HTTP},
     etc.
@@ -184,10 +185,10 @@ con cuatro nodos que incluye los tres tipos de nodo posibles: escape, movimiento
 lateral y limpio.
 
 \begin{table}[htbp]
-\centering
+\centering\small
 \caption{Tipos de aristas en el grafo de clúster}
 \label{tab:edge_types}
-\begin{tabular}{@{}llll@{}}
+\begin{tabular}{@{}p{3cm}cp{3.1cm}p{4.3cm}@{}}
 \toprule
 Tipo & Código & Dirección & Criterio \\
 \midrule
@@ -231,6 +232,7 @@ inicial de adquisición de datos.
 
 \subsection{Detección de escape y movimiento lateral}
 
+{\raggedright
 La clasificación de nodos utiliza dos conjuntos de flags definidos en el código
 como constantes inmutables (\texttt{frozenset}). Un nodo se clasifica como de
 \textbf{escape} si tiene activa al menos una de las siguientes 8~flags:
@@ -240,7 +242,7 @@ como constantes inmutables (\texttt{frozenset}). Un nodo se clasifica como de
 incorporado durante el desarrollo al detectar que \textit{badpods\_hostpath} —que monta
 el sistema de ficheros del anfitrión— era incorrectamente etiquetado como
 \textit{isolated} al no tener ninguna otra flag de escape activa. Con la corrección,
-el número de clústeres de cadena de ataque ascendió de 13 a 15.
+el número de clústeres de cadena de ataque ascendió de 13 a 15.\par}
 
 Un nodo se clasifica como de \textbf{movimiento lateral} si tiene activa al menos una
 de las siguientes 4~flags: \texttt{SA\_AUTOMOUNT\_TOKEN} (token de cuenta de servicio
@@ -302,6 +304,7 @@ El modelo \ac{GAT} \citep{Velickovic2018} implementado tiene la siguiente estruc
 con las dimensiones exactas verificadas en \texttt{gat\_encoder.py}:
 
 \begin{enumerate}
+\raggedright
   \item \textbf{Embedding de tipo de arista}: \texttt{Embedding(5, 8)}.
         Los cinco tipos de arista (proximidad de directorio, alcance de
         privilegio, lateral por \textit{ServiceAccount}, espacio de nombres y
@@ -480,7 +483,7 @@ también forman el vector de nodo de la Capa~2.
 \centering\small
 \caption{Características del clasificador \ac{RF} — grupo Rahman (1/2)}
 \label{tab:features_a}
-\begin{tabular}{@{}p{4.2cm}llp{4.3cm}@{}}
+\begin{tabular}{@{}p{4.2cm}llp{4.5cm}@{}}
 \toprule
 Nombre & Grupo & Rol en grafo & Descripción \\
 \midrule
@@ -511,7 +514,7 @@ Nombre & Grupo & Rol en grafo & Descripción \\
 \centering\small
 \caption{Características del clasificador \ac{RF} — grupos derivado y extendido, y nodo (2/2)}
 \label{tab:features_b}
-\begin{tabular}{@{}p{4.2cm}llp{4.3cm}@{}}
+\begin{tabular}{@{}p{4.2cm}llp{4.5cm}@{}}
 \toprule
 Nombre & Grupo & Rol en grafo & Descripción \\
 \midrule
@@ -554,6 +557,7 @@ tipos en todos los módulos del paquete; (3) \textit{pytest}, para la suite de
 tests unitarios e de integración del paquete; y (4) \textit{pre-commit hooks},
 que aplican automáticamente ruff y mypy en cada commit.
 
+{\raggedright
 La suite de tests cubre los siguientes componentes: el parser de \ac{YAML}
 (\texttt{utils/yaml\_parser.py}), la construcción del grafo de clúster
 (\texttt{utils/graph\_builder.py}), el clasificador \ac{RF} (\texttt{model/rf\_classifier.py})
@@ -561,4 +565,4 @@ y el ensamblador \ac{GA} (\texttt{model/ga\_ensemble.py}). Los tests de integrac
 verifican el \textit{pipeline} completo de extremo a extremo: dado un directorio
 de manifiestos de prueba con flags de escape conocidas, se comprueba que la salida
 del comando \texttt{kubescan scan} produce el veredicto esperado (ATTACK\_CHAIN)
-con \textit{ensemble\_score} por encima del umbral de clasificación.
+con \textit{ensemble\_score} por encima del umbral de clasificación.\par}
