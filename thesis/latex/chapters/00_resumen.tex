@@ -11,7 +11,7 @@ A partir de 2.479 manifiestos de \textit{Kubernetes} procedentes de cuatro fuent
 públicas complementarias, se construyen 96 grafos de clúster con aristas que
 representan relaciones de privilegio, movimiento lateral y proximidad. La Capa~1
 alcanza una F1 macro de 0,9935 en la clasificación de manifiestos individuales, con
-\acs{AUC}\,=\,0,9988 y cero falsos negativos en el conjunto de test. La Capa~2, basada en
+\acs{AUC}\,=\,0,9980 y cero falsos negativos en el conjunto de test. La Capa~2, basada en
 \ac{GAT} de 3 capas con 4 cabezas de atención, \textit{embedding} de tipos de arista
 y aumentación de grafos, logra F1~macro\,=\,0,870\,\(\pm\)\,0,075 y
 Precisión@5\,=\,0,720\,\(\pm\)\,0,098 en validación cruzada con un protocolo de
@@ -41,7 +41,7 @@ ensemble weight optimisation (Layer~3).
 
 From 2,479 Kubernetes manifests drawn from four complementary public sources, 96
 cluster graphs are built with edges representing privilege-escalation, lateral-movement,
-and proximity relationships. Layer~1 achieves macro-F1\,=\,0.9935, \ac{AUC}\,=\,0.9988,
+and proximity relationships. Layer~1 achieves macro-F1\,=\,0.9935, \ac{AUC}\,=\,0.9980,
 and zero false negatives on the test set. Layer~2, a 3-layer \ac{GAT} with 4 attention
 heads, edge-type embeddings and graph augmentation, achieves
 macro-F1\,=\,0.870\,\(\pm\)\,0.075 and Precision@5\,=\,0.720\,\(\pm\)\,0.098 under a

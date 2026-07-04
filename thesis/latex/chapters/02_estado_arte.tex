@@ -69,7 +69,7 @@ el espacio de detección cubre los vectores de ataque documentados y más explot
 la industria.
 
 % -----------------------------------------------------------
-\section{Análisis estático de \ac{IaC}}
+\section{Análisis estático de \acs{IaC}}
 % -----------------------------------------------------------
 
 El análisis estático de manifiestos \ac{IaC} cuenta con una larga trayectoria en la
@@ -126,9 +126,9 @@ combinación que maximiza la métrica objetivo sobre los pliegues de validación
 
 En el dominio de la detección de intrusiones en red, el conjunto de datos UNSW-NB15
 \citep{Moustafa2015} se ha convertido en un referente de evaluación para clasificadores
-supervisados, con una distribución de clases (77\,\% tráfico benigno vs.\ 23\,\%
-ataques) análoga a la del conjunto de manifiestos de este trabajo (77,7\,\% seguros
-vs.\ 22,3\,\% misconfigured). El desequilibrio de clases es un problema generalizado
+supervisados, y presenta un desequilibrio de clases del mismo orden de magnitud que el
+conjunto de manifiestos de este trabajo (64,2\,\% seguros vs.\ 35,8\,\% misconfigured).
+El desequilibrio de clases es un problema generalizado
 en los datasets de seguridad: las misconfiguraciones críticas son rarísimas en
 repositorios reales, lo que obliga a adoptar estrategias explícitas de compensación.
 La alternativa más común es asignar pesos de clase inversamente proporcionales a su
@@ -192,6 +192,7 @@ Red Neuronal (\acs{MLP}) & \checkmark & Con pesos & Variable & Requiere normaliz
 \textit{k}-NN & \checkmark & No & Estimada & Costoso en inferencia \\
 \bottomrule
 \end{tabular}
+\fuentepropia
 \end{table}
 
 Trabajos como \citeauthor{Wist2021} \citeyear{Wist2021}, que aplican técnicas de \ac{ML} a
@@ -221,6 +222,7 @@ representación del nodo \(v\) se actualiza como:
   \right)
   \label{eq:gnn_update}
 \end{equation}
+\addequationtoindex{Actualización de la representación de un nodo en una capa GNN}
 
 donde \(\mathcal{N}(v)\) es el conjunto de vecinos de \(v\), \(\mathbf{W}^{(l)}\) y
 \(\mathbf{b}^{(l)}\) son parámetros entrenables de la capa \(l\), y \(\sigma\) es una
@@ -255,6 +257,7 @@ de nodos \((v, u)\) el coeficiente de atención es:
   }
   \label{eq:gat_attn}
 \end{equation}
+\addequationtoindex{Coeficiente de atención en Graph Attention Networks}
 
 donde \(\mathbf{a}\) es un vector de parámetros de atención y \(\|\) denota
 concatenación. Este diseño es especialmente apropiado para grafos de clúster
@@ -267,7 +270,7 @@ Esta intuición motiva el uso de \textit{pooling} combinado de media y máximo e
 Capa~2.
 
 % -----------------------------------------------------------
-\section{\ac{GNN}s aplicadas a ciberseguridad}
+\section{\acs{GNN}s aplicadas a ciberseguridad}
 % -----------------------------------------------------------
 
 La aplicación de \ac{GNN}s a la detección de amenazas es un campo emergente con rápido
@@ -387,6 +390,7 @@ IceKube \citep{IceKube2023} & No & Sí & \checkmark & No \\
 \textbf{kubescan} & \checkmark & \textbf{No} & \checkmark & \checkmark \\
 \bottomrule
 \end{tabular}
+\fuentepropia
 \end{table}
 
 El sistema \textit{kubescan} presentado en este trabajo responde a las tres carencias

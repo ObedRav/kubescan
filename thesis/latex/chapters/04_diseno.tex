@@ -80,6 +80,7 @@ un directorio de manifiestos \ac{YAML} en una puntuación de riesgo de cadena de
                   + w_{\text{esc}} \cdot \mathbf{1}[\exists\,\text{nodo de escape en }C]
   \label{eq:ensemble}
 \end{equation}
+\addequationtoindex{Función de puntuación del ensemble (Capa 3)}
 
 donde los pesos \(w_{\text{rf}}, w_{\text{gnn}}, w_{\text{esc}}\) son optimizados
 mediante Algoritmo Genético para maximizar la Precisión@5 en el conjunto de validación.
@@ -92,15 +93,17 @@ mediante Algoritmo Genético para maximizar la Precisión@5 en el conjunto de va
            Los \textit{risk\_scores} producidos por la Capa~1 se incorporan como
            atributo nodal 26 del grafo de entrada de la Capa~2.}
   \label{fig:arquitectura}
+  \fuentepropia
 \end{figure}
 
 % -----------------------------------------------------------
 \section{Construcción del dataset}
+\label{sec:construccion_dataset}
 % -----------------------------------------------------------
 
 \subsection{Fuentes de datos}
 
-El conjunto de datos tabular final contiene 2.479~filas y 57~columnas, combinando
+El conjunto de datos tabular final contiene 2.479~filas y 58~columnas, combinando
 cinco fuentes (agrupadas en cuatro categorías, dado que Rahman et~al.\ aporta dos
 plataformas distintas con características de distribución diferentes; ver Tabla~\ref{tab:dataset}):
 
@@ -121,6 +124,7 @@ Repositorios de seguridad adicionales & 431 & CTFs, \textit{fixtures} de herrami
 \textbf{Total} & \textbf{2.479} & \\
 \bottomrule
 \end{tabular}
+\fuentepropia
 \end{table}
 
 La incorporación de BadPods fue esencial para mitigar la escasez de ejemplos de
@@ -129,8 +133,9 @@ misconfiguraciones críticas en los repositorios reales: antes de añadir esta f
 la cobertura ascendió al 2,8\,\%. En cuanto a los conjuntos de datos de referencia
 existentes para intrusión en red, como UNSW-NB15 \citep{Moustafa2015}, se estudió su
 metodología de construcción como guía para el diseño del proceso de etiquetado y la
-estrategia de balanceo de clases, dado que presentan una distribución similar
-(77\,\% benigno vs.\ 23\,\% malicioso). El conjunto \textit{GenKubeSec}
+estrategia de balanceo de clases, dado que presentan un desequilibrio de clases del
+mismo orden de magnitud que el de este trabajo (64,2\,\% seguros vs.\ 35,8\,\%
+misconfigured). El conjunto \textit{GenKubeSec}
 \citep{Backes2024}, publicado en 2024, no estaba disponible durante el desarrollo de
 este trabajo; en su lugar se empleó \textit{Checkov} \citep{Checkov2021} directamente
 sobre los ficheros \ac{YAML} descargados como fuente de validación multi-herramienta
@@ -138,28 +143,37 @@ equivalente.
 
 \subsection{Características extraídas}
 
-El extractor de características aplica 25 reglas de análisis estático a cada manifiesto
+El extractor de características aplica 28 reglas de análisis estático a cada manifiesto
 \ac{YAML}, organizadas en tres grupos:
 
 \begin{itemize}
-  \item \textbf{15 flags Rahman} (subconjunto del trabajo original): \texttt{TRUE\_HOST\_PID},
+  \item \textbf{18 flags Rahman} (subconjunto del trabajo original): \texttt{TRUE\_HOST\_PID},
     \texttt{CAP\_SYS\_ADMIN}, \texttt{SEC\_CONT\_OVER\_PRIVIL}, \texttt{INSECURE\_HTTP},
     etc.
   \item \textbf{3 features derivadas}: \texttt{cap\_misuse} (OR de las dos flags de
-    capacidades de sistema), \texttt{all\_secrets} (OR de secretos en manifiesto),
-    \texttt{total\_misconfigs} (suma de todas las flags activas).
-  \item \textbf{6 features extendidas}: \texttt{NO\_RUN\_AS\_NON\_ROOT},
-    \texttt{IMAGE\_USES\_LATEST}, \texttt{SA\_AUTOMOUNT\_TOKEN}, etc.;
-    imputadas mediante \textit{Checkov} para el 57,4\,\% de filas con YAML descargado,
-    y mediante la mediana de columna para el resto.
+    capacidades de sistema), \texttt{all\_secrets} (OR de los indicadores de exposición
+    de secretos), \texttt{total\_misconfigs} (suma de todas las flags activas).
+  \item \textbf{7 features extendidas}: \texttt{NO\_RUN\_AS\_NON\_ROOT},
+    \texttt{IMAGE\_USES\_LATEST}, \texttt{SA\_AUTOMOUNT\_TOKEN}, \texttt{HOSTPATH\_MOUNT},
+    etc.; imputadas mediante \textit{Checkov} para el 47,4\,\% de filas con YAML
+    descargado, y mediante la mediana de columna para el resto.
 \end{itemize}
 
-Tres features con varianza casi nula fueron eliminadas del entrenamiento:
-\texttt{SECCOMP\_UNCONFINED} (0/2.048), \texttt{VALID\_TAINT\_SECRET} (0/2.048) y
-\texttt{NO\_NETWORK\_POLICY} (2.047/2.048 activa, sin poder discriminativo).
+La Capa~2 (\ac{GNN}) consume únicamente las 18~flags Rahman y las 7~features extendidas
+(25 en total, \texttt{FEATURE\_COLS} en \texttt{yaml\_parser.py}) como vector de nodo,
+excluyendo las 3~features derivadas —agregados calculados a partir de las otras 25 que
+no aportan información estructural adicional al grafo—; ver
+Sección~\ref{sec:features_table}.
+
+Tres features presentan varianza casi nula pero se mantienen en el entrenamiento (con
+importancia residual o nula, Sección~\ref{sec:rf_importance}):
+\texttt{SECCOMP\_UNCONFINED} (15/2.479 activa), \texttt{VALID\_TAINT\_SECRET}
+(0/2.479 activa) y \texttt{NO\_NETWORK\_POLICY} (2.478/2.479 activa, sin poder
+discriminativo).
 
 % -----------------------------------------------------------
 \section{Construcción del grafo de clúster}
+\label{sec:construccion_grafo}
 % -----------------------------------------------------------
 
 Cada directorio de manifiestos se representa como un grafo dirigido
@@ -184,6 +198,7 @@ Co-espacio de nombres (\texttt{SEMANTIC\_NS}) & 3 & Bidireccional & Mismo \texti
 Escalada \ac{RBAC} & 4 & Dirigida (elevado\(\to\)todos) & \ac{SA} vinculado a rol privilegiado \\
 \bottomrule
 \end{tabular}
+\fuentepropia
 \end{table}
 
 Cada nodo \(v_i\) lleva un vector de características \(\mathbf{x}_i \in \mathbb{R}^{26}\):
@@ -193,14 +208,19 @@ contiene el \textit{risk\_score} producido por el modelo \textit{Random Forest}.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.72\textwidth]{fig_grafo_cluster}
-  \caption{Ejemplo de grafo de clúster Kubernetes con cuatro nodos. El nodo rojo
-           (pod-A) tiene flags de escape activas y emite aristas de tipo~1
-           (\textit{privilege\_reach}) hacia todos los demás. El nodo naranja
-           (pod-B) tiene flags de movimiento lateral y emite aristas de tipo~2
-           (\textit{sa\_lateral}). La arista de tipo~4 (\ac{RBAC}) representa la
-           vinculación de un \textit{ServiceAccount} a un rol privilegiado.}
+  \caption{Ejemplo de grafo de clúster Kubernetes con cuatro nodos, mostrando los
+           tres tipos de nodo (escape, movimiento lateral y limpio) y las aristas
+           dirigidas que cada uno origina.}
   \label{fig:grafo_cluster}
+  \fuentepropia
 \end{figure}
+
+Como se observa en la Figura~\ref{fig:grafo_cluster}, el nodo rojo (pod-A) tiene
+flags de escape activas y emite aristas de tipo~1 (\textit{privilege\_reach}) hacia
+todos los demás nodos del clúster. El nodo naranja (pod-B) tiene flags de
+movimiento lateral y emite aristas de tipo~2 (\textit{sa\_lateral}). La arista de
+tipo~4 (\ac{RBAC}) representa la vinculación de un \textit{ServiceAccount} a un rol
+privilegiado.
 
 El dataset de grafos final comprende 96~grafos originales (25~clean, 46~isolated,
 25~attack\_chain) y 471~grafos totales tras la aumentación de datos aplicada
@@ -231,7 +251,7 @@ de movimiento lateral (tipo~2) se construyen de forma análoga a las de escape: 
 una arista dirigida desde cada nodo lateral hacia todos los demás, pero únicamente si
 no existe ya una arista de mayor prioridad (escape o \ac{RBAC}).
 
-\subsection{Detección de privilegio \ac{RBAC}}
+\subsection{Detección de privilegio \acs{RBAC}}
 
 La construcción de aristas \ac{RBAC} (tipo~4) requiere dos pasadas sobre el conjunto de
 manifiestos. La primera pasada identifica los roles privilegiados: aquellos cuyo nombre
@@ -244,6 +264,7 @@ nodos del clúster.
 
 % -----------------------------------------------------------
 \section{Capa 1: Random Forest}
+\label{sec:capa1_diseno}
 % -----------------------------------------------------------
 
 \subsection{Modelo binario}
@@ -255,7 +276,7 @@ Se entrena un \textit{RandomForestClassifier} de \textit{scikit-learn}
   \item \texttt{n\_estimators = 500}
   \item \texttt{max\_features = sqrt} (clasificación estándar)
   \item \texttt{min\_samples\_leaf = 2} (evita hojas de muestra única)
-  \item \texttt{class\_weight = balanced} (compensa ratio 3,5:1)
+  \item \texttt{class\_weight = balanced} (compensa ratio 1,79:1)
   \item \texttt{random\_state = 42}
 \end{itemize}
 
@@ -272,6 +293,7 @@ grafo; se incluye como salida adicional de la Capa~1.
 
 % -----------------------------------------------------------
 \section{Capa 2: Graph Attention Network}
+\label{sec:capa2_diseno}
 % -----------------------------------------------------------
 
 \subsection{Arquitectura}
@@ -334,6 +356,7 @@ siguiente fórmula implementada en \texttt{train\_gnn.py}:
   w_i = \frac{1/n_i}{\displaystyle\sum_{j=0}^{K-1} 1/n_j} \cdot K
   \label{eq:class_weights}
 \end{equation}
+\addequationtoindex{Cálculo de pesos de clase para el entrenamiento de la GAT}
 
 donde \(n_i\) es el número de grafos de entrenamiento de la clase \(i\) y \(K=3\)
 es el número de clases. Esta fórmula normaliza los pesos para que su media sea~1,0,
@@ -378,6 +401,7 @@ indirectamente.
 
 % -----------------------------------------------------------
 \section{Capa 3: Ensemble con Algoritmo Genético}
+\label{sec:capa3_diseno}
 % -----------------------------------------------------------
 
 Los pesos \((w_{\text{rf}}, w_{\text{gnn}}, w_{\text{esc}})\) de la
@@ -391,14 +415,15 @@ suma de los tres pesos sea siempre~1). La función objetivo es:
   F = 0{,}7 \cdot P@5 + 0{,}3 \cdot (1 - \text{FPR\_clean})
   \label{eq:ga_fitness}
 \end{equation}
+\addequationtoindex{Función objetivo (fitness) del Algoritmo Genético}
 
 La selección se realiza mediante torneo de tamaño~3; el cruce es aritmético (media
 de los dos padres); la mutación aplica perturbación gaussiana con \(\sigma\,=\,0{,}08\)
 y tasa de mutación del 15\,\%, seguida de re-proyección al dominio válido
 (\(w_{\text{rf}} \geq 0\)); y el criterio de parada es 150~generaciones.
 Como \textit{baseline} determinístico, se ejecuta previamente una búsqueda en rejilla
-2D con paso \(1/20\) (231~evaluaciones) que confirma la región de soluciones óptimas
-antes del refinamiento genético.
+2D con paso \(1/20\) (231~evaluaciones); la comparación de su óptimo con el resultado
+del \ac{GA} se discute en la Sección~\ref{sec:layer3}.
 
 La señal de escape se define como un indicador binario que vale~1,0 si al menos un
 nodo del clúster tiene alguna flag de escape activa, y~0,0 en caso contrario. Esta
@@ -445,66 +470,75 @@ pesos del modelo sigue la cadena: argumento \texttt{--checkpoints-dir}
 \label{sec:features_table}
 % -----------------------------------------------------------
 
-Las Tablas~\ref{tab:features_a} y~\ref{tab:features_b} describen las 25 características binarias utilizadas
-por la Capa~1, organizadas por grupo y con indicación de si son relevantes para
-la detección de escape o de movimiento lateral en el grafo de la Capa~2.
+Las Tablas~\ref{tab:features_a} y~\ref{tab:features_b} describen las 28 características
+utilizadas por la Capa~1, organizadas por grupo y con indicación de si son relevantes
+para la detección de escape (ESC) o de movimiento lateral (LAT) en el grafo
+de la Capa~2. De estas 28, las 25 que no son derivadas (18~Rahman + 7~extendidas)
+también forman el vector de nodo de la Capa~2.
 
 \begin{table}[htbp]
 \centering\small
-\caption{Características del clasificador \ac{RF} — grupo Rahman y derivadas (1/2)}
+\caption{Características del clasificador \ac{RF} — grupo Rahman (1/2)}
 \label{tab:features_a}
-\begin{tabular}{@{}p{4.5cm}lp{5.5cm}@{}}
+\begin{tabular}{@{}p{4.2cm}llp{4.3cm}@{}}
 \toprule
-Nombre & Grupo & Descripción \\
+Nombre & Grupo & Rol en grafo & Descripción \\
 \midrule
-\texttt{TRUE\_HOST\_PID} & Rahman & Comparte PID namespace del anfitrión \\
-\texttt{TRUE\_HOST\_IPC} & Rahman & Comparte IPC namespace del anfitrión \\
-\texttt{TRUE\_HOST\_NET} & Rahman & Comparte red del anfitrión \\
-\texttt{TRUE\_HOST\_PORT} & Rahman & Expone puerto en el nodo anfitrión \\
-\texttt{DOCKERSOCK\_PATH} & Rahman & Monta socket de Docker \\
-\texttt{PRIV\_ESC\_ALLOWED} & Rahman & \texttt{allowPrivilegeEscalation: true} \\
-\texttt{SEC\_CONT\_OVER\_PRIVIL} & Rahman & Contenedor privilegiado (\texttt{privileged: true}) \\
-\texttt{CAP\_SYS\_ADMIN} & Rahman & Capacidad \texttt{SYS\_ADMIN} activa \\
-\texttt{CAP\_SYS\_MODULE} & Rahman & Capacidad \texttt{SYS\_MODULE} activa \\
-\texttt{CAP\_NET\_ADMIN} & Rahman & Capacidad de administración de red \\
-\texttt{INSECURE\_HTTP} & Rahman & Usa HTTP sin TLS en puerto conocido \\
-\texttt{KV\_SECRET\_KEY} & Rahman & Secreto expuesto como variable de entorno \\
-\texttt{KV\_SECRET\_VOL} & Rahman & Secreto montado como volumen \\
-\texttt{SA\_AUTOMOUNT} & Rahman & \texttt{automountServiceAccountToken: true} \\
-\texttt{HOSTPATH\_MOUNT} & Rahman & Monta ruta del sistema de ficheros del anfitrión \\
-\texttt{cap\_misuse} & Derivada & OR lógico de \texttt{CAP\_SYS\_ADMIN} y \texttt{CAP\_SYS\_MODULE} \\
-\texttt{all\_secrets} & Derivada & OR de secretos como variable de entorno y volumen \\
-\texttt{total\_misconfigs} & Derivada & Suma de todas las flags activas \\
+\texttt{TRUE\_HOST\_PID} & Rahman & ESC & Comparte PID namespace del anfitrión \\
+\texttt{TRUE\_HOST\_IPC} & Rahman & ESC & Comparte IPC namespace del anfitrión \\
+\texttt{TRUE\_HOST\_NET} & Rahman & ESC & Comparte red del anfitrión \\
+\texttt{DOCKERSOCK\_PATH} & Rahman & ESC & Monta socket de Docker \\
+\texttt{CAP\_SYS\_ADMIN} & Rahman & ESC & Capacidad \texttt{SYS\_ADMIN} activa \\
+\texttt{CAP\_SYS\_MODULE} & Rahman & ESC & Capacidad \texttt{SYS\_MODULE} activa \\
+\texttt{WITHIN\_MANIFEST\_SECRET} & Rahman & LAT & Secreto en texto plano embebido en el manifiesto \\
+\texttt{SEC\_CONT\_OVER\_PRIVIL} & Rahman & ESC & Contenedor privilegiado (\texttt{privileged: true}) \\
+\texttt{ALLOW\_PRIVI} & Rahman & LAT & \texttt{allowPrivilegeEscalation: true} \\
+\texttt{INSECURE\_HTTP} & Rahman & — & Usa HTTP sin TLS en puerto conocido \\
+\texttt{NO\_SECU\_CONTEXT} & Rahman & — & Ausencia de \texttt{securityContext} definido \\
+\texttt{HOST\_ALIAS} & Rahman & — & Usa \texttt{hostAliases} para resolución DNS manual \\
+\texttt{NO\_DEFAULT\_NSPACE} & Rahman & — & Despliega en el \textit{namespace} \texttt{default} \\
+\texttt{NO\_RESO} & Rahman & — & Sin límites/\textit{requests} de recursos definidos \\
+\texttt{NO\_ROLLING\_UPDATE} & Rahman & — & Sin estrategia de actualización \textit{RollingUpdate} \\
+\texttt{SECCOMP\_UNCONFINED} & Rahman & — & Perfil \textit{seccomp} \texttt{unconfined} (sin filtrado de \textit{syscalls}) \\
+\texttt{VALID\_TAINT\_SECRET} & Rahman & — & Secreto válido referenciado en \textit{taint}/\textit{toleration} \\
+\texttt{NO\_NETWORK\_POLICY} & Rahman & — & Sin \texttt{NetworkPolicy} definida en el \textit{namespace} \\
 \bottomrule
 \end{tabular}
+\fuentepropia
 \end{table}
 
 \begin{table}[htbp]
 \centering\small
-\caption{Características del clasificador \ac{RF} — grupo extendido y nodo (2/2)}
+\caption{Características del clasificador \ac{RF} — grupos derivado y extendido, y nodo (2/2)}
 \label{tab:features_b}
-\begin{tabular}{@{}p{4.5cm}lp{5.5cm}@{}}
+\begin{tabular}{@{}p{4.2cm}llp{4.3cm}@{}}
 \toprule
-Nombre & Grupo & Descripción \\
+Nombre & Grupo & Rol en grafo & Descripción \\
 \midrule
-\texttt{NO\_RUN\_AS\_NON\_ROOT} & Extendida & Sin restricción de usuario no root \\
-\texttt{NO\_READONLY\_ROOTFS} & Extendida & Sistema de ficheros raíz con escritura \\
-\texttt{IMAGE\_USES\_LATEST} & Extendida & Imagen con \texttt{tag: latest} \\
-\texttt{SA\_AUTOMOUNT\_TOKEN} & Extendida & \textit{ServiceAccount} con token automontado \\
-\texttt{NO\_CPU\_LIMIT} & Extendida & Sin límite de CPU definido \\
-\texttt{NO\_MEM\_LIMIT} & Extendida & Sin límite de memoria definido \\
-\texttt{risk\_score} & Nodo (Capa~2) & Probabilidad \ac{RF} clase misconfigured \(\in [0,1]\) \\
+\texttt{cap\_misuse} & Derivada & — & OR lógico de \texttt{CAP\_SYS\_ADMIN} y \texttt{CAP\_SYS\_MODULE} \\
+\texttt{all\_secrets} & Derivada & — & OR de los indicadores de exposición de secretos \\
+\texttt{total\_misconfigs} & Derivada & — & Suma de todas las flags activas \\
+\texttt{NO\_RUN\_AS\_NON\_ROOT} & Extendida & — & Sin restricción de usuario no root \\
+\texttt{NO\_READ\_ONLY\_ROOT\_FS} & Extendida & — & Sistema de ficheros raíz con escritura \\
+\texttt{IMAGE\_USES\_LATEST} & Extendida & — & Imagen con \texttt{tag: latest} \\
+\texttt{SA\_AUTOMOUNT\_TOKEN} & Extendida & LAT & \textit{ServiceAccount} con token automontado \\
+\texttt{USES\_DEFAULT\_SA} & Extendida & LAT & Usa la \textit{ServiceAccount} \texttt{default} del \textit{namespace} \\
+\texttt{UNTRUSTED\_REGISTRY} & Extendida & — & Imagen proveniente de un registro no confiable \\
+\texttt{HOSTPATH\_MOUNT} & Extendida & ESC & Monta ruta del sistema de ficheros del anfitrión \\
+\texttt{risk\_score} & Nodo (Capa~2) & — & Probabilidad \ac{RF} clase misconfigured \(\in [0,1]\) \\
 \bottomrule
 \end{tabular}
+\fuentepropia
 \end{table}
 
-Las 8 primeras características del grupo Rahman (hasta \texttt{HOSTPATH\_MOUNT})
-corresponden a las flags de escape utilizadas para la clasificación de nodos en
-el grafo. Las características \texttt{SA\_AUTOMOUNT} y \texttt{KV\_SECRET\_*}
-son los indicadores de movimiento lateral. Las 6 características extendidas
-(prefijo \texttt{NO\_}) están imputadas mediante \textit{Checkov} para el
-57,4\,\% de filas con YAML disponible y mediante la mediana de columna para
-el resto.
+Las 8~flags de escape (ESC, \texttt{ESCAPE\_FLAGS} en \texttt{graph\_builder.py}) son
+\texttt{TRUE\_HOST\_PID}, \texttt{TRUE\_HOST\_IPC}, \texttt{TRUE\_HOST\_NET},
+\texttt{DOCKERSOCK\_PATH}, \texttt{CAP\_SYS\_ADMIN}, \texttt{CAP\_SYS\_MODULE},
+\texttt{SEC\_CONT\_OVER\_PRIVIL} y \texttt{HOSTPATH\_MOUNT}. Las 4~flags de movimiento
+lateral (LAT, \texttt{LATERAL\_FLAGS}) son \texttt{SA\_AUTOMOUNT\_TOKEN},
+\texttt{USES\_DEFAULT\_SA}, \texttt{WITHIN\_MANIFEST\_SECRET} y \texttt{ALLOW\_PRIVI}.
+Las 7~características extendidas están imputadas mediante \textit{Checkov} para el
+47,4\,\% de filas con YAML disponible y mediante la mediana de columna para el resto.
 
 % -----------------------------------------------------------
 \section{Calidad de software y proceso de validación}

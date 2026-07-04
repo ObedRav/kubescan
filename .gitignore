@@ -67,5 +67,6 @@ thesis/latex/*.out
 thesis/latex/*.toc
 thesis/latex/*.lof
 thesis/latex/*.lot
+thesis/latex/*.loe
 thesis/latex/*.synctex.gz
 thesis/latex/test_fig.pdf

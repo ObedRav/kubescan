@@ -5,6 +5,7 @@ Genera las 6 figuras del TFE kubescan con datos reales del proyecto.
 Ejecutar desde: /Users/obedrayo/Documents/UNIR/TFE/
     python3 thesis/generate_figures.py
 """
+import json
 import os
 import matplotlib
 matplotlib.use('Agg')
@@ -15,6 +16,10 @@ import numpy as np
 
 OUT = os.path.join(os.path.dirname(__file__), "figures")
 os.makedirs(OUT, exist_ok=True)
+
+CHECKPOINTS = os.path.join(
+    os.path.dirname(__file__), "..", "research", "models", "checkpoints"
+)
 
 plt.rcParams.update({
     'font.family': 'DejaVu Sans',
@@ -107,11 +112,13 @@ plt.close()
 print("fig_grafo_cluster.pdf OK")
 
 # ── FIG 5.1  RF Feature importance ──────────────────────────────────────────
-# Datos reales: narrative doc total_misconfigs=33.25%, INSECURE_HTTP=24.84%
-features = ['total_misconfigs','INSECURE_HTTP','all_secrets','cap_misuse',
-            'SA_AUTOMOUNT','CAP_SYS_ADMIN','TRUE_HOST_PID','HOSTPATH_MOUNT',
-            'IMAGE_LATEST','NO_RUN_AS_ROOT']
-importances = [33.25, 24.84, 7.41, 5.83, 4.92, 3.17, 2.88, 2.61, 2.34, 1.97]
+# Datos reales cargados directamente de rf_results.json (fuente única de verdad)
+with open(os.path.join(CHECKPOINTS, "rf_results.json")) as f:
+    _rf_results = json.load(f)
+_importances = _rf_results["binary"]["feature_importances"]
+_top10 = sorted(_importances.items(), key=lambda kv: kv[1], reverse=True)[:10]
+features = [name for name, _ in _top10]
+importances = [val * 100 for _, val in _top10]
 colors = ['#c0392b' if i < 2 else '#2980b9' for i in range(len(features))]
 
 fig, ax = plt.subplots(figsize=(7, 3.6))

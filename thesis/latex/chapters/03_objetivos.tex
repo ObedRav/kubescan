@@ -14,12 +14,14 @@ validación de datos, y la justificación de las métricas de evaluación adopta
 % -----------------------------------------------------------
 
 Diseñar, implementar y evaluar un sistema automático de predicción de cadenas de
-ataque en infraestructuras \textit{Kubernetes} que supere las limitaciones de los
-enfoques basados en análisis estático puro, mediante la combinación de un clasificador
-de manifiestos individuales (\textit{Random Forest}) con una red neuronal de grafos
-(\textit{Graph Attention Network}) y optimización de ensemble mediante Algoritmo
-Genético, operando exclusivamente sobre manifiestos \ac{YAML} estáticos sin requerir
-acceso a un clúster activo.
+ataque en infraestructuras \textit{Kubernetes} que complemente los enfoques de
+análisis estático por manifiesto individual con el contexto estructural del
+clúster, mediante la combinación de un clasificador de manifiestos individuales
+(\textit{Random Forest}) con una red neuronal de grafos (\textit{Graph Attention
+Network}) y optimización de ensemble mediante Algoritmo Genético. El sistema opera
+principalmente sobre manifiestos \ac{YAML} estáticos, sin requerir acceso a un
+clúster activo, si bien incorpora opcionalmente una vía de consulta directa al
+clúster (OE6).
 
 % -----------------------------------------------------------
 \section{Objetivos específicos}
@@ -43,18 +45,19 @@ acceso a un clúster activo.
     cuenta de servicio, co-namespacio semántico y escalada \ac{RBAC}.
 
   \item[OE4.] Desarrollar una Capa~2 de clasificación de clústeres basada en \ac{GAT}
-    que alcance Precisión@5 superior a 0,70 en la detección de cadenas de ataque, o
-    justifique los límites teóricos que impidan alcanzar dicho umbral con el conjunto
-    de datos disponible.
+    que alcance Precisión@5 superior a 0,70 (media de validación cruzada de 5~pliegues)
+    en la detección de cadenas de ataque.
 
-  \item[OE5.] Implementar una Capa~3 de optimización de pesos de \textit{ensemble}
-    mediante Algoritmo Genético que minimice los falsos positivos de clústeres limpios
-    (\ac{FPR}\_clean\,=\,0) manteniendo la máxima Precisión@5.
+  \item[OE5.] Implementar una Capa~3 que optimice mediante Algoritmo Genético una
+    función objetivo combinada de Precisión@5 y falsos positivos de clústeres limpios,
+    garantizando \ac{FPR}\_clean\,=\,0 sobre el conjunto de validación y manteniendo
+    una Precisión@5 competitiva con la del mejor componente individual.
 
   \item[OE6.] Empaquetar el sistema completo como una herramienta de línea de comandos
-    (\textit{kubescan}) con soporte para análisis de directorios locales y consulta
-    directa al \ac{API} de \textit{Kubernetes} mediante \textit{kubectl}, instalable en
-    entornos Python 3.10+ en menos de 60 segundos.
+    (\textit{kubescan}) con soporte para análisis de directorios locales y,
+    opcionalmente, consulta directa al \ac{API} de \textit{Kubernetes} mediante
+    \textit{kubectl}; instalable en entornos Python 3.10+ en menos de 60 segundos
+    (\texttt{pip install}, caché de paquetes vacía, conexión de banda ancha).
 \end{description}
 
 % -----------------------------------------------------------
@@ -76,17 +79,17 @@ activa (\texttt{HOSTPATH\_MOUNT}, \texttt{TRUE\_HOST\_PID}, etc.) en al menos un
 manifiesto del directorio.
 
 \textbf{Fase~2 — Extracción de características y construcción del grafo.} Extracción
-de 25 características binarias por manifiesto mediante análisis estático
-multi-herramienta y construcción del grafo de clúster con cinco tipos de arista
-(Tabla~\ref{tab:edge_types}). En esta fase se realizó también la validación de
-cobertura de la flag \texttt{HOSTPATH\_MOUNT}, documentada en la Sección~\ref{sec:gnn_por_clase}.
+de 28 características binarias por manifiesto mediante análisis estático
+multi-herramienta (Sección~\ref{sec:features_table}) y construcción del grafo de
+clúster con cinco tipos de arista (Tabla~\ref{tab:edge_types}). En esta fase se
+realizó también la validación de cobertura de la flag \texttt{HOSTPATH\_MOUNT},
+documentada en la Sección~\ref{sec:gnn_por_clase}.
 
 \textbf{Fase~3 — Entrenamiento de la Capa~1.} Entrenamiento de un clasificador
 \textit{Random Forest} mediante validación cruzada de 5~pliegues para predecir la
 presencia de misconfiguraciones individuales y generar \textit{risk scores}
-calibrados. La selección de hiperparámetros (\texttt{n\_estimators}, \texttt{max\_depth},
-\texttt{min\_samples\_leaf}) se realizó mediante búsqueda en rejilla sobre el conjunto
-de entrenamiento.
+calibrados, con los hiperparámetros fijos detallados en la
+Sección~\ref{sec:capa1_diseno}.
 
 \textbf{Fase~4 — Entrenamiento de la Capa~2.} Entrenamiento de una \ac{GAT} de 3~capas
 con agrupamiento de grafos (\textit{graph pooling}) y validación cruzada estratificada
@@ -104,16 +107,19 @@ selección de hiperparámetros.
 % -----------------------------------------------------------
 
 La estrategia de partición de datos difiere entre la Capa~1 (datos tabulares) y la
-Capa~2 (datos de grafos), dado que sus tamaños y distribuciones son distintos.
+Capa~2 (datos de grafos), dado que sus tamaños y distribuciones son distintos. El
+tamaño final de cada conjunto depende del proceso de adquisición y construcción
+descrito en las Secciones~\ref{sec:construccion_dataset} y~\ref{sec:construccion_grafo}
+del Capítulo~\ref{cap:diseno}.
 
-Para la Capa~1, los 2.479~manifiestos se dividen en un conjunto de entrenamiento
-(80\,\%, 1.983~muestras) y un conjunto de test (20\,\%, 496~muestras), con
-estratificación por la variable objetivo para mantener la proporción de clases en
-ambos subconjuntos. La evaluación del modelo se realiza mediante validación cruzada
-de 5~pliegues sobre el conjunto de entrenamiento para la selección de hiperparámetros,
-y el conjunto de test se reserva exclusivamente para la evaluación final.
+Para la Capa~1, el conjunto de manifiestos se divide en un conjunto de entrenamiento
+(80\,\%) y un conjunto de test (20\,\%), con estratificación por la variable objetivo
+para mantener la proporción de clases en ambos subconjuntos. La evaluación del modelo
+se realiza mediante validación cruzada de 5~pliegues sobre el conjunto de
+entrenamiento para la selección de hiperparámetros, y el conjunto de test se reserva
+exclusivamente para la evaluación final.
 
-Para la Capa~2, los 96~grafos de clúster se evalúan mediante validación cruzada
+Para la Capa~2, los grafos de clúster se evalúan mediante validación cruzada
 estratificada de 5~pliegues, con estratificación por etiqueta de clúster
 (\textit{clean}, \textit{isolated}, \textit{attack\_chain}). En cada pliegue, la
 aumentación de datos se aplica \textbf{exclusivamente} sobre los grafos de
@@ -124,6 +130,7 @@ train/val/test clásica sin comprometer la representatividad de cada subconjunto
 
 % -----------------------------------------------------------
 \section{Métricas de evaluación}
+\label{sec:metricas}
 % -----------------------------------------------------------
 
 La selección de métricas de evaluación responde a los requisitos operacionales del
@@ -135,7 +142,7 @@ importancia a las clases minoritarias (misconfiguraciones críticas) que a las
 mayoritarias (manifiestos seguros). Esta propiedad es fundamental en datasets de
 seguridad desequilibrados, donde la exactitud (\textit{accuracy}) sería una métrica
 engañosa —un clasificador que predice siempre «seguro» obtendría una exactitud del
-77,7\,\% pero F1 macro del 44,4\,\%.
+64,2\,\% pero F1 macro del 39,1\,\%.
 
 \textbf{\ac{AUC}-\acs{ROC}} para el modelo binario: mide la capacidad del clasificador para
 separar las dos clases independientemente del umbral de decisión, lo que permite
