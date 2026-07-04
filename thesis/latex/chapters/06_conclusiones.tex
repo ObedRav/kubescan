@@ -148,6 +148,38 @@ grafo de ataque sobre clústeres activos (KubeHound, IceKube), el etiquetado exp
 de una submuestra, y la confirmación mediante explotación controlada en entornos de
 laboratorio como \textit{kubernetes-goat}.
 
+\textbf{L7 — No determinismo de CUDA en las operaciones de \textit{scatter} del
+\ac{GNN}.} Al replicar el proceso de entrenamiento de la Capa~2 sobre una GPU
+NVIDIA A100 (CUDA) en lugar del \textit{backend} MPS/CPU empleado para los
+resultados de esta memoria, se observó una variación no trivial en las métricas de
+validación cruzada (F1 macro entre 0,845 y 0,882 frente a 0,917 en el \textit{backend}
+original; P@5 entre 0,77 y 0,92 frente a 0,880), manteniendo semilla, datos,
+particiones e hiperparámetros idénticos. Se descartaron como causa la precisión
+\textit{TF32} (confirmado en tiempo de ejecución que
+\texttt{torch.backends.cuda.matmul.allow\_tf32} permanece desactivada) y la
+paralelización del cargador de datos (el conjunto es estático en memoria y el orden
+de muestreo está fijado por un generador con semilla). La causa confirmada son las
+operaciones \texttt{scatter\_add}/\texttt{scatter\_reduce} empleadas por
+\texttt{GATConv} y por las capas de \textit{pooling} global
+(\texttt{global\_max\_pool}, \texttt{global\_mean\_pool}), que en CUDA se
+implementan mediante \texttt{atomicAdd} sin versión determinista disponible —
+confirmado por los propios mantenedores de \textit{PyTorch Geometric} en los
+\textit{issues} públicos \#2788 y \#3175 del repositorio. El orden de acumulación
+en punto flotante depende de la planificación de hilos de la GPU y, al no ser
+la suma en punto flotante asociativa, pequeñas diferencias numéricas cambian el
+\textit{ranking} sobre un conjunto de validación reducido (81~grafos, entre 4 y 5
+cadenas de ataque por pliegue), amplificando el efecto sobre P@5 y F1 macro. Se
+incorporaron banderas de determinismo específicas de CUDA
+(\texttt{torch.use\_deterministic\_algorithms}, \texttt{cudnn.deterministic}) que,
+aunque no resuelven la ausencia de una implementación determinista de
+\texttt{scatter\_add}, sí lograron reproducibilidad exacta entre ejecuciones
+repetidas sobre la misma configuración de GPU. Esto indica que la brecha
+observada no es ruido aleatorio entre ejecuciones sino una divergencia numérica fija
+y reproducible entre \textit{backends} (CUDA frente a MPS/CPU); su cierre completo
+requeriría sustituir la agregación por la ruta \texttt{SparseTensor} de
+\textit{PyTorch Geometric}, documentada como determinista pero no evaluada en este
+trabajo.
+
 \section{Trabajo futuro}
 
 Los resultados de este trabajo permiten formular las siguientes recomendaciones de
