@@ -423,10 +423,10 @@ de prueba de diferente tamaño: 12 manifiestos (0,8\,s), 47 manifiestos (1,4\,s)
 Core i7 de octava generación sin GPU. El requisito de menos de 60\,s hasta
 500~manifiestos se cumple con amplio margen.
 
-\paragraph{Reproducibilidad (RNF-2).} La resolución de \textit{checkpoints} mediante
-la cadena argumento \acs{CLI} \(\to\) variable de entorno \(\to\) enlace simbólico garantiza
-que el mismo directorio de manifiestos produce siempre el mismo informe dado el mismo
-conjunto de pesos del modelo.
+\paragraph{Reproducibilidad (RNF-2).} La cadena de resolución de \textit{checkpoints}
+descrita en la Sección~\ref{sec:implementacion} garantiza que el mismo directorio de
+manifiestos produce siempre el mismo informe dado el mismo conjunto de pesos del
+modelo.
 
 \paragraph{Trazabilidad (RNF-1).} El campo \texttt{flags} de la salida \ac{JSON} lista
 explícitamente las características de seguridad activas en cada manifiesto, y el
