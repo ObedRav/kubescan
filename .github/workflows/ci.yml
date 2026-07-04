@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install package + dev tooling
+        run: |
+          python -m pip install --upgrade pip
+          # CPU-only torch wheels keep the CI image small and fast
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install torch-geometric
+          pip install -e "kubescan/[dev]"
+
+      - name: Ruff lint
+        run: ruff check kubescan/src kubescan/tests research/models research/scripts
+
+      - name: Ruff extended (audit ruleset)
+        run: |
+          ruff check kubescan/src kubescan/tests research/models research/scripts \
+            --select ALL \
+            --ignore ANN,D,ERA,FBT,TRY,RUF,N,EM,G,T20,S101,PLR2004,SLF001,PD,NPY,\
+PLR0913,PLR0912,PLR0915,C901,BLE001,TID252,INP001,S603,S607,PLW1510,ARG001,ARG002,\
+E501,TC,PLC0415,S311,S110,S301,PLW2901,PERF203,PERF401,PERF102,SIM,PTH123,PIE810,RET504,PT018
+
+      - name: Mypy type check
+        run: mypy kubescan/src --strict --ignore-missing-imports
+
+      - name: Regenerate CI fixtures
+        run: python kubescan/tests/fixtures/make_fixtures.py
+
+      - name: Run test suite with coverage
+        run: cd kubescan && pytest tests/ -q --cov=kubescan --cov-report=term-missing
+
+      - name: Radon complexity
+        run: radon cc kubescan/src research/models research/scripts -s -a --min B

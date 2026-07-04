@@ -1,0 +1,25 @@
+# GAT training configuration — Layer 2 (5-fold cross-validation)
+# Produced: Macro-F1 = 0.9167 ± 0.0648, P@5 = 0.880 ± 0.098  TARGET MET ✅
+#
+# Usage:
+#   python models/train_gnn.py \
+#     --hidden 64 --heads 4 --layers 3 --dropout 0.3 \
+#     --epochs 300 --batch-size 8 --lr 5e-4 --weight-decay 1e-4 \
+#     --patience 50 --cv-folds 5 --seed 42
+
+# Architecture
+hidden: 64
+heads: 4
+layers: 3
+dropout: 0.3
+
+# Training loop
+epochs: 300
+batch_size: 8
+lr: 0.0005          # 5e-4
+weight_decay: 0.0001  # 1e-4
+patience: 50        # early stopping
+
+# Cross-validation
+cv_folds: 5
+seed: 42

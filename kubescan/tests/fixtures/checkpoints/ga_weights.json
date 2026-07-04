@@ -1,0 +1,6 @@
+{
+  "w_rf": 0.3333333333333333,
+  "w_gnn": 0.3333333333333333,
+  "w_escape": 0.3333333333333333,
+  "_note": "fixture weights \u2014 equal thirds, not trained"
+}

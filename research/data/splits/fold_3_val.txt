@@ -1,0 +1,16 @@
+badpods_priv
+MicroservicesOnContainers
+innovate-digital-bank
+CloudFlix
+kubernetes-goof
+gitlab-agent
+kubeyard
+tye
+Microservices-deployment-with-PaaS-Containers-and-Serverless-Platforms
+run-devops
+minik8s-ctf
+microservices-dotnetcore-docker-sf-k8s
+MicroCouriers
+IngressMonitorController
+spring-cloud-dataflow
+kubernetes_goat_internal-proxy

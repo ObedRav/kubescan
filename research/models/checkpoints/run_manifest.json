@@ -1,0 +1,127 @@
+{
+  "created_utc": "2026-06-11T12:51:50.809883+00:00",
+  "platform": "Darwin arm64",
+  "git_commit": null,
+  "versions": {
+    "python": "3.10.17",
+    "torch": "2.11.0",
+    "torch_geometric": "2.7.0",
+    "sklearn": "1.7.2",
+    "numpy": "2.2.6",
+    "networkx": "3.4.2",
+    "skops": "0.14.0"
+  },
+  "data_checksums": {
+    "rf_dataset.csv": "cff671744e2fa42a219acc398f7cea76da06a7436a6b0b6ac5b887d809853bce",
+    "graph_manifest.csv": "41a8f65199dddf08df71dadc7ef6c20ab7f34209b73ae0a47dafeab4f2bf56f3",
+    "graphs_cache.npz": "364fe9a204d4508fdee20e97f05e7b2ed81d261fdd111326661fc2c7bc65639d",
+    "splits_config.json": "9439b6a981393ee88df237511bc58401554aa534e4351443b918c4b6998ce547",
+    "fold_0_train.txt": "97cf23531d0061a5e02169daa78bb27f37714b0630631e38c154a28ba5e4b112",
+    "fold_0_val.txt": "32fdee67b3e7cfd33e8c8ba6bb56591824a3c5d35db95ae2a0d84afac16184e1",
+    "fold_1_train.txt": "0e30928d93eb7ad9d1e6c6607bac11c298d482830fe8596a35dabd3756c1fdb2",
+    "fold_1_val.txt": "b2839e00b74864d1816ebf420c578a65c405bacf90ce664d848f3f78961d34f6",
+    "fold_2_train.txt": "8a8db669089ccf7c5e47da06c1ea8844d3131c30a066cd1057824c6ca3cbc674",
+    "fold_2_val.txt": "0c9dc89d706855888422f13d4f8517aefd6c0c279b8d3e7f6accf353de383e7a",
+    "fold_3_train.txt": "aae84da3fe6d3b1c4132e2e6461c71f1e95a88f6dbef6e552366576fb9d59540",
+    "fold_3_val.txt": "239eb08b7f8d0821d52923dbc08045d1012fda91232081582bffd2ca03215b75",
+    "fold_4_train.txt": "4ce204c32c5fcb94e7b2135a0065d6787bf6c25b42e3e3c7177b821f6ddbbbfc",
+    "fold_4_val.txt": "47504ab8719312bb14876118068525148170cf517e3e7909080b61cde651b599",
+    "test.txt": "872b02efaee2b4b5d21ee5aeecdf43308bbf3741ffe50f70dc66e0131d340db7",
+    "train.txt": "bf43fe4d7f4b655d087aed55e2b1be029def0bbbd7ba670e16e658442ad5cb92",
+    "val.txt": "a705926948daa2a8cf42d8f95c3ed5b9f553b27bcdeac0dbd23f91e7d354d271"
+  },
+  "checkpoint_checksums": {
+    "cv_results.json": "d82156f99d3fd815635ac27ee98c9047f3e3328dfb78dc23fb0f8effeb501031",
+    "ga_results.json": "8634a53f007b5d67a624f2be836b26f96e65e4da5b082f04d9f0e408db273d3f",
+    "ga_weights.json": "8b30d11f1e35c014ea0536eb83e6252b6b52ebc86f32f86088cf658080143830",
+    "gnn_best.pt": "faa4498d1b7a4e7f53e65e64928fe0de3751b8e803668baf1dcea1974b3c6447",
+    "gnn_fold_0.pt": "f5893b292921a564be9eb6a4b49de99c832354d77b043fa71cc8ca05ab818e14",
+    "gnn_fold_1.pt": "d52429aa4296e355ce0565dd13eaf2a8554a8bed6dcafe24b232de85f76327c8",
+    "gnn_fold_2.pt": "b7f84019504ab5b93b34994d63d3359e75f280d7a72f7289df520826f5b9098d",
+    "gnn_fold_3.pt": "9a270a913bf55b32c4e25336d638a4f7a3bbe28e5e87db4fb0f5b022aa8b4dab",
+    "gnn_fold_4.pt": "67b13f33710e6b2963adb3c8e3bb0dbae02c26baae4163f80ea09deacd3dd334",
+    "rf_model.skops": "5cc21bc53c0b4bdd092c4edad613117ca9e303f8298b9b60662a5656da5c3156",
+    "rf_results.json": "19c692caafe20be5c8d80ab5aaad44c2f02541753ca048d6bcaef087334d8495",
+    "test_results.json": "bfe4c76d8e4c04757e2ef0c171c4210bf318bd4ae2272a52adb209116fa5a095"
+  },
+  "headline_metrics": {
+    "gnn_cv": {
+      "num_folds": 5,
+      "binary": false,
+      "macro_f1_mean": 0.8695430495430495,
+      "macro_f1_std": 0.0753839348628551,
+      "precision_at_5_mean": 0.72,
+      "precision_at_5_std": 0.09797958971132716,
+      "precision_at_5_target": 0.7,
+      "accuracy_mean": 0.8633333333333333,
+      "accuracy_std": 0.07607562027351471,
+      "fold_f1s": [
+        0.8424242424242424,
+        0.8857142857142858,
+        0.9407407407407407,
+        0.9407407407407407,
+        0.7380952380952381
+      ],
+      "fold_p5s": [
+        0.6,
+        0.8,
+        0.8,
+        0.8,
+        0.6
+      ],
+      "model_config": {
+        "hidden": 64,
+        "heads": 4,
+        "layers": 3,
+        "dropout": 0.3,
+        "lr": 0.0005,
+        "epochs": 300
+      }
+    },
+    "ga": {
+      "w_rf": 0.33742524431364523,
+      "w_gnn": 0.3278789386574905,
+      "w_escape": 0.33469581702886425,
+      "p_at_k": 0.6,
+      "fpr_clean": 0.0,
+      "objective": 0.72,
+      "k": 5,
+      "alpha": 0.7,
+      "beta": 0.3,
+      "p_at_k_ceiling": 1.0,
+      "mode": "oof",
+      "oof_n_graphs": 81,
+      "oof_n_chains": 21,
+      "grid_best": {
+        "w_rf": 0.0,
+        "w_gnn": 0.0,
+        "w_escape": 1.0,
+        "p_at_k": 0.8
+      },
+      "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES = [0,1,2,3,4,5,7,24] in 26-dim node feature vector."
+    },
+    "test": {
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.6666666666666666,
+      "precision_at_5": 0.6,
+      "precision_at_5_ceiling": 0.8,
+      "hits_ceiling": false,
+      "fpr_clean": 0.0
+    },
+    "test_cis": {
+      "n_bootstrap": 10000,
+      "p_at_k_ci95": [
+        0.0,
+        1.0
+      ],
+      "fpr_clean_ci95": [
+        0.0,
+        0.4
+      ],
+      "macro_f1_ci95": [
+        0.4222222222222222,
+        0.9327731092436974
+      ]
+    }
+  }
+}

@@ -1,0 +1,349 @@
+% ============================================================
+% bibliografia.bib — kubescan TFM references
+% ============================================================
+
+% ----- Core ML / GNN ----------------------------------------
+
+@inproceedings{Velickovic2018,
+  author    = {Petar Veli\v{c}kovi\'{c} and Guillem Cucurull and Arantxa Casanova
+               and Adriana Romero and Pietro Li\`{o} and Yoshua Bengio},
+  title     = {Graph Attention Networks},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2018},
+  url       = {https://openreview.net/forum?id=rJXMpikCZ},
+}
+
+@inproceedings{Kipf2017,
+  author    = {Thomas N. Kipf and Max Welling},
+  title     = {Semi-Supervised Classification with Graph Convolutional Networks},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2017},
+  url       = {https://openreview.net/forum?id=SJU4ayYgl},
+}
+
+@inproceedings{Hamilton2017,
+  author    = {William L. Hamilton and Zhitao Ying and Jure Leskovec},
+  title     = {Inductive Representation Learning on Large Graphs},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {30},
+  year      = {2017},
+}
+
+@inproceedings{Xu2019,
+  author    = {Keyulu Xu and Weihua Hu and Jure Leskovec and Stefanie Jegelka},
+  title     = {How Powerful are Graph Neural Networks?},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2019},
+  url       = {https://openreview.net/forum?id=ryGs6iA5Km},
+}
+
+@article{Zhou2020,
+  author    = {Jie Zhou and Ganqu Cui and Shengding Hu and Zhengyan Zhang
+               and Cheng Yang and Zhiyuan Liu and Lifeng Wang and Changcheng Li
+               and Maosong Sun},
+  title     = {Graph Neural Networks: A Review of Methods and Applications},
+  journal   = {AI Open},
+  volume    = {1},
+  pages     = {57--81},
+  year      = {2020},
+  doi       = {10.1016/j.aiopen.2021.01.001},
+}
+
+@book{Hamilton2020,
+  author    = {William L. Hamilton},
+  title     = {Graph Representation Learning},
+  publisher = {Morgan \& Claypool},
+  year      = {2020},
+  doi       = {10.2200/S01045ED1V01Y202009AIM048},
+}
+
+@article{Breiman2001,
+  author    = {Leo Breiman},
+  title     = {Random Forests},
+  journal   = {Machine Learning},
+  volume    = {45},
+  number    = {1},
+  pages     = {5--32},
+  year      = {2001},
+  doi       = {10.1023/A:1010933404324},
+}
+
+@inproceedings{Fey2019,
+  author    = {Matthias Fey and Jan Eric Lenssen},
+  title     = {Fast Graph Representation Learning with {PyTorch Geometric}},
+  booktitle = {ICLR Workshop on Representation Learning on Graphs and Manifolds},
+  year      = {2019},
+  url       = {https://arxiv.org/abs/1903.02428},
+}
+
+@article{Pedregosa2011,
+  author    = {Fabian Pedregosa and Ga\"{e}l Varoquaux and Alexandre Gramfort
+               and Vincent Michel and Bertrand Thirion and Olivier Grisel
+               and Mathieu Blondel and Peter Prettenhofer and Ron Weiss
+               and Vincent Dubourg and Jake Vanderplas and Alexandre Passos
+               and David Cournapeau and Matthieu Brucher and Matthieu Perrot
+               and \'{E}douard Duchesnay},
+  title     = {Scikit-learn: Machine Learning in {Python}},
+  journal   = {Journal of Machine Learning Research},
+  volume    = {12},
+  pages     = {2825--2830},
+  year      = {2011},
+}
+
+% ----- Kubernetes security / datasets -----------------------
+
+@inproceedings{Rahman2022,
+  author    = {Akond Rahman and Md Rayhanur Rahman and Chris Parnin
+               and Laurie Williams},
+  title     = {Security Smells in Infrastructure as Code: An Investigation
+               of {Ansible}, {Chef}, and {Kubernetes} Scripts},
+  booktitle = {IEEE Transactions on Software Engineering},
+  volume    = {48},
+  number    = {8},
+  pages     = {2827--2843},
+  year      = {2022},
+  doi       = {10.1109/TSE.2021.3054582},
+}
+
+@inproceedings{Moustafa2015,
+  author    = {Nour Moustafa and Jill Slay},
+  title     = {{UNSW-NB15}: A Comprehensive Data Set for Network Intrusion
+               Detection Systems ({UNSW-NB15} Network Data Set)},
+  booktitle = {2015 Military Communications and Information Systems
+               Conference (MilCIS)},
+  pages     = {1--6},
+  year      = {2015},
+  doi       = {10.1109/MilCIS.2015.7348942},
+}
+
+@misc{Backes2024,
+  author    = {Jana Backes and Thomas Wies and Martin Strecker},
+  title     = {{GenKubeSec}: {LLM}-Based {Kubernetes} Misconfiguration
+               Detection, Explanation, and Remediation},
+  year      = {2024},
+  eprint    = {2405.19954},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR},
+  url       = {https://arxiv.org/abs/2405.19954},
+}
+
+@misc{BishopFox2021,
+  author    = {Seth Tabor},
+  title     = {Bad Pods: {Kubernetes} Pod Privilege Escalation},
+  howpublished = {BishopFox Blog},
+  year      = {2021},
+  url       = {https://bishopfox.com/blog/kubernetes-pod-privilege-escalation},
+}
+
+@misc{KubernetesGoat,
+  author    = {Madhuakula},
+  title     = {{Kubernetes Goat}: Interactive {Kubernetes} Security Learning
+               Playground},
+  howpublished = {GitHub},
+  year      = {2020},
+  url       = {https://github.com/madhuakula/kubernetes-goat},
+}
+
+@misc{NSA2022,
+  author    = {{National Security Agency} and
+               {Cybersecurity and Infrastructure Security Agency}},
+  title     = {{Kubernetes} Hardening Guidance},
+  howpublished = {NSA/CISA Technical Report},
+  year      = {2022},
+  url       = {https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF},
+}
+
+@misc{CNCF2022,
+  author    = {{Cloud Native Computing Foundation}},
+  title     = {Cloud Native Security Whitepaper v2},
+  howpublished = {CNCF White Paper},
+  year      = {2022},
+  url       = {https://github.com/cncf/tag-security/blob/main/security-whitepaper/CNCF_cloud-native-security-whitepaper-Nov2022.pdf},
+}
+
+@misc{Checkov2021,
+  author    = {{Bridgecrew}},
+  title     = {Checkov: Open Source Static Analysis for Infrastructure as Code},
+  howpublished = {GitHub},
+  year      = {2021},
+  url       = {https://github.com/bridgecrewio/checkov},
+}
+
+@misc{KubeLinter2021,
+  author    = {{StackRox}},
+  title     = {{kube-linter}: Static Analysis for {Kubernetes} {YAML} Files and {Helm} Charts},
+  howpublished = {GitHub},
+  year      = {2021},
+  url       = {https://github.com/stackrox/kube-linter},
+}
+
+@misc{KubernetesDocs2024,
+  author    = {{The Kubernetes Authors}},
+  title     = {{Kubernetes} Documentation},
+  howpublished = {kubernetes.io},
+  year      = {2024},
+  url       = {https://kubernetes.io/docs/},
+}
+
+% ----- GNN for cybersecurity --------------------------------
+
+@inproceedings{Bilot2023,
+  author    = {Tristan Bilot and Nour El Madhoun and Khaldoun Al Agha
+               and Anis Zouaoui},
+  title     = {Graph Neural Networks for Intrusion Detection: A Survey},
+  journal   = {IEEE Access},
+  volume    = {11},
+  pages     = {49114--49139},
+  year      = {2023},
+  doi       = {10.1109/ACCESS.2023.3275789},
+}
+
+@inproceedings{Lo2022,
+  author    = {Wai Weng Lo and Siamak Layeghy and Mohanad Sarhan
+               and Marcus Gallagher and Marius Portmann},
+  title     = {{E-GraphSAGE}: A Graph Neural Network based Intrusion
+               Detection System for {IoT}},
+  booktitle = {IEEE/IFIP Network Operations and Management Symposium (NOMS)},
+  year      = {2022},
+  doi       = {10.1109/NOMS54207.2022.9789878},
+}
+
+@article{Cai2023,
+  author    = {Li Cai and Zhi Chen and Linghui Li and Xinrui Han and
+               Yongjun Wang},
+  title     = {AttackG: Constructing Technique Knowledge Graph from
+               Cyber Threat Intelligence Reports},
+  journal   = {Computers \& Security},
+  volume    = {132},
+  pages     = {103343},
+  year      = {2023},
+  doi       = {10.1016/j.cose.2023.103343},
+}
+
+% ----- Tools and frameworks ---------------------------------
+
+@inproceedings{Hagberg2008,
+  author    = {Aric A. Hagberg and Daniel A. Schult and Pieter J. Swart},
+  title     = {Exploring Network Structure, Dynamics, and Function using
+               {NetworkX}},
+  booktitle = {Proceedings of the 7th Python in Science Conference (SciPy)},
+  pages     = {11--15},
+  year      = {2008},
+  url       = {https://conference.scipy.org/proceedings/SciPy2008/paper_2/},
+}
+
+@misc{Paszke2019,
+  author    = {Adam Paszke and Sam Gross and Francisco Massa and Adam Lerer
+               and James Bradbury and Gregory Chanan and Trevor Killeen
+               and Zeming Lin and Natalia Gimelshein and Luca Antiga and others},
+  title     = {{PyTorch}: An Imperative Style, High-Performance Deep Learning
+               Library},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {32},
+  year      = {2019},
+  url       = {https://arxiv.org/abs/1912.01703},
+}
+
+% ----- Genetic algorithms -----------------------------------
+
+@book{Holland1975,
+  author    = {John H. Holland},
+  title     = {Adaptation in Natural and Artificial Systems},
+  publisher = {University of Michigan Press},
+  year      = {1975},
+}
+
+% ----- IaC and DevSecOps -----------------------------------
+
+@article{Kochhar2016,
+  author    = {Pavneet Singh Kochhar and Tegawend\'{e} F. Bissyand\'{e}
+               and David Lo and Lingxiao Jiang},
+  title     = {An Empirical Study of Adoption of Software Testing in
+               Open Source Projects},
+  journal   = {2013 13th International Conference on Quality Software},
+  year      = {2013},
+  doi       = {10.1109/QSIC.2013.57},
+}
+
+@inproceedings{Shamim2020,
+  author    = {Md Shamim Hossain and Akond Rahman},
+  title     = {An Empirical Study of {IoT} Security Aspects at
+               Sentence-Level in Developer Textual Discussions},
+  booktitle = {Information and Software Technology},
+  volume    = {150},
+  year      = {2022},
+  doi       = {10.1016/j.infsof.2022.106970},
+}
+
+@inproceedings{Wist2021,
+  author    = {Torkel Wist and Hugo Hammer and Anis Yazidi},
+  title     = {Vulnerability Prediction from Source Code Using Machine
+               Learning Techniques},
+  booktitle = {2021 IEEE Symposium Series on Computational Intelligence (SSCI)},
+  year      = {2021},
+  doi       = {10.1109/SSCI50451.2021.9659833},
+}
+
+% ----- NEW REFERENCES: KubeHound, IceKube, MITRE ATT&CK, Kill Chain --------
+
+@misc{KubeHound2023,
+  author       = {{Datadog Security Labs}},
+  title        = {{KubeHound}: Identifying attack paths in {Kubernetes} clusters},
+  year         = {2023},
+  howpublished = {Open source tool. \url{https://github.com/DataDog/KubeHound}},
+  note         = {Released October 2023},
+}
+
+@misc{IceKube2023,
+  author       = {{WithSecure Labs}},
+  title        = {{IceKube}: Finding complex attack paths in {Kubernetes} clusters},
+  year         = {2023},
+  howpublished = {Open source tool. \url{https://github.com/WithSecureLabs/IceKube}},
+}
+
+@misc{MITRE2021Containers,
+  author       = {{MITRE Corporation} and {Center for Threat-Informed Defense}},
+  title        = {{ATT\&CK} for {Containers}},
+  year         = {2021},
+  howpublished = {\url{https://ctid.mitre.org/projects/attck-for-containers/}},
+  note         = {Incorporated in ATT\&CK version 9},
+}
+
+@inproceedings{Hutchins2011,
+  author    = {Eric M. Hutchins and Michael J. Cloppert and Rohan M. Amin},
+  title     = {Intelligence-Driven Computer Network Defense Informed by Analysis
+               of Adversary Campaigns and Intrusion Kill Chains},
+  booktitle = {Proceedings of the 6th International Conference on Information
+               Warfare and Security (ICIW)},
+  year      = {2011},
+  pages     = {113--125},
+}
+
+@misc{Kubescape2021,
+  author       = {{ARMO Ltd.}},
+  title        = {Kubescape: Open-source {Kubernetes} Security Platform},
+  year         = {2021},
+  howpublished = {Open source tool, CNCF incubating project.
+                  \url{https://github.com/kubescape/kubescape}},
+}
+
+% ----- Industry reports & new survey references -----------
+
+@techreport{RedHat2024,
+  author       = {{Red Hat}},
+  title        = {State of {Kubernetes} Security Report 2024},
+  institution  = {Red Hat, Inc.},
+  year         = {2024},
+  url          = {https://www.redhat.com/en/resources/kubernetes-adoption-security-market-trends-overview},
+}
+
+@article{GNNSurvey2024,
+  author    = {Huante Liu and others},
+  title     = {A survey on graph neural networks for intrusion detection systems:
+               Methods, trends and challenges},
+  journal   = {Computers \& Security},
+  volume    = {141},
+  pages     = {103821},
+  year      = {2024},
+  doi       = {10.1016/j.cose.2024.103821},
+}

@@ -1,0 +1,22 @@
+{
+  "w_rf": 0.33742524431364523,
+  "w_gnn": 0.3278789386574905,
+  "w_escape": 0.33469581702886425,
+  "p_at_k": 0.6,
+  "fpr_clean": 0.0,
+  "objective": 0.72,
+  "k": 5,
+  "alpha": 0.7,
+  "beta": 0.3,
+  "p_at_k_ceiling": 1.0,
+  "mode": "oof",
+  "oof_n_graphs": 81,
+  "oof_n_chains": 21,
+  "grid_best": {
+    "w_rf": 0.0,
+    "w_gnn": 0.0,
+    "w_escape": 1.0,
+    "p_at_k": 0.8
+  },
+  "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES = [0,1,2,3,4,5,7,24] in 26-dim node feature vector."
+}

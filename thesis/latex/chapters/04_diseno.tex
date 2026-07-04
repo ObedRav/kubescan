@@ -1,0 +1,530 @@
+% ============================================================
+\chapter{Diseño e Implementación}
+\label{cap:diseno}
+% ============================================================
+
+Este capítulo describe el diseño completo del sistema \textit{kubescan} y su
+implementación como herramienta de software distribuible. Se presentan, en primer lugar,
+los requisitos funcionales y no funcionales que guiaron las decisiones de diseño;
+a continuación se detalla la arquitectura de tres capas del sistema, los procesos de
+construcción del conjunto de datos y del grafo de clúster, y los algoritmos de
+entrenamiento de cada capa; finalmente se describe la interfaz de línea de comandos
+resultante. La implementación completa se encuentra disponible en el repositorio
+indicado en el Apéndice~\ref{ap:repositorio}.
+
+% -----------------------------------------------------------
+\section{Identificación de requisitos}
+\label{sec:requisitos}
+% -----------------------------------------------------------
+
+El diseño de \textit{kubescan} parte de un análisis de requisitos derivado tanto de
+las limitaciones identificadas en el estado del arte (Sección~\ref{sec:sintesis}) como
+de los vectores de ataque documentados por la \ac{NSA} y la \ac{CISA} \citep{NSA2022}.
+
+\subsection{Requisitos funcionales}
+
+\begin{description}
+  \item[RF-1 — Detección de misconfiguraciones individuales.] El sistema debe clasificar
+    cada manifiesto \ac{YAML} como seguro o \textit{misconfigured}, produciendo además un
+    índice de severidad en tres niveles (limpio, bajo\,--\,medio, alto\,--\,crítico).
+  \item[RF-2 — Detección de cadenas de ataque.] El sistema debe clasificar un conjunto
+    de manifiestos que describe un clúster en una de tres categorías: \textit{clean},
+    \textit{isolated} (misconfiguraciones sin cadena viable) o
+    \textit{attack\_chain} (ruta de escalada de privilegios hasta movimiento lateral).
+  \item[RF-3 — Interfaz de línea de comandos.] El sistema debe exponer un comando
+    \texttt{kubescan scan <dir>} para análisis de directorios locales y un comando
+    \texttt{kubescan live} para análisis de clústeres activos mediante \textit{kubectl}.
+  \item[RF-4 — Formatos de salida.] El sistema debe producir informes en formato texto
+    legible y en formato \acs{JSON} estructurado para integración con herramientas externas.
+  \item[RF-5 — Priorización de riesgos.] El sistema debe producir un ranking de
+    clústeres por puntuación de riesgo que maximice la Precisión@5 — colocando las
+    cadenas de ataque reales en las primeras posiciones.
+\end{description}
+
+\subsection{Requisitos no funcionales}
+
+\begin{description}
+  \item[RNF-1 — Trazabilidad.] Todas las reglas de detección de nodos de escape y
+    movimiento lateral deben ser explícitas, auditables y derivadas de fuentes
+    normativas documentadas \citep{NSA2022,BishopFox2021}.
+  \item[RNF-2 — Reproducibilidad.] Los modelos entrenados deben almacenarse como
+    \textit{checkpoints} e incluirse en el paquete, de forma que el análisis sea
+    idempotente dado el mismo directorio de entrada.
+  \item[RNF-3 — Instalabilidad.] El sistema debe ser instalable mediante
+    \texttt{pip install -e kubescan/} sin dependencias de compiladores externos.
+  \item[RNF-4 — Latencia.] El análisis de un clúster de hasta 500 manifiestos debe
+    completarse en menos de 60 segundos en hardware de gama media (CPU).
+\end{description}
+
+% -----------------------------------------------------------
+\section{Arquitectura general del sistema}
+% -----------------------------------------------------------
+
+El sistema \textit{kubescan} implementa una arquitectura de tres capas que transforma
+un directorio de manifiestos \ac{YAML} en una puntuación de riesgo de cadena de ataque
+(Figura~\ref{fig:arquitectura}):
+
+\begin{enumerate}
+  \item \textbf{Capa~1 (Random Forest):} extrae 25 características binarias por
+    manifiesto y produce un \textit{risk\_score} \(\in [0,1]\).
+  \item \textbf{Capa~2 (\ac{GAT}):} modela el clúster como un grafo donde los nodos
+    son manifiestos y las aristas representan relaciones de seguridad; produce una
+    probabilidad de cadena de ataque \(\in [0,1]\).
+  \item \textbf{Capa~3 (Ensemble \acs{GA}):} combina las señales de las dos capas anteriores
+    con una señal binaria de escape según la ecuación:
+\end{enumerate}
+
+\begin{equation}
+  \text{score}(C) = w_{\text{rf}} \cdot \overline{\text{risk}}(C)
+                  + w_{\text{gnn}} \cdot p_{\text{chain}}(C)
+                  + w_{\text{esc}} \cdot \mathbf{1}[\exists\,\text{nodo de escape en }C]
+  \label{eq:ensemble}
+\end{equation}
+
+donde los pesos \(w_{\text{rf}}, w_{\text{gnn}}, w_{\text{esc}}\) son optimizados
+mediante Algoritmo Genético para maximizar la Precisión@5 en el conjunto de validación.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{fig_arquitectura}
+  \caption{Arquitectura del sistema \textit{kubescan}: pipeline de tres capas desde
+           manifiestos \ac{YAML} de entrada hasta la clasificación de riesgo del clúster.
+           Los \textit{risk\_scores} producidos por la Capa~1 se incorporan como
+           atributo nodal 26 del grafo de entrada de la Capa~2.}
+  \label{fig:arquitectura}
+\end{figure}
+
+% -----------------------------------------------------------
+\section{Construcción del dataset}
+% -----------------------------------------------------------
+
+\subsection{Fuentes de datos}
+
+El conjunto de datos tabular final contiene 2.479~filas y 57~columnas, combinando
+cinco fuentes (agrupadas en cuatro categorías, dado que Rahman et~al.\ aporta dos
+plataformas distintas con características de distribución diferentes; ver Tabla~\ref{tab:dataset}):
+
+\begin{table}[htbp]
+\centering
+\caption{Composición del conjunto de datos de manifiestos Kubernetes}
+\label{tab:dataset}
+\begin{tabular}{@{}lrl@{}}
+\toprule
+Fuente & Filas & Rol \\
+\midrule
+Rahman et~al.\ \citep{Rahman2022} — GitHub & 1.510 & Manifiestos reales, etiquetados \\
+Rahman et~al.\ \citep{Rahman2022} — GitLab & 396 & Ídem, plataforma distinta \\
+BishopFox BadPods \citep{BishopFox2021} & 128 & Pods vulnerables intencionales \\
+Kubernetes Goat \citep{KubernetesGoat} & 14 & Escenarios de vulnerabilidad \\
+Repositorios de seguridad adicionales & 431 & CTFs, \textit{fixtures} de herramientas, labs \\
+\midrule
+\textbf{Total} & \textbf{2.479} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La incorporación de BadPods fue esencial para mitigar la escasez de ejemplos de
+misconfiguraciones críticas en los repositorios reales: antes de añadir esta fuente,
+\texttt{TRUE\_HOST\_PID} aparecía en sólo el 0,3\,\% de las filas; tras la incorporación,
+la cobertura ascendió al 2,8\,\%. En cuanto a los conjuntos de datos de referencia
+existentes para intrusión en red, como UNSW-NB15 \citep{Moustafa2015}, se estudió su
+metodología de construcción como guía para el diseño del proceso de etiquetado y la
+estrategia de balanceo de clases, dado que presentan una distribución similar
+(77\,\% benigno vs.\ 23\,\% malicioso). El conjunto \textit{GenKubeSec}
+\citep{Backes2024}, publicado en 2024, no estaba disponible durante el desarrollo de
+este trabajo; en su lugar se empleó \textit{Checkov} \citep{Checkov2021} directamente
+sobre los ficheros \ac{YAML} descargados como fuente de validación multi-herramienta
+equivalente.
+
+\subsection{Características extraídas}
+
+El extractor de características aplica 25 reglas de análisis estático a cada manifiesto
+\ac{YAML}, organizadas en tres grupos:
+
+\begin{itemize}
+  \item \textbf{15 flags Rahman} (subconjunto del trabajo original): \texttt{TRUE\_HOST\_PID},
+    \texttt{CAP\_SYS\_ADMIN}, \texttt{SEC\_CONT\_OVER\_PRIVIL}, \texttt{INSECURE\_HTTP},
+    etc.
+  \item \textbf{3 features derivadas}: \texttt{cap\_misuse} (OR de las dos flags de
+    capacidades de sistema), \texttt{all\_secrets} (OR de secretos en manifiesto),
+    \texttt{total\_misconfigs} (suma de todas las flags activas).
+  \item \textbf{6 features extendidas}: \texttt{NO\_RUN\_AS\_NON\_ROOT},
+    \texttt{IMAGE\_USES\_LATEST}, \texttt{SA\_AUTOMOUNT\_TOKEN}, etc.;
+    imputadas mediante \textit{Checkov} para el 57,4\,\% de filas con YAML descargado,
+    y mediante la mediana de columna para el resto.
+\end{itemize}
+
+Tres features con varianza casi nula fueron eliminadas del entrenamiento:
+\texttt{SECCOMP\_UNCONFINED} (0/2.048), \texttt{VALID\_TAINT\_SECRET} (0/2.048) y
+\texttt{NO\_NETWORK\_POLICY} (2.047/2.048 activa, sin poder discriminativo).
+
+% -----------------------------------------------------------
+\section{Construcción del grafo de clúster}
+% -----------------------------------------------------------
+
+Cada directorio de manifiestos se representa como un grafo dirigido
+\(G=(V, E)\) donde \(|V|\) es el número de manifiestos del clúster y
+\(E\) contiene aristas de cinco tipos semánticamente distintos
+(Tabla~\ref{tab:edge_types}). La Figura~\ref{fig:grafo_cluster} ilustra un ejemplo
+con cuatro nodos que incluye los tres tipos de nodo posibles: escape, movimiento
+lateral y limpio.
+
+\begin{table}[htbp]
+\centering
+\caption{Tipos de aristas en el grafo de clúster}
+\label{tab:edge_types}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Tipo & Código & Dirección & Criterio \\
+\midrule
+Proximidad de directorio & 0 & Bidireccional & Mismo subdirectorio \ac{YAML} \\
+Alcance de privilegio & 1 & Dirigida (escape\(\to\)todos) & Flag de escape activa \\
+Movimiento lateral \acs{SA} & 2 & Dirigida (lateral\(\to\)todos) & Flag de movimiento lateral \\
+Co-espacio de nombres (\texttt{SEMANTIC\_NS}) & 3 & Bidireccional & Mismo \textit{namespace} K8s \\
+Escalada \ac{RBAC} & 4 & Dirigida (elevado\(\to\)todos) & \ac{SA} vinculado a rol privilegiado \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Cada nodo \(v_i\) lleva un vector de características \(\mathbf{x}_i \in \mathbb{R}^{26}\):
+índices 0–24 corresponden a las 25 features binarias de la Capa~1 y el índice~25
+contiene el \textit{risk\_score} producido por el modelo \textit{Random Forest}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{fig_grafo_cluster}
+  \caption{Ejemplo de grafo de clúster Kubernetes con cuatro nodos. El nodo rojo
+           (pod-A) tiene flags de escape activas y emite aristas de tipo~1
+           (\textit{privilege\_reach}) hacia todos los demás. El nodo naranja
+           (pod-B) tiene flags de movimiento lateral y emite aristas de tipo~2
+           (\textit{sa\_lateral}). La arista de tipo~4 (\ac{RBAC}) representa la
+           vinculación de un \textit{ServiceAccount} a un rol privilegiado.}
+  \label{fig:grafo_cluster}
+\end{figure}
+
+El dataset de grafos final comprende 96~grafos originales (25~clean, 46~isolated,
+25~attack\_chain) y 471~grafos totales tras la aumentación de datos aplicada
+exclusivamente en el conjunto de entrenamiento. Los 14 nuevos clústeres de cadena de
+ataque provienen de 24 repositorios de seguridad adicionales (CTFs, laboratorios y
+\textit{fixtures} de herramientas de análisis estático) incorporados tras la fase
+inicial de adquisición de datos.
+
+\subsection{Detección de escape y movimiento lateral}
+
+La clasificación de nodos utiliza dos conjuntos de flags definidos en el código
+como constantes inmutables (\texttt{frozenset}). Un nodo se clasifica como de
+\textbf{escape} si tiene activa al menos una de las siguientes 8~flags:
+\texttt{TRUE\_HOST\_PID}, \texttt{TRUE\_HOST\_IPC}, \texttt{TRUE\_HOST\_NET},
+\texttt{DOCKERSOCK\_PATH}, \texttt{CAP\_SYS\_ADMIN}, \texttt{CAP\_SYS\_MODULE},
+\texttt{SEC\_CONT\_OVER\_PRIVIL} o \texttt{HOSTPATH\_MOUNT}. Este último vector fue
+incorporado durante el desarrollo al detectar que \textit{badpods\_hostpath} —que monta
+el sistema de ficheros del anfitrión— era incorrectamente etiquetado como
+\textit{isolated} al no tener ninguna otra flag de escape activa. Con la corrección,
+el número de clústeres de cadena de ataque ascendió de 13 a 15.
+
+Un nodo se clasifica como de \textbf{movimiento lateral} si tiene activa al menos una
+de las siguientes 4~flags: \texttt{SA\_AUTOMOUNT\_TOKEN} (token de cuenta de servicio
+automontado), \texttt{USES\_DEFAULT\_SA} (usa la cuenta de servicio por defecto del
+\textit{namespace}), \texttt{WITHIN\_MANIFEST\_SECRET} (secreto referenciado en el
+manifiesto) o \texttt{ALLOW\_PRIVI} (contenedor con capacidad de escalada). Las aristas
+de movimiento lateral (tipo~2) se construyen de forma análoga a las de escape: se emite
+una arista dirigida desde cada nodo lateral hacia todos los demás, pero únicamente si
+no existe ya una arista de mayor prioridad (escape o \ac{RBAC}).
+
+\subsection{Detección de privilegio \ac{RBAC}}
+
+La construcción de aristas \ac{RBAC} (tipo~4) requiere dos pasadas sobre el conjunto de
+manifiestos. La primera pasada identifica los roles privilegiados: aquellos cuyo nombre
+está en el conjunto \{cluster-admin, admin, edit\} o cuyas reglas contienen verbos de
+escalada \{*, escalate, bind, impersonate\}. La segunda pasada recorre los objetos
+\textit{RoleBinding} y \textit{ClusterRoleBinding}: sólo cuando el campo
+\textit{roleRef} referencia un rol privilegiado identificado en la primera pasada se
+emite una arista \ac{RBAC} desde el pod que usa esa cuenta de servicio hacia todos los demás
+nodos del clúster.
+
+% -----------------------------------------------------------
+\section{Capa 1: Random Forest}
+% -----------------------------------------------------------
+
+\subsection{Modelo binario}
+
+Se entrena un \textit{RandomForestClassifier} de \textit{scikit-learn}
+\citep{Pedregosa2011} con los hiperparámetros siguientes:
+
+\begin{itemize}
+  \item \texttt{n\_estimators = 500}
+  \item \texttt{max\_features = sqrt} (clasificación estándar)
+  \item \texttt{min\_samples\_leaf = 2} (evita hojas de muestra única)
+  \item \texttt{class\_weight = balanced} (compensa ratio 3,5:1)
+  \item \texttt{random\_state = 42}
+\end{itemize}
+
+El modelo se entrena sobre 1.983~muestras (80\,\% del total) y se evalúa en 496
+muestras de test no vistas durante el entrenamiento. La probabilidad predicha para la
+clase misconfigured (clase~1) se usa como \textit{risk\_score} del nodo en el grafo.
+
+\subsection{Modelo de severidad}
+
+Además del modelo binario, se entrena un clasificador de severidad de tres clases
+(\textit{clean}, \textit{low-medium}, \textit{high-critical}) para ofrecer información
+más granular al operador de seguridad. Este modelo no interviene en el cálculo del
+grafo; se incluye como salida adicional de la Capa~1.
+
+% -----------------------------------------------------------
+\section{Capa 2: Graph Attention Network}
+% -----------------------------------------------------------
+
+\subsection{Arquitectura}
+
+El modelo \ac{GAT} \citep{Velickovic2018} implementado tiene la siguiente estructura,
+con las dimensiones exactas verificadas en \texttt{gat\_encoder.py}:
+
+\begin{enumerate}
+  \item \textbf{Embedding de tipo de arista}: \texttt{Embedding(5, 8)}.
+        Los cinco tipos de arista (proximidad de directorio, alcance de
+        privilegio, lateral por \textit{ServiceAccount}, espacio de nombres y
+        \ac{RBAC}) son categóricos: codificarlos como un escalar continuo
+        implicaría un orden espurio (el tipo~4 «valdría» cuatro veces el
+        tipo~1). Cada tipo se proyecta a un vector aprendido de 8~dims que
+        \texttt{GATConv} consume como atributo de arista
+        (\textit{edge\_dim=8}).
+  \item \textbf{Proyección inicial}: \texttt{Linear(26, 256)} \(+\) \texttt{LayerNorm(256)}
+        \(+\) \acs{ReLU} \(+\) \texttt{Dropout(0.3)}.
+        Proyecta el vector de nodo de 26~dims a 256~dims
+        (\(64 \times 4\,\text{cabezas}\)).
+  \item \textbf{Capas \ac{GAT}~0 y~1} (\textit{concat=True}):
+        \texttt{GATConv(256, 64, heads=4)} con \textit{edge\_dim=8};
+        salida 256~dims \((64 \times 4)\); seguidas de \texttt{LayerNorm}, \acs{ELU},
+        conexión residual y \texttt{Dropout(0.3)}.
+  \item \textbf{Capa \ac{GAT}~2} (\textit{concat=False, heads=1}):
+        \texttt{GATConv(256, 64, heads=1)}; salida 64~dims
+        (una sola cabeza de atención que produce directamente
+        el embedding final del nodo, sin concatenación);
+        seguida de \texttt{LayerNorm}, \ac{ELU}, conexión residual y \texttt{Dropout(0.3)}.
+  \item \textbf{Global pooling}: \texttt{global\_mean\_pool} y \texttt{global\_max\_pool}
+        sobre los 64-dim embeddings de todos los nodos; concatenación
+        \(\to\) 128~dims (\(64 + 64\)).
+  \item \textbf{Clasificador \ac{MLP}}: \texttt{Linear(128, 64)} \(+\) \ac{ReLU} \(+\)
+        \texttt{Dropout(0.3)} \(+\) \texttt{Linear(64, 3)}.
+\end{enumerate}
+
+La elección de \ac{GAT} sobre \ac{GCN} responde a que el mecanismo de atención permite al modelo
+aprender qué aristas son más informativas para la señal de ataque: una arista de
+\textit{privilege\_reach} debe recibir mayor peso que una arista de proximidad de
+directorio. El \textit{pooling} combinado de media y máximo captura dos señales
+complementarias: la media refleja la postura de seguridad promedio del clúster,
+mientras que el máximo identifica el nodo más peligroso, ambas necesarias para detectar
+cadenas de ataque que pueden estar concentradas en un único nodo crítico.
+
+\subsection{Entrenamiento}
+
+El modelo se entrena con \textit{PyTorch Geometric} \citep{Fey2019} bajo los
+siguientes hiperparámetros: optimizador AdamW con tasa de aprendizaje
+\(5\times10^{-4}\) y \textit{weight\_decay}\,=\,\(10^{-4}\);
+\textit{scheduler} CosineAnnealingLR con T\_max\,=\,300 y
+\(\eta_{\min}\,=\,10^{-5}\); función de pérdida CrossEntropyLoss con pesos
+de clase calculados por frecuencia inversa;
+\textit{gradient clipping} con norma máxima 2,0; \textit{early stopping} con
+paciencia de 50 épocas; y validación cruzada estratificada de 5~pliegues.
+
+Los pesos de clase se calculan en cada pliegue de entrenamiento mediante la
+siguiente fórmula implementada en \texttt{train\_gnn.py}:
+
+\begin{equation}
+  w_i = \frac{1/n_i}{\displaystyle\sum_{j=0}^{K-1} 1/n_j} \cdot K
+  \label{eq:class_weights}
+\end{equation}
+
+donde \(n_i\) es el número de grafos de entrenamiento de la clase \(i\) y \(K=3\)
+es el número de clases. Esta fórmula normaliza los pesos para que su media sea~1,0,
+equivalente al comportamiento de \texttt{class\_weight=balanced} de
+\textit{scikit-learn}. Un detalle importante es que los pesos se calculan
+\textbf{después} de la aumentación de datos: como la aumentación genera 15~variantes
+por grafo de cadena de ataque, la clase \textit{attack\_chain} pasa de ser la
+minoría a ser la mayoría en el conjunto de entrenamiento (aproximadamente 250~grafos
+aumentados vs.\ 20~clean y 37~isolated en el conjunto de entrenamiento de cada
+pliegue, tras excluir las variantes de los clústeres de validación y test). La Ecuación~\ref{eq:class_weights} se auto-adapta a esta nueva distribución
+asignando mayor peso a \textit{clean} e \textit{isolated}, y menor peso a
+\textit{attack\_chain}, compensando el efecto de la sobre-representación creada por
+la aumentación.
+
+\subsection{Aumentación de datos}
+
+Para mitigar la escasez de ejemplos de cadena de ataque (15 de 82 grafos en la
+primera fase), se aplican tres estrategias de aumentación exclusivamente sobre los
+grafos de entrenamiento: \textit{edge dropout} (eliminación aleatoria del 20\,\% de
+aristas de los tipos~0 y~3, los menos críticos para la señal de ataque);
+\textit{feature masking} (puesta a cero aleatoria del 15\,\% de valores en el vector
+de nodo); y \textit{subgraph sampling} (extracción de un subgrafo inducido por el
+70\,\% de nodos del grafo original, manteniendo los nodos de escape; cada subgrafo
+se valida contra la regla de etiquetado de cadena y, si deja de cumplirla, se
+descarta en favor de una variante sobre el grafo completo, evitando introducir
+ruido de etiqueta). Cada grafo de
+cadena de ataque origina 15~variantes aumentadas, resultando en 375~grafos
+adicionales (25~originales \(\times\) 15~variantes), para un total de
+471~grafos con aumentación.
+
+La asignación de variantes a particiones es \textbf{consciente de grupos}
+(\textit{group-aware}): una variante aumentada solo puede entrar en una partición
+de entrenamiento si su grafo base pertenece a esa misma partición. Las variantes
+derivadas de clústeres de validación o de test se excluyen del entrenamiento por
+completo, ya que entrenar con casi-duplicados de un grafo de evaluación
+constituiría fuga de datos. Adicionalmente, los 15~clústeres de test se mantienen
+fuera de los pliegues de validación cruzada: los pliegues particionan únicamente
+los 81~grafos originales restantes, de modo que ni los modelos de pliegue ni las
+predicciones \textit{out-of-fold} empleadas para ajustar los pesos del
+\textit{ensemble} (Capa~3) observan ningún clúster de test, directa ni
+indirectamente.
+
+% -----------------------------------------------------------
+\section{Capa 3: Ensemble con Algoritmo Genético}
+% -----------------------------------------------------------
+
+Los pesos \((w_{\text{rf}}, w_{\text{gnn}}, w_{\text{esc}})\) de la
+Ecuación~\ref{eq:ensemble} son optimizados mediante un Algoritmo Genético
+\citep{Holland1975} con 60~individuos codificados como pares
+\((w_{\text{gnn}}, w_{\text{esc}})\) \(\in [0,1]^2\), con \(w_{\text{rf}}\) derivado
+como \(1 - w_{\text{gnn}} - w_{\text{esc}}\) (la representación 2D garantiza que la
+suma de los tres pesos sea siempre~1). La función objetivo es:
+
+\begin{equation}
+  F = 0{,}7 \cdot P@5 + 0{,}3 \cdot (1 - \text{FPR\_clean})
+  \label{eq:ga_fitness}
+\end{equation}
+
+La selección se realiza mediante torneo de tamaño~3; el cruce es aritmético (media
+de los dos padres); la mutación aplica perturbación gaussiana con \(\sigma\,=\,0{,}08\)
+y tasa de mutación del 15\,\%, seguida de re-proyección al dominio válido
+(\(w_{\text{rf}} \geq 0\)); y el criterio de parada es 150~generaciones.
+Como \textit{baseline} determinístico, se ejecuta previamente una búsqueda en rejilla
+2D con paso \(1/20\) (231~evaluaciones) que confirma la región de soluciones óptimas
+antes del refinamiento genético.
+
+La señal de escape se define como un indicador binario que vale~1,0 si al menos un
+nodo del clúster tiene alguna flag de escape activa, y~0,0 en caso contrario. Esta
+formulación evita la dilución que produciría una fracción cuando la mayoría de los
+nodos del clúster son limpios.
+
+La asignación de clase final a partir de la puntuación \textit{ensemble\_score}
+se realiza mediante los siguientes umbrales fijos, definidos en
+\texttt{ga\_ensemble.py}:
+\begin{itemize}
+  \item \textit{ensemble\_score}\,\(\geq\)\,0,60 \(\ \Rightarrow\) \texttt{ATTACK\_CHAIN}
+  \item \textit{ensemble\_score}\,\(\geq\)\,0,30 \(\ \Rightarrow\) \texttt{ISOLATED\_MISCONFIG}
+  \item De lo contrario \(\Rightarrow\) \texttt{CLEAN}
+\end{itemize}
+Estos umbrales son fijos y no se reoptimizan durante el entrenamiento del \ac{GA},
+que optimiza únicamente los pesos \(w_i\) de la Ecuación~\ref{eq:ensemble}.
+Permiten al operador interpretar directamente la puntuación: cualquier clúster con
+\textit{score}\,\(\geq\)\,0,60 requiere revisión inmediata.
+
+% -----------------------------------------------------------
+\section{Implementación de kubescan}
+% -----------------------------------------------------------
+
+El sistema se distribuye como un paquete Python instalable mediante
+\texttt{pip install -e kubescan/}. La estructura del paquete sigue la convención
+\textit{src-layout} de \textit{setuptools}: el código fuente reside en
+\texttt{kubescan/src/kubescan/} y los módulos se organizan en tres submódulos:
+\texttt{model/} (clasificadores \ac{RF}, \ac{GAT} y ensamblador \ac{GA}), \texttt{utils/}
+(\textit{parser} \ac{YAML} y constructor de grafos) y \texttt{cli.py} (interfaz de
+línea de comandos basada en \textit{Click}).
+
+El punto de entrada principal expone dos comandos. El primero,
+\texttt{kubescan scan <dir>}, analiza un directorio local de manifiestos \ac{YAML} y
+emite un informe de riesgo en formato texto o \ac{JSON}. El segundo,
+\texttt{kubescan live}, consulta el \ac{API} de \textit{Kubernetes} mediante
+\textit{kubectl}, vuelca los recursos de \textit{workloads} y \ac{RBAC} en un directorio
+temporal y ejecuta el \textit{pipeline} completo sobre ellos. La resolución de los
+pesos del modelo sigue la cadena: argumento \texttt{--checkpoints-dir}
+\(\to\) variable de entorno \texttt{KUBESCAN\_CHECKPOINTS} \(\to\) enlace simbólico
+\texttt{kubescan/checkpoints/trained/} \(\to\) \texttt{FileNotFoundError}.
+
+% -----------------------------------------------------------
+\section{Tabla de características del sistema}
+\label{sec:features_table}
+% -----------------------------------------------------------
+
+Las Tablas~\ref{tab:features_a} y~\ref{tab:features_b} describen las 25 características binarias utilizadas
+por la Capa~1, organizadas por grupo y con indicación de si son relevantes para
+la detección de escape o de movimiento lateral en el grafo de la Capa~2.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Características del clasificador \ac{RF} — grupo Rahman y derivadas (1/2)}
+\label{tab:features_a}
+\begin{tabular}{@{}p{4.5cm}lp{5.5cm}@{}}
+\toprule
+Nombre & Grupo & Descripción \\
+\midrule
+\texttt{TRUE\_HOST\_PID} & Rahman & Comparte PID namespace del anfitrión \\
+\texttt{TRUE\_HOST\_IPC} & Rahman & Comparte IPC namespace del anfitrión \\
+\texttt{TRUE\_HOST\_NET} & Rahman & Comparte red del anfitrión \\
+\texttt{TRUE\_HOST\_PORT} & Rahman & Expone puerto en el nodo anfitrión \\
+\texttt{DOCKERSOCK\_PATH} & Rahman & Monta socket de Docker \\
+\texttt{PRIV\_ESC\_ALLOWED} & Rahman & \texttt{allowPrivilegeEscalation: true} \\
+\texttt{SEC\_CONT\_OVER\_PRIVIL} & Rahman & Contenedor privilegiado (\texttt{privileged: true}) \\
+\texttt{CAP\_SYS\_ADMIN} & Rahman & Capacidad \texttt{SYS\_ADMIN} activa \\
+\texttt{CAP\_SYS\_MODULE} & Rahman & Capacidad \texttt{SYS\_MODULE} activa \\
+\texttt{CAP\_NET\_ADMIN} & Rahman & Capacidad de administración de red \\
+\texttt{INSECURE\_HTTP} & Rahman & Usa HTTP sin TLS en puerto conocido \\
+\texttt{KV\_SECRET\_KEY} & Rahman & Secreto expuesto como variable de entorno \\
+\texttt{KV\_SECRET\_VOL} & Rahman & Secreto montado como volumen \\
+\texttt{SA\_AUTOMOUNT} & Rahman & \texttt{automountServiceAccountToken: true} \\
+\texttt{HOSTPATH\_MOUNT} & Rahman & Monta ruta del sistema de ficheros del anfitrión \\
+\texttt{cap\_misuse} & Derivada & OR lógico de \texttt{CAP\_SYS\_ADMIN} y \texttt{CAP\_SYS\_MODULE} \\
+\texttt{all\_secrets} & Derivada & OR de secretos como variable de entorno y volumen \\
+\texttt{total\_misconfigs} & Derivada & Suma de todas las flags activas \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Características del clasificador \ac{RF} — grupo extendido y nodo (2/2)}
+\label{tab:features_b}
+\begin{tabular}{@{}p{4.5cm}lp{5.5cm}@{}}
+\toprule
+Nombre & Grupo & Descripción \\
+\midrule
+\texttt{NO\_RUN\_AS\_NON\_ROOT} & Extendida & Sin restricción de usuario no root \\
+\texttt{NO\_READONLY\_ROOTFS} & Extendida & Sistema de ficheros raíz con escritura \\
+\texttt{IMAGE\_USES\_LATEST} & Extendida & Imagen con \texttt{tag: latest} \\
+\texttt{SA\_AUTOMOUNT\_TOKEN} & Extendida & \textit{ServiceAccount} con token automontado \\
+\texttt{NO\_CPU\_LIMIT} & Extendida & Sin límite de CPU definido \\
+\texttt{NO\_MEM\_LIMIT} & Extendida & Sin límite de memoria definido \\
+\texttt{risk\_score} & Nodo (Capa~2) & Probabilidad \ac{RF} clase misconfigured \(\in [0,1]\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las 8 primeras características del grupo Rahman (hasta \texttt{HOSTPATH\_MOUNT})
+corresponden a las flags de escape utilizadas para la clasificación de nodos en
+el grafo. Las características \texttt{SA\_AUTOMOUNT} y \texttt{KV\_SECRET\_*}
+son los indicadores de movimiento lateral. Las 6 características extendidas
+(prefijo \texttt{NO\_}) están imputadas mediante \textit{Checkov} para el
+57,4\,\% de filas con YAML disponible y mediante la mediana de columna para
+el resto.
+
+% -----------------------------------------------------------
+\section{Calidad de software y proceso de validación}
+\label{sec:calidad}
+% -----------------------------------------------------------
+
+El desarrollo de \textit{kubescan} sigue prácticas de ingeniería de software
+orientadas a la producción. La calidad del código se garantiza mediante cuatro
+herramientas integradas en un \textit{pipeline} de pre-commit y CI/CD: (1)
+\textit{ruff}, linter y formateador de código Python con reglas de estilo y
+seguridad; (2) \textit{mypy} en modo estricto, para comprobación estática de
+tipos en todos los módulos del paquete; (3) \textit{pytest}, para la suite de
+tests unitarios e de integración del paquete; y (4) \textit{pre-commit hooks},
+que aplican automáticamente ruff y mypy en cada commit.
+
+La suite de tests cubre los siguientes componentes: el parser de \ac{YAML}
+(\texttt{utils/yaml\_parser.py}), la construcción del grafo de clúster
+(\texttt{utils/graph\_builder.py}), el clasificador \ac{RF} (\texttt{model/rf\_classifier.py})
+y el ensamblador \ac{GA} (\texttt{model/ga\_ensemble.py}). Los tests de integración
+verifican el \textit{pipeline} completo de extremo a extremo: dado un directorio
+de manifiestos de prueba con flags de escape conocidas, se comprueba que la salida
+del comando \texttt{kubescan scan} produce el veredicto esperado (ATTACK\_CHAIN)
+con \textit{ensemble\_score} por encima del umbral de clasificación.

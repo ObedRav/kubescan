@@ -1,0 +1,60 @@
+% ============================================================
+\chapter{Resumen}
+
+Este trabajo presenta \textit{kubescan}, un sistema de detección automática de
+cadenas de ataque en infraestructuras \textit{Kubernetes} que combina un clasificador
+\textit{Random Forest} (Capa~1) con una Red Neuronal de Grafos de Atención —
+\textit{Graph Attention Network} (\acs{GAT}) — (Capa~2) y optimización de pesos mediante
+Algoritmo Genético (Capa~3).
+
+A partir de 2.479 manifiestos de \textit{Kubernetes} procedentes de cuatro fuentes
+públicas complementarias, se construyen 96 grafos de clúster con aristas que
+representan relaciones de privilegio, movimiento lateral y proximidad. La Capa~1
+alcanza una F1 macro de 0,9935 en la clasificación de manifiestos individuales, con
+\acs{AUC}\,=\,0,9988 y cero falsos negativos en el conjunto de test. La Capa~2, basada en
+\ac{GAT} de 3 capas con 4 cabezas de atención, \textit{embedding} de tipos de arista
+y aumentación de grafos, logra F1~macro\,=\,0,870\,\(\pm\)\,0,075 y
+Precisión@5\,=\,0,720\,\(\pm\)\,0,098 en validación cruzada con un protocolo de
+particionado consciente de grupos (sin fuga entre variantes aumentadas y sus grafos
+base), superando el objetivo de diseño de P@5\,>\,0,70 sobre un corpus de 96~grafos
+de clúster originales (471 tras aumentación de datos). En el conjunto de test —
+excluido de la validación cruzada y del ajuste del \textit{ensemble} — el sistema
+alcanza Precisión@1\,=\,1,00, recupera 3 de las 4~cadenas de ataque en las primeras
+5~posiciones y no produce falsos positivos de clústeres limpios
+(\acs{FPR}\_clean\,=\,0\,\%). Los resultados, acompañados de intervalos de confianza
+acordes al tamaño del corpus, son consistentes con la viabilidad del enfoque híbrido
+\acs{GNN}\,+\,\acs{RF} para la detección automática de rutas de explotación en entornos
+\textit{Kubernetes} reales.
+
+\medskip
+\noindent\textbf{Palabras clave:} Kubernetes, Graph Neural Networks, Random Forest,
+seguridad, cadenas de ataque, infraestructura como código, misconfiguraciones.
+
+% ============================================================
+\chapter{Abstract}
+% ============================================================
+
+This work presents \textit{kubescan}, an automatic attack-chain detection system
+for \textit{Kubernetes} infrastructures that combines a Random Forest classifier
+(Layer~1) with a Graph Attention Network (\ac{GAT}) (Layer~2) and Genetic Algorithm
+ensemble weight optimisation (Layer~3).
+
+From 2,479 Kubernetes manifests drawn from four complementary public sources, 96
+cluster graphs are built with edges representing privilege-escalation, lateral-movement,
+and proximity relationships. Layer~1 achieves macro-F1\,=\,0.9935, \ac{AUC}\,=\,0.9988,
+and zero false negatives on the test set. Layer~2, a 3-layer \ac{GAT} with 4 attention
+heads, edge-type embeddings and graph augmentation, achieves
+macro-F1\,=\,0.870\,\(\pm\)\,0.075 and Precision@5\,=\,0.720\,\(\pm\)\,0.098 under a
+group-aware cross-validation protocol (no leakage between augmented variants and
+their base clusters), exceeding the P@5\,>\,0.70 design target for cluster-level
+attack-chain classification. On the test set — held out from cross-validation and
+ensemble tuning — the system achieves Precision@1\,=\,1.00, recovers 3 of the
+4~attack chains within the top-5 ranking, and produces no false positives on clean
+clusters (FPR\_clean\,=\,0). Results, reported with confidence intervals appropriate
+to the corpus size, are consistent with the feasibility of the hybrid
+\ac{GNN}\,+\,\ac{RF} approach for automatic exploitation-path detection in real
+Kubernetes environments.
+
+\medskip
+\noindent\textbf{Keywords:} Kubernetes, Graph Neural Networks, Random Forest, security,
+attack chains, infrastructure as code, misconfigurations.

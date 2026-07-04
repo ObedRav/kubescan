@@ -1,0 +1,24 @@
+# GA ensemble configuration — Layer 3
+# Produced: w_rf≈0.337, w_gnn≈0.328, w_esc≈0.335; test P@5=0.80, FPR_clean=0.00
+#
+# Usage:
+#   python models/run_ga_ensemble.py \
+#     --oof --generations 150 --pop-size 60 --k 5 \
+#     --alpha 0.7 --beta 0.3 \
+#     --hidden 64 --heads 4 --layers 3 --seed 42
+
+# GA hyperparameters
+generations: 150
+pop_size: 60
+k: 5              # top-k for Precision@k objective
+alpha: 0.7        # P@k weight in fitness function
+beta: 0.3         # FPR_clean weight in fitness function
+
+# GNN architecture (must match gnn_config.yaml)
+hidden: 64
+heads: 4
+layers: 3
+seed: 42
+
+# Evaluation mode
+# oof: true  — use out-of-fold evaluation (all 96 graphs, no val leak)

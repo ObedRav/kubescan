@@ -1,0 +1,155 @@
+% ============================================================
+\chapter{Objetivos y Metodología}
+\label{cap:objetivos}
+% ============================================================
+
+Este capítulo define los objetivos del trabajo y describe la metodología seguida
+para alcanzarlos. En primer lugar se formula el objetivo general y los objetivos
+específicos, todos ellos con criterios SMART cuantificables. A continuación se
+describen las cinco fases del proceso de desarrollo, la estrategia de partición y
+validación de datos, y la justificación de las métricas de evaluación adoptadas.
+
+% -----------------------------------------------------------
+\section{Objetivo general}
+% -----------------------------------------------------------
+
+Diseñar, implementar y evaluar un sistema automático de predicción de cadenas de
+ataque en infraestructuras \textit{Kubernetes} que supere las limitaciones de los
+enfoques basados en análisis estático puro, mediante la combinación de un clasificador
+de manifiestos individuales (\textit{Random Forest}) con una red neuronal de grafos
+(\textit{Graph Attention Network}) y optimización de ensemble mediante Algoritmo
+Genético, operando exclusivamente sobre manifiestos \ac{YAML} estáticos sin requerir
+acceso a un clúster activo.
+
+% -----------------------------------------------------------
+\section{Objetivos específicos}
+% -----------------------------------------------------------
+
+\begin{description}
+  \item[OE1.] Construir un conjunto de datos de manifiestos \textit{Kubernetes}
+    etiquetados que combine múltiples fuentes públicas, contenga al menos
+    2.000~manifiestos, y alcance una cobertura mínima del 2\,\% en la flag de escape
+    \texttt{TRUE\_HOST\_PID}, superando el 0,3\,\% de los repositorios reales no
+    aumentados.
+
+  \item[OE2.] Desarrollar una Capa~1 de clasificación de manifiestos individuales
+    basada en \textit{Random Forest} con F1 macro superior a 0,85, que produzca
+    \textit{risk scores} calibrados para usar como características de nodo en la
+    Capa~2.
+
+  \item[OE3.] Diseñar un esquema de grafo de clúster con tipos de arista
+    semánticamente significativos para el dominio \textit{Kubernetes}:
+    proximidad de directorio, alcance de privilegio, movimiento lateral mediante
+    cuenta de servicio, co-namespacio semántico y escalada \ac{RBAC}.
+
+  \item[OE4.] Desarrollar una Capa~2 de clasificación de clústeres basada en \ac{GAT}
+    que alcance Precisión@5 superior a 0,70 en la detección de cadenas de ataque, o
+    justifique los límites teóricos que impidan alcanzar dicho umbral con el conjunto
+    de datos disponible.
+
+  \item[OE5.] Implementar una Capa~3 de optimización de pesos de \textit{ensemble}
+    mediante Algoritmo Genético que minimice los falsos positivos de clústeres limpios
+    (\ac{FPR}\_clean\,=\,0) manteniendo la máxima Precisión@5.
+
+  \item[OE6.] Empaquetar el sistema completo como una herramienta de línea de comandos
+    (\textit{kubescan}) con soporte para análisis de directorios locales y consulta
+    directa al \ac{API} de \textit{Kubernetes} mediante \textit{kubectl}, instalable en
+    entornos Python 3.10+ en menos de 60 segundos.
+\end{description}
+
+% -----------------------------------------------------------
+\section{Metodología}
+% -----------------------------------------------------------
+
+El trabajo sigue un proceso iterativo de cinco fases que combina el paradigma de
+desarrollo de \textit{software} (requisitos, diseño, implementación, prueba) con el
+proceso de ciencia de datos (adquisición, preparación, modelado, evaluación):
+
+\textbf{Fase~1 — Adquisición de datos.} Descarga y normalización de manifiestos
+\textit{Kubernetes} de cuatro fuentes públicas complementarias: el conjunto de datos
+de Rahman et~al.\ \citep{Rahman2022} (repositorios reales etiquetados), BishopFox
+BadPods \citep{BishopFox2021} (pods intencionadamente vulnerables), \textit{Kubernetes
+Goat} \citep{KubernetesGoat} (escenarios de vulnerabilidad) y repositorios de
+seguridad adicionales (CTFs, laboratorios y \textit{fixtures}). El criterio de
+inclusión de repositorios adicionales fue la presencia de al menos una flag de escape
+activa (\texttt{HOSTPATH\_MOUNT}, \texttt{TRUE\_HOST\_PID}, etc.) en al menos un
+manifiesto del directorio.
+
+\textbf{Fase~2 — Extracción de características y construcción del grafo.} Extracción
+de 25 características binarias por manifiesto mediante análisis estático
+multi-herramienta y construcción del grafo de clúster con cinco tipos de arista
+(Tabla~\ref{tab:edge_types}). En esta fase se realizó también la validación de
+cobertura de la flag \texttt{HOSTPATH\_MOUNT}, documentada en la Sección~\ref{sec:gnn_por_clase}.
+
+\textbf{Fase~3 — Entrenamiento de la Capa~1.} Entrenamiento de un clasificador
+\textit{Random Forest} mediante validación cruzada de 5~pliegues para predecir la
+presencia de misconfiguraciones individuales y generar \textit{risk scores}
+calibrados. La selección de hiperparámetros (\texttt{n\_estimators}, \texttt{max\_depth},
+\texttt{min\_samples\_leaf}) se realizó mediante búsqueda en rejilla sobre el conjunto
+de entrenamiento.
+
+\textbf{Fase~4 — Entrenamiento de la Capa~2.} Entrenamiento de una \ac{GAT} de 3~capas
+con agrupamiento de grafos (\textit{graph pooling}) y validación cruzada estratificada
+de 5~pliegues, con aumentación de datos sobre los grafos de entrenamiento para mitigar
+la escasez de ejemplos de cadena de ataque.
+
+\textbf{Fase~5 — Optimización de ensemble y evaluación.} Optimización de los pesos
+del ensemble de tres componentes (\ac{RF}, \ac{GNN}, señal de escape) mediante Algoritmo
+Genético sobre el conjunto de validación, y evaluación final sobre el conjunto de
+test reservado desde el inicio y no utilizado en ninguna fase de entrenamiento ni
+selección de hiperparámetros.
+
+% -----------------------------------------------------------
+\section{Estrategia de partición y validación de datos}
+% -----------------------------------------------------------
+
+La estrategia de partición de datos difiere entre la Capa~1 (datos tabulares) y la
+Capa~2 (datos de grafos), dado que sus tamaños y distribuciones son distintos.
+
+Para la Capa~1, los 2.479~manifiestos se dividen en un conjunto de entrenamiento
+(80\,\%, 1.983~muestras) y un conjunto de test (20\,\%, 496~muestras), con
+estratificación por la variable objetivo para mantener la proporción de clases en
+ambos subconjuntos. La evaluación del modelo se realiza mediante validación cruzada
+de 5~pliegues sobre el conjunto de entrenamiento para la selección de hiperparámetros,
+y el conjunto de test se reserva exclusivamente para la evaluación final.
+
+Para la Capa~2, los 96~grafos de clúster se evalúan mediante validación cruzada
+estratificada de 5~pliegues, con estratificación por etiqueta de clúster
+(\textit{clean}, \textit{isolated}, \textit{attack\_chain}). En cada pliegue, la
+aumentación de datos se aplica \textbf{exclusivamente} sobre los grafos de
+entrenamiento del pliegue, nunca sobre los de validación, evitando así la fuga de
+datos. La estrategia de validación cruzada es la estándar para conjuntos de grafos
+pequeños \citep{Hamilton2020}, donde no hay suficientes muestras para una partición
+train/val/test clásica sin comprometer la representatividad de cada subconjunto.
+
+% -----------------------------------------------------------
+\section{Métricas de evaluación}
+% -----------------------------------------------------------
+
+La selección de métricas de evaluación responde a los requisitos operacionales del
+sistema y a las características del dataset.
+
+\textbf{F1 macro} para la Capa~1 y la clasificación por clases de la Capa~2: la
+F1 macro calcula la media no ponderada de la F1 de cada clase, otorgando igual
+importancia a las clases minoritarias (misconfiguraciones críticas) que a las
+mayoritarias (manifiestos seguros). Esta propiedad es fundamental en datasets de
+seguridad desequilibrados, donde la exactitud (\textit{accuracy}) sería una métrica
+engañosa —un clasificador que predice siempre «seguro» obtendría una exactitud del
+77,7\,\% pero F1 macro del 44,4\,\%.
+
+\textbf{\ac{AUC}-\acs{ROC}} para el modelo binario: mide la capacidad del clasificador para
+separar las dos clases independientemente del umbral de decisión, lo que permite
+al operador ajustar la sensibilidad según las necesidades del entorno.
+
+\textbf{Precisión@k} (P@k) para la Capa~2: en lugar de evaluar la clasificación
+por umbral, P@k mide la fracción de clústeres de cadena de ataque en las primeras
+\(k\) posiciones del ranking por puntuación de riesgo. Esta métrica está directamente
+alineada con el caso de uso operacional: un equipo de seguridad que audita los
+\(k\) clústeres de mayor riesgo en su infraestructura quiere que todos sean cadenas
+de ataque reales, no falsas alarmas. La elección de \(k=5\) refleja la capacidad
+de revisión manual típica de un equipo de seguridad reducido en una jornada laboral.
+
+\textbf{\ac{FPR}\_clean} (tasa de falsos positivos sobre clústeres limpios): mide la
+fracción de clústeres clasificados como de alto riesgo que en realidad son limpios.
+Un \ac{FPR}\_clean\,=\,0 significa que ningún clúster limpio aparece entre los de mayor
+puntuación, eliminando las investigaciones innecesarias.
