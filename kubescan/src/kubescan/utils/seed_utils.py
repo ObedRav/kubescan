@@ -22,4 +22,11 @@ def set_global_seed(seed: int) -> None:
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
+    if torch.cuda.is_available():
+        # CUDA scatter/gather kernels (used by GATConv message passing) pick
+        # non-deterministic algorithms by default regardless of seed — only
+        # matters on CUDA, MPS/CPU runs were already effectively deterministic.
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        torch.use_deterministic_algorithms(True, warn_only=True)
     logger.info("seed=%d", seed)
