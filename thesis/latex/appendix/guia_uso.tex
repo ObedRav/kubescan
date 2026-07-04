@@ -1,0 +1,150 @@
+% ============================================================
+\chapter{Guía de Uso y Reproducción}
+\label{ap:guia_uso}
+% ============================================================
+
+Este apéndice complementa la Sección~\ref{sec:implementacion} con los pasos
+concretos para instalar \textit{kubescan}, interpretar el informe que produce
+sobre un caso real, y reproducir el pipeline de entrenamiento de investigación
+descrito en el Capítulo~\ref{cap:diseno}.
+
+% -----------------------------------------------------------
+\section{Instalación}
+% -----------------------------------------------------------
+
+El paquete se instala en modo editable desde la raíz del repositorio:
+
+{\footnotesize\begin{verbatim}
+pip install -e kubescan/
+\end{verbatim}}
+
+Las versiones de Python soportadas y la resolución de dependencias se verifican
+en la Sección~\ref{sec:evaluacion_funcional} (RNF-3).
+
+% -----------------------------------------------------------
+\section{Uso de la interfaz de línea de comandos}
+% -----------------------------------------------------------
+
+\subsection{Análisis de un directorio de manifiestos}
+
+El comando \texttt{kubescan scan} analiza un directorio de manifiestos \ac{YAML}
+de forma recursiva. A modo de ejemplo, se analiza un directorio con dos
+manifiestos: un \textit{pod} con montaje del sistema de ficheros del anfitrión
+y contenedor privilegiado (\texttt{pod-privilegiado.yaml}, adaptado de
+\textit{BishopFox BadPods}), y un \textit{Deployment} sin
+\texttt{securityContext} ni \texttt{NetworkPolicy} definidos
+(\texttt{deployment-web.yaml}, adaptado de \textit{Kubernetes Goat}):
+
+{\footnotesize\begin{verbatim}
+$ kubescan scan /tmp/manifests-ejemplo --cluster-name produccion-web
+Scanning /tmp/manifests-ejemplo (5 GNN fold models loaded)...
+  2 manifest(s) with workload resources found
+
+==================================================================
+  KUBESCAN - Attack-Chain Risk Report
+  Cluster : produccion-web
+  Path    : /tmp/manifests-ejemplo
+==================================================================
+
+  VERDICT - ATTACK_CHAIN          x  HIGH RISK - review immediately
+
+  Ensemble score    : 0.9037
+  Chain probability : 0.7104   (5-fold GNN ensemble)
+  Clean probability : 0.0130
+  Mean RF risk      : 0.9961
+  Escape fraction   : 0.5000   (1/2 manifests have escape flags)
+  Lateral fraction  : 2/2 manifests have lateral flags
+
+  Weights: w_rf=0.337  w_gnn=0.328  w_escape=0.335
+
+==================================================================
+\end{verbatim}}
+
+La salida reporta las tres señales de entrada al ensemble (\textit{mean RF
+risk}, \textit{chain probability} y \textit{escape fraction}, ponderadas por
+\(w_{\text{rf}}\), \(w_{\text{gnn}}\) y \(w_{\text{esc}}\) respectivamente,
+optimizados por el \ac{GA} — ver Sección~\ref{sec:capa3_diseno}), y clasifica el
+clúster mediante los umbrales fijos definidos en esa misma sección. En este
+caso, la presencia de un nodo con flags de escape activas (\texttt{pod-privilegiado.yaml})
+eleva el \textit{ensemble\_score} muy por encima del umbral de 0,60.
+
+El indicador \texttt{--show-nodes} añade un desglose por manifiesto (\textit{risk
+score}, tipo de nodo y flags activas); \texttt{--format json} produce el mismo
+informe en formato \ac{JSON} estructurado para integración con otras
+herramientas. A continuación se muestra una versión abreviada (se omiten
+campos y valores para mayor claridad):
+
+{\footnotesize\begin{verbatim}
+$ kubescan scan /tmp/manifests-ejemplo --cluster-name produccion-web --format json
+{
+  "cluster": "produccion-web",
+  "verdict": "ATTACK_CHAIN",
+  "ensemble_score": 0.903702,
+  "chain_probability": 0.710363,
+  "mean_rf_risk": 0.99605,
+  "n_manifests": 2,
+  "n_escape_capable": 1,
+  "manifests": [
+    {
+      "file": "pod-privilegiado.yaml",
+      "risk_score": 0.999914,
+      "escape_capable": true,
+      "flags": ["TRUE_HOST_PID", "TRUE_HOST_IPC", "..."]
+    },
+    "..."
+  ]
+}
+\end{verbatim}}
+
+Los pesos del modelo se resuelven mediante la cadena descrita en la
+Sección~\ref{sec:implementacion} (argumento \texttt{--checkpoints-dir}
+\(\to\) variable de entorno \texttt{KUBESCAN\_CHECKPOINTS} \(\to\) enlace
+simbólico); no es necesario indicarlos explícitamente si el paquete se instaló
+junto con el repositorio completo.
+
+\subsection{Análisis de un clúster en ejecución}
+
+El comando \texttt{kubescan live} aplica el mismo \textit{pipeline} sobre el
+estado actual de un clúster accesible mediante \textit{kubectl}, sin necesidad
+de exportar manifiestos manualmente:
+
+{\footnotesize\begin{verbatim}
+kubescan live -n produccion
+kubescan live --all-namespaces --format json
+\end{verbatim}}
+
+Este comando requiere \textit{kubectl} configurado con permisos de lectura
+sobre \textit{workloads} y recursos \ac{RBAC} en el clúster objetivo.
+
+% -----------------------------------------------------------
+\section{Reproducción del pipeline de investigación}
+% -----------------------------------------------------------
+
+{\raggedright
+El pipeline de entrenamiento se ejecuta mediante los objetivos definidos en el
+\texttt{Makefile} de la raíz del repositorio. Los pasos de adquisición y
+extracción (\texttt{research/scripts/01\_acquire/}, con
+\texttt{download\_github\_manifests.py} e \texttt{ingest\_attack\_repos.py}; y
+\texttt{research/scripts/02\_extract/}, con \texttt{extract\_yaml\_features.py}
+y \texttt{build\_graphs.py}) son intensivos en red y no están automatizados en
+el \texttt{Makefile}; se ejecutan manualmente una única vez y producen los
+grafos de clúster en \texttt{research/data/graphs/*.npz}.\par}
+
+A partir de ahí, el resto del pipeline es reproducible con dos objetivos:
+
+{\footnotesize\begin{verbatim}
+make data       # aumentacion -> cache de grafos -> splits group-aware
+make reproduce  # data -> RF -> GAT (5-fold) -> ensemble GA -> eval en test
+\end{verbatim}}
+
+{\raggedright
+El objetivo \texttt{reproduce} encadena, en orden, \texttt{train\_rf.py},
+\texttt{train\_gnn.py} (5-fold, 300 épocas, \texttt{hidden=64},
+\texttt{heads=4}, \texttt{layers=3}), \texttt{run\_ga\_ensemble.py} y
+\texttt{evaluate\_test\_set.py}, todos con semilla fija (\texttt{--seed 42} por
+defecto), y finaliza generando
+\texttt{research/models/checkpoints/run\_manifest.json} con la procedencia de
+la ejecución. El objetivo \texttt{reproduce-ablations} reentrena las variantes
+de arquitectura reportadas en la Tabla~\ref{tab:arch_ablation} (\ac{GAT} de
+2~capas y \ac{GCN} de 3~capas) bajo las mismas semillas e hiperparámetros de
+entrenamiento.\par}
