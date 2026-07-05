@@ -77,6 +77,7 @@ class RemoteState(TypedDict):
     exit_code: int | None
     process_alive: bool
     existing_sizes: dict[str, int]
+    mem_available_mb: int
 
 
 @dataclass(frozen=True)
@@ -355,6 +356,7 @@ class ColabPipelineRunner:
             new_text = state["log"]
             offset_bytes += len(new_text.encode("utf-8"))
             self._echo_progress(stage, new_text)
+            print(f"  [{stage.name}] mem_available={state['mem_available_mb']}MiB", flush=True)
             ready = self._stable_artifacts(state["existing_sizes"], stable_sizes)
             self._grab_ready_artifacts(stage, ready, grabbed)
             scan_text = failure_carry + new_text
@@ -424,8 +426,15 @@ class ColabPipelineRunner:
             f"    p = os.path.join({REMOTE_CHECKPOINTS_DIR!r}, f)\n"
             "    if os.path.exists(p):\n"
             "        existing_sizes[f] = os.path.getsize(p)\n"
+            "mem_available_mb = 0\n"
+            "with open('/proc/meminfo') as meminfo:\n"
+            "    for line in meminfo:\n"
+            "        if line.startswith('MemAvailable:'):\n"
+            "            mem_available_mb = int(line.split()[1]) // 1024\n"
+            "            break\n"
             "print(json.dumps({'log': log_text, 'exit_code': exit_code, "
-            "'process_alive': process_alive, 'existing_sizes': existing_sizes}))\n"
+            "'process_alive': process_alive, 'existing_sizes': existing_sizes, "
+            "'mem_available_mb': mem_available_mb}))\n"
         )
         output = self._exec_resilient(snippet)
         try:
