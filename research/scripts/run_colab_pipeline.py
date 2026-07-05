@@ -307,8 +307,15 @@ class ColabPipelineRunner:
         first checks a PID lock file and, if a live process already holds
         it, reports that PID instead of spawning a second instance. Only
         when no live process is found does it clear stale state (log, exit
-        flag, lock) from a previous run and start a fresh one."""
+        flag, lock, and any of the stage's expected output files already
+        sitting on the VM -- e.g. checked out by `git clone` from a
+        previously committed run -- so `_stable_artifacts` cannot mistake an
+        untouched leftover for a freshly finished write) and start a fresh
+        one."""
         remote_log, remote_exit_flag, remote_lock = self._remote_paths(stage)
+        remote_artifacts = tuple(
+            f"{REMOTE_CHECKPOINTS_DIR}/{filename}" for filename in stage.expected_artifacts
+        )
         snippet = (
             "import subprocess, os\n"
             f"lock_path = {remote_lock!r}\n"
@@ -324,7 +331,7 @@ class ColabPipelineRunner:
             "if already_running:\n"
             f"    print({LAUNCH_MARKER!r}, old_pid)\n"
             "else:\n"
-            f"    for stale in ({remote_log!r}, {remote_exit_flag!r}, lock_path):\n"
+            f"    for stale in ({remote_log!r}, {remote_exit_flag!r}, lock_path) + {remote_artifacts!r}:\n"
             "        if os.path.exists(stale):\n"
             "            os.remove(stale)\n"
             f"    log = open({remote_log!r}, 'wb')\n"
