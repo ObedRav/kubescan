@@ -179,10 +179,27 @@ class ColabPipelineRunner:
     def run(self, stages: tuple[PipelineStage, ...]) -> None:
         for stage in stages:
             print(f"=== STAGE START: {stage.name} ===", flush=True)
+            self._clear_stale_artifacts(stage)
             self._launch_stage(stage)
             self._poll_stage(stage)
             print(f"=== STAGE DONE: {stage.name} ===", flush=True)
         print("=== PIPELINE COMPLETE ===", flush=True)
+
+    def _clear_stale_artifacts(self, stage: PipelineStage) -> None:
+        """Remove any local file already sitting at a stage's expected output
+        path before that stage is (re)launched. `_download` re-validates an
+        existing local file instead of re-fetching it (cheap: a valid JSON or
+        non-empty binary passes `_is_complete`), which is right for resuming a
+        download interrupted mid-poll but wrong across separate pipeline runs
+        -- a leftover checkpoint from an old run (gitignored, so it survives
+        indefinitely) would otherwise be silently reported as this run's
+        output. Every stage relaunch (whether a fresh remote process or one
+        this run already produced) must re-earn its local files from the
+        current remote run."""
+        for filename in stage.expected_artifacts:
+            local_path = self._dest_dir / filename
+            if local_path.exists():
+                local_path.unlink()
 
     def _run_colab_cli(self, args: list[str], code: str | None = None) -> str:
         """Run one `colab` CLI invocation with a hard Python-side deadline.
