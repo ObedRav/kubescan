@@ -19,7 +19,26 @@
       "w_escape": 1.0,
       "p_at_k": 0.8
     },
-    "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES = [0,1,2,3,4,5,7,24] in 26-dim node feature vector."
+    "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector.",
+    "_provenance": {
+      "created_utc": "2026-07-05T22:15:36.477776+00:00",
+      "git_commit": "4ffa613c7079e9d14f5c1e9c18d6264d05247b91",
+      "git_dirty": true,
+      "platform": "Linux x86_64",
+      "versions": {
+        "python": "3.12.13",
+        "torch": "2.11.0+cu128",
+        "torch_geometric": "2.8.0",
+        "sklearn": "1.6.1",
+        "numpy": "2.0.2",
+        "networkx": "3.6.1",
+        "skops": "0.14.0"
+      },
+      "seed": 42,
+      "mode": "oof",
+      "generations": 150,
+      "pop_size": 60
+    }
   },
   "generations": 150,
   "pop_size": 60,
@@ -34,7 +53,7 @@
     {
       "gen": 1,
       "best": 0.72,
-      "mean": 0.7153333333333332,
+      "mean": 0.7199999999999999,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
@@ -55,14 +74,14 @@
     {
       "gen": 4,
       "best": 0.72,
-      "mean": 0.7176666666666665,
+      "mean": 0.7153333333333332,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
     {
       "gen": 5,
       "best": 0.72,
-      "mean": 0.7153333333333332,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
@@ -90,7 +109,7 @@
     {
       "gen": 9,
       "best": 0.72,
-      "mean": 0.7199999999999999,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
@@ -272,14 +291,14 @@
     {
       "gen": 35,
       "best": 0.72,
-      "mean": 0.7153333333333332,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
     {
       "gen": 36,
       "best": 0.72,
-      "mean": 0.7153333333333332,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
@@ -692,7 +711,7 @@
     {
       "gen": 95,
       "best": 0.72,
-      "mean": 0.7199999999999999,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
@@ -923,7 +942,7 @@
     {
       "gen": 128,
       "best": 0.72,
-      "mean": 0.7199999999999999,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
@@ -965,7 +984,7 @@
     {
       "gen": 134,
       "best": 0.72,
-      "mean": 0.7199999999999999,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
@@ -993,14 +1012,14 @@
     {
       "gen": 138,
       "best": 0.72,
-      "mean": 0.7199999999999999,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
     {
       "gen": 139,
       "best": 0.72,
-      "mean": 0.7176666666666665,
+      "mean": 0.7199999999999999,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
@@ -1021,7 +1040,7 @@
     {
       "gen": 142,
       "best": 0.72,
-      "mean": 0.7199999999999999,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
@@ -1042,7 +1061,7 @@
     {
       "gen": 145,
       "best": 0.72,
-      "mean": 0.7199999999999999,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
@@ -1056,7 +1075,7 @@
     {
       "gen": 147,
       "best": 0.72,
-      "mean": 0.7199999999999999,
+      "mean": 0.7176666666666665,
       "best_w_gnn": 0.3278789386574905,
       "best_w_esc": 0.33469581702886425
     },
