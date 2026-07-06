@@ -36,9 +36,12 @@ Usage:
 
 import argparse
 import csv
+import logging
 import os
 import sys
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "02_extract"))
 from extract_yaml_features import (
@@ -127,28 +130,27 @@ CLUSTERS: list[dict] = [
         "recurse": True,
         "note":    "danielsagi: hostPath /var/log symlink escape + SA token exfiltration",
     },
-    # OPA Gatekeeper PSP constraint library — split by policy category.
-    # Each category has both allowed (clean) and disallowed (attack) sample pods.
-    # Per-manifest labels come from feature extraction, so clean samples receive
-    # label=0 and disallowed samples receive label=2 naturally.
+    # OPA Gatekeeper PSP constraint library — one cluster per sample manifest
+    # (split_by_file, not split_by_subdir): bundling a policy category's
+    # allowed+disallowed samples into one multi-node cluster let unrelated
+    # samples that happen to share an unrelated escape flag (e.g. a shared
+    # base template) trip the graph-level ">=2 escape nodes" chain rule —
+    # see audit/model_fixes.md option 3. Per-file clusters can't do that.
     {
         "cluster_prefix": "gatekeeper",
         "dir":            ATTACK_REPOS_DIR / "gatekeeper-library" / "library" / "pod-security-policy",
-        "split_by_subdir": True,
-        "subdir_fixtures": None,  # recurse directly into each policy subdir
-        "recurse":         True,
-        "note":            "OPA Gatekeeper PSP library",
+        "split_by_file":  True,
+        "recurse":        True,
+        "note":           "OPA Gatekeeper PSP library",
     },
-    # Shopify/kubeaudit auditor test fixtures — split by auditor type.
-    # Fixtures include both clean (flag-absent or annotated-allowed) and
-    # attack (flag-set) manifests; feature extraction labels each correctly.
+    # Shopify/kubeaudit auditor test fixtures — one cluster per fixture file,
+    # same rationale as gatekeeper above.
     {
         "cluster_prefix": "kubeaudit",
         "dir":            ATTACK_REPOS_DIR / "kubeaudit-fixtures" / "auditors",
-        "split_by_subdir": True,
-        "subdir_fixtures": "fixtures",  # YAMLs live in <auditor>/fixtures/
-        "recurse":         False,       # fixtures/ is flat
-        "note":            "Shopify/kubeaudit auditor fixtures",
+        "split_by_file":  True,
+        "recurse":        True,
+        "note":           "Shopify/kubeaudit auditor fixtures",
     },
     # datree-tests — all 111 test cases in one cluster.
     # Each test has pass/ (compliant) and fail/ (non-compliant) subdirectories;
@@ -158,6 +160,113 @@ CLUSTERS: list[dict] = [
         "dir":     ATTACK_REPOS_DIR / "datree-tests" / "pkg" / "policy" / "tests",
         "recurse": True,
         "note":    "datreeio policy tests: pass/ and fail/ manifests",
+    },
+    # --- Real production workloads (complement the synthetic-lab-heavy corpus
+    #     above with legitimate multi-resource deployments that are
+    #     structurally attack-chain-shaped: escape-capable DaemonSets/agents
+    #     paired with a ServiceAccount bound to a meaningful Role/ClusterRole) ---
+    {
+        "cluster": "longhorn",
+        "dir":     ATTACK_REPOS_DIR / "longhorn" / "deploy",
+        "recurse": False,
+        "note":    "longhorn/longhorn: production storage manager — privileged "
+                   "hostPath-mounting DaemonSet + broad ClusterRole",
+    },
+    {
+        "cluster": "calico",
+        "dir":     ATTACK_REPOS_DIR / "calico" / "manifests",
+        "recurse": False,
+        "note":    "projectcalico/calico: production CNI — hostNetwork+privileged "
+                   "node DaemonSet + ClusterRole",
+    },
+    # Each Dockerfiles/manifests/ subdirectory is a self-contained real
+    # deployment variant (own DaemonSet + own rbac.yaml) — split_by_subdir
+    # yields one cluster per variant instead of merging unrelated flavours.
+    {
+        "cluster_prefix": "datadog",
+        "dir":            ATTACK_REPOS_DIR / "datadog-agent" / "Dockerfiles" / "manifests",
+        "split_by_subdir": True,
+        "subdir_fixtures": None,
+        "recurse":         False,
+        "note":            "DataDog/datadog-agent: production observability agent "
+                           "variants — hostPID/capabilities/docker.sock + ClusterRole",
+    },
+    {
+        "cluster": "aws-ebs-csi-driver",
+        "dir":     ATTACK_REPOS_DIR / "aws-ebs-csi-driver" / "deploy" / "kubernetes" / "base",
+        "recurse": False,
+        "note":    "kubernetes-sigs/aws-ebs-csi-driver: production CSI driver — "
+                   "privileged node DaemonSet + ClusterRole",
+    },
+    # --- Purpose-built attack-graph tooling fixtures ---
+    # Flat directory, one self-contained SA+Role/ClusterRole+RoleBinding+Pod
+    # chain per technique file — split_by_file (no subdirs to split on).
+    {
+        "cluster_prefix": "kubehound",
+        "dir":            ATTACK_REPOS_DIR / "kubehound" / "test" / "setup" / "test-cluster" / "attacks",
+        "split_by_file":  True,
+        "note":           "DataDog/KubeHound: attack-graph tool's own test fixtures — "
+                          "one escalation/lateral-movement technique per file",
+    },
+    # --- Additional CTF-style scenarios (verified NOT forks of any repo above) ---
+    {
+        "cluster_prefix": "simulator",
+        "dir":            ATTACK_REPOS_DIR / "simulator" / "ansible" / "roles",
+        "split_by_subdir": True,
+        "subdir_fixtures": "files/manifests",
+        "recurse":         False,
+        "note":            "controlplaneio/simulator: narrative attack scenarios — "
+                           "escape flag + RBAC lateral-movement grant in the same manifest",
+    },
+    # --- Additional scanner test-fixture corpus — one cluster per
+    #     PASSED/FAILED manifest, same split_by_file rationale as above ---
+    {
+        "cluster_prefix": "checkov",
+        "dir":            ATTACK_REPOS_DIR / "checkov-tests" / "tests" / "kubernetes" / "checks",
+        "split_by_file":  True,
+        "recurse":        True,
+        "note":           "bridgecrewio/checkov: per-check PASSED/FAILED Kubernetes fixtures",
+    },
+    # --- wrongsecrets: real multi-resource K8s app, secrets-exposure focused
+    #     (adds clean/isolated diversity, not a chain source) ---
+    {
+        "cluster": "wrongsecrets-k8s",
+        "dir":     ATTACK_REPOS_DIR / "wrongsecrets" / "k8s",
+        "recurse": True,
+        "note":    "OWASP/wrongsecrets: base k8s manifests + challenge53 sidecar-secret-theft scenario",
+    },
+    {
+        "cluster": "wrongsecrets-aws",
+        "dir":     ATTACK_REPOS_DIR / "wrongsecrets" / "aws" / "k8s",
+        "recurse": True,
+        "note":    "OWASP/wrongsecrets: EKS deployment variant",
+    },
+    {
+        "cluster": "wrongsecrets-azure",
+        "dir":     ATTACK_REPOS_DIR / "wrongsecrets" / "azure" / "k8s",
+        "recurse": True,
+        "note":    "OWASP/wrongsecrets: AKS deployment variant",
+    },
+    {
+        "cluster": "wrongsecrets-gcp",
+        "dir":     ATTACK_REPOS_DIR / "wrongsecrets" / "gcp" / "k8s",
+        "recurse": True,
+        "note":    "OWASP/wrongsecrets: GKE deployment variant",
+    },
+    {
+        "cluster": "wrongsecrets-okteto",
+        "dir":     ATTACK_REPOS_DIR / "wrongsecrets" / "okteto" / "k8s",
+        "recurse": True,
+        "note":    "OWASP/wrongsecrets: Okteto deployment variant",
+    },
+    # --- KaiMonkey: included for completeness, but its cft/ directory is
+    #     CloudFormation (AWS::*), not Kubernetes — expected to contribute
+    #     zero rows via the "no workload resources found" skip path.
+    {
+        "cluster": "kaimonkey",
+        "dir":     ATTACK_REPOS_DIR / "KaiMonkey" / "cft",
+        "recurse": True,
+        "note":    "accurics/KaiMonkey: CloudFormation fixtures, not Kubernetes — expected no-op",
     },
 ]
 
@@ -200,38 +309,100 @@ def find_yamls(directory: Path, recurse: bool) -> list[Path]:
     return sorted(list(directory.glob("*.yaml")) + list(directory.glob("*.yml")))
 
 
+def _missing_dir_sentinel(defn: dict, prefix: str, base_dir: Path) -> list[dict]:
+    """
+    Placeholder cluster for a source directory that doesn't exist (e.g. a repo
+    that failed to clone). Reported by main()'s normal "directory not found"
+    skip path instead of vanishing silently from the ingestion summary.
+    """
+    return [{**defn, "cluster": prefix, "dir": base_dir}]
+
+
+def _expand_split_by_subdir(defn: dict) -> list[dict]:
+    """One cluster per immediate subdirectory of `dir`."""
+    base_dir: Path = defn["dir"]
+    prefix: str = defn["cluster_prefix"]
+    fixtures_sub: str | None = defn.get("subdir_fixtures")
+    recurse: bool = defn.get("recurse", True)
+    note: str = defn.get("note", "")
+
+    if not base_dir.exists():
+        return _missing_dir_sentinel(defn, prefix, base_dir)
+
+    result: list[dict] = []
+    for subdir in sorted(base_dir.iterdir()):
+        if not subdir.is_dir():
+            continue
+        yaml_dir = subdir / fixtures_sub if fixtures_sub else subdir
+        result.append({
+            "cluster": f"{prefix}_{subdir.name}",
+            "dir":     yaml_dir,
+            "recurse": recurse,
+            "note":    f"{note}: {subdir.name}",
+        })
+    return result
+
+
+def _slugify_relpath(rel: Path) -> str:
+    """
+    Turn a path relative to a source dir into a collision-safe cluster-name
+    slug. Doubles literal underscores in each path segment before joining
+    segments with a single underscore, so distinct paths can never collide
+    after slugging — a naive '/' -> '_' replacement would map both
+    'foo_bar/baz.yaml' and 'foo/bar_baz.yaml' to 'foo_bar_baz', silently
+    merging two unrelated fixtures into one cluster (see review discussion,
+    audit/model_fixes.md option 3 rationale).
+    """
+    segments = rel.with_suffix("").as_posix().split("/")
+    return "_".join(segment.replace("_", "__") for segment in segments)
+
+
+def _expand_split_by_file(defn: dict) -> list[dict]:
+    """One cluster per YAML file inside `dir` (optionally recursive).
+
+    Used for fixture directories where each file is already a self-contained
+    example and grouping by subdirectory would spuriously combine unrelated
+    examples into one cluster — e.g. scanner PASSED/FAILED fixture pairs that
+    test an unrelated, narrow config setting but happen to share unrelated
+    escape flags baked into their shared base template, which would trip the
+    graph-level ">=2 escape nodes" chain rule despite representing no real
+    escalation chain (see audit/model_fixes.md, option 3). A single-node
+    cluster structurally can't satisfy that rule, which is exactly the fix.
+    """
+    base_dir: Path = defn["dir"]
+    prefix: str = defn["cluster_prefix"]
+    recurse: bool = defn.get("recurse", False)
+    note: str = defn.get("note", "")
+
+    if not base_dir.exists():
+        return _missing_dir_sentinel(defn, prefix, base_dir)
+
+    result: list[dict] = []
+    for ypath in find_yamls(base_dir, recurse):
+        rel_stem = _slugify_relpath(ypath.relative_to(base_dir))
+        result.append({
+            "cluster": f"{prefix}_{rel_stem}",
+            "dir":     ypath.parent,
+            "files":   [ypath],
+            "recurse": False,
+            "note":    f"{note}: {rel_stem}",
+        })
+    return result
+
+
 def expand_clusters(cluster_defs: list[dict]) -> list[dict]:
     """
-    Expand split_by_subdir entries into one cluster definition per subdir.
-    Regular entries are returned unchanged.
+    Expand split_by_subdir/split_by_file entries into one cluster definition
+    each. Regular entries are returned unchanged.
     """
     result: list[dict] = []
     for defn in cluster_defs:
-        if not defn.get("split_by_subdir"):
+        if defn.get("split_by_file"):
+            result.extend(_expand_split_by_file(defn))
+        elif defn.get("split_by_subdir"):
+            result.extend(_expand_split_by_subdir(defn))
+        else:
             result.append(defn)
-            continue
-
-        base_dir: Path = defn["dir"]
-        prefix: str = defn["cluster_prefix"]
-        fixtures_sub: str | None = defn.get("subdir_fixtures")
-        recurse: bool = defn.get("recurse", True)
-        note: str = defn.get("note", "")
-
-        if not base_dir.exists():
-            result.append({**defn, "cluster": prefix, "dir": base_dir})
-            continue
-
-        for subdir in sorted(base_dir.iterdir()):
-            if not subdir.is_dir():
-                continue
-            yaml_dir = subdir / fixtures_sub if fixtures_sub else subdir
-            result.append({
-                "cluster": f"{prefix}_{subdir.name}",
-                "dir":     yaml_dir,
-                "recurse": recurse,
-                "note":    f"{note}: {subdir.name}",
-            })
-
     return result
 
 
@@ -299,6 +470,29 @@ def main() -> None:
     existing_repos = {r["repo_name"] for r in existing_rows}
     flat_clusters = expand_clusters(CLUSTERS)
 
+    # A cluster's grouping mode (regular/split_by_subdir/split_by_file) or
+    # naming can change between runs (e.g. this file's gatekeeper/kubeaudit
+    # migration from split_by_subdir to split_by_file). The skip-if-known
+    # check below is keyed on repo_name, so rows left behind under an old
+    # naming scheme won't be recognised as "already in dataset" and would
+    # be silently duplicated under new names on the next run. Surface that
+    # instead of letting it happen quietly.
+    current_cluster_names = {c["cluster"] for c in flat_clusters}
+    orphaned_repos = sorted({
+        r["repo_name"] for r in existing_rows
+        if r.get("source") == "attack_repos" and r["repo_name"] not in current_cluster_names
+    })
+    if orphaned_repos:
+        logger.warning(
+            "%d repo_name(s) already in rf_dataset.csv no longer match any "
+            "current CLUSTERS definition — stale from a prior grouping/naming "
+            "scheme, or intentionally removed: %s. If a source's split mode "
+            "changed, remove its old rows before re-running or duplicates "
+            "will be ingested under the new names.",
+            len(orphaned_repos),
+            ", ".join(orphaned_repos[:20]) + (" ..." if len(orphaned_repos) > 20 else ""),
+        )
+
     new_rows: list[dict] = []
     cluster_stats: list[tuple[str, int, int]] = []
 
@@ -314,7 +508,7 @@ def main() -> None:
             print(f"  [skip] {cluster_name}: directory not found: {cluster_dir}")
             continue
 
-        yamls = find_yamls(cluster_dir, cluster_def["recurse"])
+        yamls = cluster_def.get("files") or find_yamls(cluster_dir, cluster_def["recurse"])
         if not yamls:
             print(f"  [skip] {cluster_name}: no YAML files found")
             continue
@@ -322,7 +516,12 @@ def main() -> None:
         cluster_rows: list[dict] = []
         n_skipped = 0
         for ypath in yamls:
-            feats = extract_features_from_file(ypath)
+            try:
+                feats = extract_features_from_file(ypath)
+            except Exception:
+                logger.warning("%s: unparseable — skipping", ypath, exc_info=True)
+                n_skipped += 1
+                continue
             if feats is None:
                 n_skipped += 1
                 continue

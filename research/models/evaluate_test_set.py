@@ -68,6 +68,7 @@ except ImportError as e:
     sys.exit(f"Cannot import KubeGAT: {e}")
 
 # Canonical escape-flag indices from the kubescan package (single source of truth)
+from bootstrap_utils import resample_indices
 from kubescan.model.ga_ensemble import ESCAPE_FLAG_INDICES
 from kubescan.utils.device_utils import dataloader_kwargs, resolve_device
 from kubescan.utils.seed_utils import set_global_seed
@@ -178,7 +179,7 @@ def bootstrap_cis(
 
     p5s, fprs, f1s = [], [], []
     for _ in range(n_boot):
-        idx = rng.integers(0, n, size=n)
+        idx = resample_indices(n, rng)
         p5, fpr = rank_metrics(s[idx].tolist(), y[idx].tolist(), k=k)
         p5s.append(p5)
         fprs.append(fpr)

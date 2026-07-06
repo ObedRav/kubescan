@@ -138,10 +138,17 @@ def build_stages(seed: int) -> tuple[PipelineStage, ...]:
         ),
         PipelineStage(
             name="ga_ensemble",
-            remote_command=f"python3 -u research/models/run_ga_ensemble.py --oof --seed {seed}",
+            # --select-method/--min-weight/--reg-lambda are pinned explicitly
+            # (matching run_ga_ensemble.py's own current defaults) rather than
+            # left implicit, so a "reproduce the pipeline" run keeps producing
+            # the same objective even if those defaults change later.
+            remote_command=(
+                f"python3 -u research/models/run_ga_ensemble.py --oof --seed {seed} "
+                f"--select-method ga --min-weight 0.1 --reg-lambda 2.0"
+            ),
             log_filename="ga_ensemble.log",
             failure_pattern=r"Traceback|Killed|OOM",
-            progress_pattern=r"Generation|Best fitness",
+            progress_pattern=r"gen [ ]*[0-9]+:|GA RESULT",
             expected_artifacts=("ga_weights.json", "ga_results.json"),
         ),
         PipelineStage(

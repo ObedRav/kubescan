@@ -27,24 +27,44 @@ Two validation modes:
                     Recommended — gives a much more reliable weight estimate.
 
 Optimisation objective:
-    F = α * Precision@5 + β * (1 - FPR_clean)
+    F = α * Precision@5 + β * (1 - FPR_clean) - λ * Σ max(0, w_floor - w_i)
+
+The last term is a floor penalty (Fix 7): without it, the optimizer is free to
+drive any of the three weights to zero whenever that scores marginally higher
+on the OOF sample, which produced a degenerate escape-only optimum
+(w_esc=1.0) that fails to generalise to the held-out test set (see
+audit/model_fixes.md, problem 2). The penalty makes "ignore a signal
+entirely" strictly dominated unless the OOF gain from doing so exceeds λ
+times the shortfall — forcing the optimizer to keep all three signals
+contributing.
+
+Weight selection methods (--select-method):
+  ga        (default) genetic algorithm search, see run_ga().
+  bootstrap resample the OOF pool with replacement, grid-search each
+            resample, and take the per-weight median across resamples (Fix
+            8). Makes the weight choice defensible on its own terms — stable
+            across resamples — rather than a single fit to one fixed sample.
+            See audit/model_fixes.md, option 2.
 
 Output:
     models/checkpoints/ga_weights.json      — best weights found
-    models/checkpoints/ga_results.json      — full GA run statistics
+    models/checkpoints/ga_results.json      — full run statistics
 
 Usage:
     python models/layer3_ga.py
     python models/layer3_ga.py --oof                         # recommended
     python models/layer3_ga.py --oof --generations 200 --pop-size 60
     python models/layer3_ga.py --alpha 0.7 --beta 0.3
+    python models/layer3_ga.py --select-method bootstrap --n-bootstrap 500
 """
 
 import argparse
 import json
 import random
 import sys
+from enum import Enum
 from pathlib import Path
+from typing import Final
 
 import numpy as np
 
@@ -66,6 +86,7 @@ try:
 except ImportError as e:
     sys.exit(f"Cannot import KubeGAT: {e}")
 
+from bootstrap_utils import resample_indices
 from provenance import provenance
 
 # Escape-flag indices in the 26-dim node feature vector — canonical
@@ -209,6 +230,15 @@ def load_oof_predictions(
 # Objective function  (Fix 4: now includes escape_signals + w_escape)
 # ---------------------------------------------------------------------------
 
+#: Default floor-penalty hyperparameters (see module docstring, Fix 7).
+#: min_weight=0.1 requires each of w_rf/w_gnn/w_escape to hold at least 10%
+#: of the ensemble; reg_lambda=2.0 makes the penalty for violating that floor
+#: (up to 2*0.1=0.2 per weight) dominate the largest OOF gain observed from
+#: driving a weight to zero (~0.14, escape-only vs. near-uniform).
+DEFAULT_MIN_WEIGHT: Final[float] = 0.1
+DEFAULT_REG_LAMBDA: Final[float] = 2.0
+
+
 def compute_objective(
     true_labels:  list[int],
     gnn_probs:    list[float],
@@ -220,12 +250,17 @@ def compute_objective(
     k:            int   = 5,
     alpha:        float = 0.7,
     beta:         float = 0.3,
+    min_weight:   float = 0.0,
+    reg_lambda:   float = 0.0,
     chain_label:  int   = 2,
     clean_label:  int   = 0,
 ) -> dict:
     """
     Compute the GA objective for weights (w_rf, w_gnn, w_escape).
     Weights are normalised internally so they sum to 1.
+
+    `min_weight`/`reg_lambda` apply a floor penalty (see module docstring)
+    that discourages the optimizer from driving any weight to zero.
     """
     # Normalise weights to sum to 1 (handles floating-point drift)
     total = w_rf + w_gnn + w_escape
@@ -251,12 +286,17 @@ def compute_objective(
     n_pos     = sum(1 for y in true_labels if y == chain_label)
     p_at_k    = hits / min(k, n_pos) if n_pos > 0 else 0.0
     fpr_clean = sum(1 for i in top_k_idx if true_labels[i] == clean_label) / k
-    objective = alpha * p_at_k + beta * (1.0 - fpr_clean)
+
+    floor_penalty = reg_lambda * sum(
+        max(0.0, min_weight - w) for w in (w_rf, w_gnn, w_escape)
+    )
+    objective = alpha * p_at_k + beta * (1.0 - fpr_clean) - floor_penalty
 
     return {
         "score":            objective,
         "p_at_k":           p_at_k,
         "fpr_clean":        fpr_clean,
+        "floor_penalty":    floor_penalty,
         "w_rf":             w_rf,
         "w_gnn":            w_gnn,
         "w_escape":         w_escape,
@@ -268,19 +308,32 @@ def compute_objective(
 # Grid search  (Fix 4: 2D grid over w_gnn × w_esc; Fix 6: larger dataset)
 # ---------------------------------------------------------------------------
 
+#: Default grid resolution — (n+1)*(n+2)/2 evaluations (231 at n=20), fast
+#: and deterministic. Named so the printed evaluation count in main() stays
+#: consistent with the actual default even if this changes.
+DEFAULT_GRID_N_STEPS: Final[int] = 20
+
+
+def grid_search_eval_count(n_steps: int) -> int:
+    """Number of (w_gnn, w_esc) grid points grid_search evaluates for n_steps."""
+    return (n_steps + 1) * (n_steps + 2) // 2
+
+
 def grid_search(
     true_labels:  list[int],
     gnn_probs:    list[float],
     rf_risks:     list[float],
     escape_signals: list[float],
-    n_steps:      int   = 20,
+    n_steps:      int   = DEFAULT_GRID_N_STEPS,
     k:            int   = 5,
     alpha:        float = 0.7,
     beta:         float = 0.3,
+    min_weight:   float = 0.0,
+    reg_lambda:   float = 0.0,
 ) -> dict:
     """
     2D exhaustive grid search over (w_gnn, w_esc) with w_rf = 1 - w_gnn - w_esc.
-    n_steps=20 gives 231 evaluations — fast and deterministic.
+    See grid_search_eval_count() for the number of evaluations at a given n_steps.
     """
     best = None
     for i in range(n_steps + 1):
@@ -293,6 +346,7 @@ def grid_search(
                 w_rf=w_rf, w_gnn=w_gnn,
                 escape_signals=escape_signals, w_escape=w_escape,
                 k=k, alpha=alpha, beta=beta,
+                min_weight=min_weight, reg_lambda=reg_lambda,
             )
             if best is None or result["score"] > best["score"]:
                 best = result
@@ -302,6 +356,24 @@ def grid_search(
 # ---------------------------------------------------------------------------
 # Genetic Algorithm  (2D chromosome: [w_gnn, w_esc])
 # ---------------------------------------------------------------------------
+
+#: Fixed corners/edges of the (w_rf, w_gnn, w_esc) simplex, expressed as
+#: (w_gnn, w_esc) chromosomes. Dirichlet sampling almost never lands exactly
+#: on these -- a coarse grid search can, since it enumerates them directly --
+#: so they are seeded into generation 0 instead of left to chance. Elitism
+#: keeps whichever of these (if any) actually score best.
+SIMPLEX_SEED_POINTS: Final[tuple[tuple[float, float], ...]] = (
+    (0.0, 0.0), (1.0, 0.0), (0.0, 1.0),          # corners: RF-only, GNN-only, escape-only
+    (0.5, 0.0), (0.0, 0.5), (0.5, 0.5),          # edge midpoints
+)
+
+#: Probability a child is jumped to a simplex edge/corner instead of
+#: perturbed locally. Gaussian mutation (std=0.08) can only take small steps,
+#: so a population that has drifted to the interior can take many
+#: generations to reach a boundary -- this gives boundary optima a direct
+#: path back into the population every generation.
+BOUNDARY_MUTATION_RATE: Final[float] = 0.05
+
 
 def run_ga(
     true_labels:  list[int],
@@ -316,6 +388,8 @@ def run_ga(
     k:            int   = 5,
     alpha:        float = 0.7,
     beta:         float = 0.3,
+    min_weight:   float = 0.0,
+    reg_lambda:   float = 0.0,
     seed:         int   = 42,
 ) -> dict:
     """
@@ -326,9 +400,10 @@ def run_ga(
     np_rng = np.random.default_rng(seed)
     n_elite = max(1, int(pop_size * elite_frac))
 
-    # Initialise: sample simplex uniformly (Dirichlet)
-    population = []
-    for _ in range(pop_size):
+    # Initialise: seed the known simplex corners/edges, then fill the rest by
+    # sampling the simplex uniformly (Dirichlet).
+    population = [pt for pt in SIMPLEX_SEED_POINTS[:pop_size]]
+    for _ in range(pop_size - len(population)):
         raw = np_rng.dirichlet([1, 1, 1])  # [w_rf, w_gnn, w_esc]
         population.append((float(raw[1]), float(raw[2])))
 
@@ -344,6 +419,7 @@ def run_ga(
                 w_rf=w_rf, w_gnn=w_gnn,
                 escape_signals=escape_signals, w_escape=w_esc,
                 k=k, alpha=alpha, beta=beta,
+                min_weight=min_weight, reg_lambda=reg_lambda,
             )
             fitness.append((result["score"], w_gnn, w_esc, result))
 
@@ -390,6 +466,15 @@ def run_ga(
                 child_gnn += float(np_rng.normal(0, 0.08))
                 child_esc += float(np_rng.normal(0, 0.08))
 
+            if rng.random() < BOUNDARY_MUTATION_RATE:
+                corner = rng.choice(("rf", "gnn", "esc"))
+                if corner == "rf":
+                    child_gnn, child_esc = 0.0, 0.0
+                elif corner == "gnn":
+                    child_gnn, child_esc = 1.0, 0.0
+                else:
+                    child_gnn, child_esc = 0.0, 1.0
+
             # Clamp and ensure w_rf >= 0
             child_gnn = max(0.0, min(1.0, child_gnn))
             child_esc = max(0.0, min(1.0 - child_gnn, child_esc))
@@ -402,6 +487,116 @@ def run_ga(
         "history":  history,
         "pop_size": pop_size,
         "generations": generations,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Bootstrap weight selection — stability across resamples of the OOF pool
+# ---------------------------------------------------------------------------
+
+class SelectionMethod(str, Enum):
+    GA        = "ga"
+    BOOTSTRAP = "bootstrap"
+
+
+DEFAULT_N_BOOTSTRAP: Final[int] = 500
+
+#: Minimum chain-positive examples a resample must contain to be usable —
+#: below this, Precision@k is undefined or too noisy to inform selection.
+MIN_BOOTSTRAP_CHAINS: Final[int] = 1
+
+
+def _resample_oof_pool(
+    true_labels:    list[int],
+    gnn_probs:      list[float],
+    rf_risks:       list[float],
+    escape_signals: list[float],
+    rng:            np.random.Generator,
+    chain_label:    int = 2,
+) -> tuple[list[int], list[float], list[float], list[float]] | None:
+    """
+    Draw one bootstrap resample (with replacement) of the OOF pool.
+    Returns None if the resample has too few chain-positive examples for
+    Precision@k to be meaningful.
+    """
+    n   = len(true_labels)
+    idx = resample_indices(n, rng)
+    labels_b = [true_labels[i] for i in idx]
+    if sum(1 for y in labels_b if y == chain_label) < MIN_BOOTSTRAP_CHAINS:
+        return None
+    return (
+        labels_b,
+        [gnn_probs[i] for i in idx],
+        [rf_risks[i] for i in idx],
+        [escape_signals[i] for i in idx],
+    )
+
+
+def bootstrap_select_weights(
+    true_labels:    list[int],
+    gnn_probs:      list[float],
+    rf_risks:       list[float],
+    escape_signals: list[float],
+    n_bootstrap:    int   = DEFAULT_N_BOOTSTRAP,
+    n_steps:        int   = DEFAULT_GRID_N_STEPS,
+    k:              int   = 5,
+    alpha:          float = 0.7,
+    beta:           float = 0.3,
+    min_weight:     float = 0.0,
+    reg_lambda:     float = 0.0,
+    seed:           int   = 42,
+) -> dict:
+    """
+    Resample the OOF pool with replacement `n_bootstrap` times, grid-search
+    each resample, and select the per-weight median across resamples.
+
+    Grid search (not the GA) is used per resample so resampling variance
+    isn't confounded with GA seed variance — grid search is deterministic
+    and cheap enough to run hundreds of times.
+    """
+    rng = np.random.default_rng(seed)
+    resampled_weights = []
+
+    for _ in range(n_bootstrap):
+        resample = _resample_oof_pool(true_labels, gnn_probs, rf_risks, escape_signals, rng)
+        if resample is None:
+            continue
+        resample_best = grid_search(
+            *resample, n_steps=n_steps, k=k, alpha=alpha, beta=beta,
+            min_weight=min_weight, reg_lambda=reg_lambda,
+        )
+        resampled_weights.append(
+            (resample_best["w_rf"], resample_best["w_gnn"], resample_best["w_escape"]),
+        )
+
+    if not resampled_weights:
+        raise ValueError(
+            f"All {n_bootstrap} bootstrap resamples were rejected for having fewer than "
+            f"{MIN_BOOTSTRAP_CHAINS} chain-positive examples out of {len(true_labels)} "
+            "graphs in the pool. Increase --n-bootstrap, use a larger/less imbalanced "
+            "pool (--oof instead of --val), or fall back to --select-method ga."
+        )
+
+    weights_arr = np.array(resampled_weights)
+    median = np.median(weights_arr, axis=0)
+    w_rf, w_gnn, w_escape = (median / median.sum()).tolist()
+
+    final = compute_objective(
+        true_labels, gnn_probs, rf_risks,
+        w_rf=w_rf, w_gnn=w_gnn,
+        escape_signals=escape_signals, w_escape=w_escape,
+        k=k, alpha=alpha, beta=beta,
+        min_weight=min_weight, reg_lambda=reg_lambda,
+    )
+
+    weight_names = ("w_rf", "w_gnn", "w_escape")
+    return {
+        "best":              final,
+        "n_bootstrap_used":  len(resampled_weights),
+        "weight_median":     dict(zip(weight_names, median.tolist())),
+        "weight_mean":       dict(zip(weight_names, weights_arr.mean(axis=0).tolist())),
+        "weight_std":        dict(zip(weight_names, weights_arr.std(axis=0).tolist())),
+        "resampled_weights": weights_arr.tolist(),
     }
 
 
@@ -430,6 +625,18 @@ def main():
     parser.add_argument("--k",            type=int,   default=5)
     parser.add_argument("--alpha",        type=float, default=0.7)
     parser.add_argument("--beta",         type=float, default=0.3)
+    parser.add_argument("--min-weight",   type=float, default=DEFAULT_MIN_WEIGHT,
+                        help="Floor penalty: minimum normalised weight each of "
+                             f"w_rf/w_gnn/w_escape should hold (default {DEFAULT_MIN_WEIGHT})")
+    parser.add_argument("--reg-lambda",   type=float, default=DEFAULT_REG_LAMBDA,
+                        help="Floor penalty strength; 0 disables regularisation "
+                             f"and reproduces the unregularised objective (default {DEFAULT_REG_LAMBDA})")
+    parser.add_argument("--select-method", type=SelectionMethod, choices=list(SelectionMethod),
+                        default=SelectionMethod.GA,
+                        help="Weight selection method: 'ga' (default) or 'bootstrap' "
+                             "(resample the OOF pool, grid-search each resample, take the median)")
+    parser.add_argument("--n-bootstrap",  type=int,   default=DEFAULT_N_BOOTSTRAP,
+                        help="Number of bootstrap resamples when --select-method=bootstrap")
     parser.add_argument("--hidden",       type=int,   default=64)
     parser.add_argument("--heads",        type=int,   default=4)
     parser.add_argument("--layers",       type=int,   default=3)
@@ -469,41 +676,68 @@ def main():
     # ------------------------------------------------------------------
     # 2D Grid search baseline
     # ------------------------------------------------------------------
-    print(f"\n2D Grid search baseline (n_steps=20, {21*22//2} evaluations):")
+    print(f"\n2D Grid search baseline (n_steps={DEFAULT_GRID_N_STEPS}, "
+          f"{grid_search_eval_count(DEFAULT_GRID_N_STEPS)} evaluations):")
     grid_best = grid_search(
         true_labels, gnn_probs, rf_risks, escape_signals,
-        n_steps=20, k=args.k, alpha=args.alpha, beta=args.beta,
+        n_steps=DEFAULT_GRID_N_STEPS, k=args.k, alpha=args.alpha, beta=args.beta,
+        min_weight=args.min_weight, reg_lambda=args.reg_lambda,
     )
     print(f"  Best: w_rf={grid_best['w_rf']:.3f}  w_gnn={grid_best['w_gnn']:.3f}  "
           f"w_esc={grid_best['w_escape']:.3f}  "
           f"score={grid_best['score']:.4f}  "
           f"P@{args.k}={grid_best['p_at_k']:.2f}  "
-          f"FPR_clean={grid_best['fpr_clean']:.2f}")
+          f"FPR_clean={grid_best['fpr_clean']:.2f}  "
+          f"floor_penalty={grid_best['floor_penalty']:.4f}")
 
     # ------------------------------------------------------------------
-    # GA optimisation
+    # Weight selection: GA or bootstrap resampling
     # ------------------------------------------------------------------
-    print(f"\nGenetic Algorithm: {args.pop_size} pop × {args.generations} gen (2D: w_gnn, w_esc)")
-    print(f"  Objective: {args.alpha:.1f}*P@{args.k} + {args.beta:.1f}*(1-FPR_clean)")
-    ga_result = run_ga(
-        true_labels, gnn_probs, rf_risks, escape_signals,
-        pop_size=args.pop_size,
-        generations=args.generations,
-        k=args.k,
-        alpha=args.alpha,
-        beta=args.beta,
-        seed=args.seed,
-    )
+    if args.select_method == SelectionMethod.GA:
+        print(f"\nGenetic Algorithm: {args.pop_size} pop × {args.generations} gen (2D: w_gnn, w_esc)")
+        print(f"  Objective: {args.alpha:.1f}*P@{args.k} + {args.beta:.1f}*(1-FPR_clean) "
+              f"- {args.reg_lambda:.1f}*floor_penalty(min_weight={args.min_weight:.2f})")
+        selection_result = run_ga(
+            true_labels, gnn_probs, rf_risks, escape_signals,
+            pop_size=args.pop_size,
+            generations=args.generations,
+            k=args.k,
+            alpha=args.alpha,
+            beta=args.beta,
+            min_weight=args.min_weight,
+            reg_lambda=args.reg_lambda,
+            seed=args.seed,
+        )
+    else:
+        print(f"\nBootstrap selection: {args.n_bootstrap} resamples of the "
+              f"{len(true_labels)}-graph OOF pool (grid search per resample)")
+        selection_result = bootstrap_select_weights(
+            true_labels, gnn_probs, rf_risks, escape_signals,
+            n_bootstrap=args.n_bootstrap,
+            k=args.k,
+            alpha=args.alpha,
+            beta=args.beta,
+            min_weight=args.min_weight,
+            reg_lambda=args.reg_lambda,
+            seed=args.seed,
+        )
+        wm, ws = selection_result["weight_median"], selection_result["weight_std"]
+        print(f"  Used {selection_result['n_bootstrap_used']}/{args.n_bootstrap} resamples "
+              f"(dropped: fewer than {MIN_BOOTSTRAP_CHAINS} chain-positive examples)")
+        print(f"  Median weights: w_rf={wm['w_rf']:.3f}±{ws['w_rf']:.3f}  "
+              f"w_gnn={wm['w_gnn']:.3f}±{ws['w_gnn']:.3f}  "
+              f"w_esc={wm['w_escape']:.3f}±{ws['w_escape']:.3f}")
 
-    best = ga_result["best"]
+    best = selection_result["best"]
     print(f"\n{'='*60}")
-    print("GA RESULT")
+    print(f"{args.select_method.value.upper()} RESULT")
     print(f"{'='*60}")
     print(f"  Best weights: w_rf={best['w_rf']:.4f}  "
           f"w_gnn={best['w_gnn']:.4f}  w_esc={best['w_escape']:.4f}")
     print(f"  Objective   : {best['score']:.4f}")
     print(f"  P@{args.k}        : {best['p_at_k']:.4f}")
     print(f"  FPR_clean   : {best['fpr_clean']:.4f}")
+    print(f"  Floor penalty: {best['floor_penalty']:.4f}")
     print(f"  P@{args.k} ceiling: {p5_ceiling:.2f}")
 
     # ------------------------------------------------------------------
@@ -516,7 +750,7 @@ def main():
         ("Escape-only",      0.0, 0.0, 1.0),
         ("Equal (1/3 each)", 1/3, 1/3, 1/3),
         ("Grid-best",        grid_best["w_gnn"], grid_best["w_rf"], grid_best["w_escape"]),
-        ("GA-best",          best["w_gnn"],       best["w_rf"],      best["w_escape"]),
+        (f"{args.select_method.value.upper()}-best", best["w_gnn"], best["w_rf"], best["w_escape"]),
     ]
     for label, w_gnn, w_rf, w_esc in configs:
         r = compute_objective(
@@ -524,6 +758,7 @@ def main():
             w_rf=w_rf, w_gnn=w_gnn,
             escape_signals=escape_signals, w_escape=w_esc,
             k=args.k, alpha=args.alpha, beta=args.beta,
+            min_weight=args.min_weight, reg_lambda=args.reg_lambda,
         )
         print(f"  {label:22s}: P@{args.k}={r['p_at_k']:.2f}  "
               f"FPR_clean={r['fpr_clean']:.2f}  score={r['score']:.4f}  "
@@ -545,6 +780,10 @@ def main():
         "k":         args.k,
         "alpha":     args.alpha,
         "beta":      args.beta,
+        "min_weight": args.min_weight,
+        "reg_lambda": args.reg_lambda,
+        "floor_penalty": best["floor_penalty"],
+        "select_method": args.select_method.value,
         "p_at_k_ceiling": p5_ceiling,
         "mode":      "oof" if args.oof else "val",
         "oof_n_graphs":  len(true_labels) if args.oof else None,
@@ -558,24 +797,37 @@ def main():
         "note": (
             "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. "
             "escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). "
-            "ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector."
+            "ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. "
+            "Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) "
+            "that discourages degenerate zero-weight solutions; see audit/model_fixes.md."
         ),
         "_provenance": provenance(
             seed=args.seed, mode="oof" if args.oof else "val",
-            generations=args.generations, pop_size=args.pop_size,
+            select_method=args.select_method.value,
+            **(
+                {"generations": args.generations, "pop_size": args.pop_size}
+                if args.select_method == SelectionMethod.GA
+                else {"n_bootstrap": args.n_bootstrap}
+            ),
         ),
     }
     with weights_out.open("w", encoding="utf-8") as f:
         json.dump(weights, f, indent=2)
 
-    ga_result_serializable = {
-        "best_weights": weights,
-        "generations":  args.generations,
-        "pop_size":     args.pop_size,
-        "history":      ga_result["history"],
-    }
+    result_serializable = {"best_weights": weights, "select_method": args.select_method.value}
+    if args.select_method == SelectionMethod.GA:
+        result_serializable["generations"] = args.generations
+        result_serializable["pop_size"]    = args.pop_size
+        result_serializable["history"]     = selection_result["history"]
+    else:
+        result_serializable["n_bootstrap"]        = args.n_bootstrap
+        result_serializable["n_bootstrap_used"]   = selection_result["n_bootstrap_used"]
+        result_serializable["weight_median"]      = selection_result["weight_median"]
+        result_serializable["weight_mean"]        = selection_result["weight_mean"]
+        result_serializable["weight_std"]         = selection_result["weight_std"]
+        result_serializable["resampled_weights"]  = selection_result["resampled_weights"]
     with results_out.open("w", encoding="utf-8") as f:
-        json.dump(ga_result_serializable, f, indent=2)
+        json.dump(result_serializable, f, indent=2)
 
     print(f"\n  Saved: {weights_out}")
     print(f"  Saved: {results_out}")
