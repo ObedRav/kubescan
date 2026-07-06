@@ -7,6 +7,6 @@
   "dropout": 0.3,
   "num_edge_types": 5,
   "edge_emb_dim": 8,
-  "_best_epoch": 6,
-  "_best_val_f1": 0.8424
+  "_best_epoch": 69,
+  "_best_val_f1": 0.8975
 }

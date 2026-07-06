@@ -1,54 +1,54 @@
 {
   "test_set": {
-    "n_graphs": 15,
-    "n_chains": 4,
-    "p5_ceiling": 0.8,
+    "n_graphs": 90,
+    "n_chains": 5,
+    "p5_ceiling": 1.0,
     "distribution": {
-      "0": 4,
-      "1": 7,
-      "2": 4
+      "1": 81,
+      "2": 5,
+      "0": 4
     }
   },
   "ensemble": {
     "weights": {
-      "w_rf": 0.33742524431364523,
-      "w_gnn": 0.3278789386574905,
-      "w_escape": 0.33469581702886425
+      "w_rf": 0.5431266433218398,
+      "w_gnn": 0.1607502167734574,
+      "w_escape": 0.2961231399047029
     },
     "n_fold_models": 5
   },
   "ranking_metrics": {
     "precision_at_1": 1.0,
-    "precision_at_3": 0.6666666666666666,
-    "precision_at_5": 0.75,
-    "precision_at_5_ceiling": 0.8,
+    "precision_at_3": 1.0,
+    "precision_at_5": 0.8,
+    "precision_at_5_ceiling": 1.0,
     "hits_ceiling": false,
     "fpr_clean": 0.0
   },
   "confidence_intervals_95": {
     "n_bootstrap": 10000,
     "p_at_k_ci95": [
-      0.4,
+      0.6,
       1.0
     ],
     "fpr_clean_ci95": [
       0.0,
-      0.2
+      0.0
     ],
     "macro_f1_ci95": [
-      0.4222222222222222,
-      0.9327731092436974
+      0.6090477272481363,
+      1.0
     ]
   },
   "ablation": [
     {
       "config": "GA-best",
-      "w_rf": 0.3374,
-      "w_gnn": 0.3279,
-      "w_escape": 0.3347,
+      "w_rf": 0.5431,
+      "w_gnn": 0.1608,
+      "w_escape": 0.2961,
       "p_at_1": 1.0,
-      "p_at_3": 0.6666666666666666,
-      "p_at_5": 0.75,
+      "p_at_3": 1.0,
+      "p_at_5": 0.8,
       "fpr_clean": 0.0
     },
     {
@@ -57,8 +57,8 @@
       "w_gnn": 0.3333,
       "w_escape": 0.3333,
       "p_at_1": 1.0,
-      "p_at_3": 0.6666666666666666,
-      "p_at_5": 0.75,
+      "p_at_3": 1.0,
+      "p_at_5": 0.8,
       "fpr_clean": 0.0
     },
     {
@@ -67,8 +67,8 @@
       "w_gnn": 0.0,
       "w_escape": 0.0,
       "p_at_1": 1.0,
-      "p_at_3": 0.3333333333333333,
-      "p_at_5": 0.5,
+      "p_at_3": 0.6666666666666666,
+      "p_at_5": 0.4,
       "fpr_clean": 0.2
     },
     {
@@ -77,8 +77,8 @@
       "w_gnn": 1.0,
       "w_escape": 0.0,
       "p_at_1": 1.0,
-      "p_at_3": 0.6666666666666666,
-      "p_at_5": 1.0,
+      "p_at_3": 1.0,
+      "p_at_5": 0.8,
       "fpr_clean": 0.0
     },
     {
@@ -87,18 +87,18 @@
       "w_gnn": 0.0,
       "w_escape": 1.0,
       "p_at_1": 0.0,
-      "p_at_3": 0.3333333333333333,
-      "p_at_5": 0.75,
+      "p_at_3": 0.6666666666666666,
+      "p_at_5": 0.4,
       "fpr_clean": 0.0
     }
   ],
   "classification_metrics": {
-    "macro_f1": 0.7261904761904763,
-    "accuracy": 0.7333333333333333,
+    "macro_f1": 0.8795793163891323,
+    "accuracy": 0.9666666666666667,
     "per_class_f1": {
       "clean": 0.8571428571428571,
-      "isolated": 0.75,
-      "attack_chain": 0.5714285714285714
+      "isolated": 0.9815950920245399,
+      "attack_chain": 0.8
     },
     "confusion_matrix": [
       [
@@ -108,165 +108,915 @@
       ],
       [
         0,
-        6,
+        80,
         1
       ],
       [
         0,
-        2,
-        2
+        1,
+        4
       ]
     ]
   },
-  "gnn_only_p5": 1.0,
+  "gnn_only_p5": 0.8,
   "ranked_clusters": [
     {
       "rank": 1,
       "cluster": "kubernetes_goat_kube-bench-security",
       "true_label": "attack_chain",
-      "ensemble_score": 0.706185,
-      "gnn_chain_prob": 0.948693,
+      "ensemble_score": 0.508811,
+      "gnn_chain_prob": 0.717971,
       "rf_mean_risk": 0.1791,
       "escape_signal": 1.0,
       "escape_fraction": 1.0
     },
     {
       "rank": 2,
-      "cluster": "gatekeeper-library",
+      "cluster": "datadog_all-containers",
       "true_label": "attack_chain",
-      "ensemble_score": 0.645647,
-      "gnn_chain_prob": 0.948372,
+      "ensemble_score": 0.456251,
+      "gnn_chain_prob": 0.996126,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 0.16
+      "escape_fraction": 0.5
     },
     {
       "rank": 3,
-      "cluster": "kube-pod-escape",
+      "cluster": "datadog_orchestrator-explorer",
+      "true_label": "attack_chain",
+      "ensemble_score": 0.456241,
+      "gnn_chain_prob": 0.996065,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 0.5
+    },
+    {
+      "rank": 4,
+      "cluster": "infra-goof-k8s",
+      "true_label": "attack_chain",
+      "ensemble_score": 0.418623,
+      "gnn_chain_prob": 0.762049,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 0.833333
+    },
+    {
+      "rank": 5,
+      "cluster": "kubernetes-microservices-yoloo",
       "true_label": "isolated",
-      "ensemble_score": 0.640492,
-      "gnn_chain_prob": 0.93265,
+      "ensemble_score": 0.398258,
+      "gnn_chain_prob": 0.458661,
+      "rf_mean_risk": 0.0523,
+      "escape_signal": 1.0,
+      "escape_fraction": 0.2
+    },
+    {
+      "rank": 6,
+      "cluster": "badpods_priv",
+      "true_label": "attack_chain",
+      "ensemble_score": 0.368111,
+      "gnn_chain_prob": 0.018476,
+      "rf_mean_risk": 0.127075,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 7,
+      "cluster": "k8s-escape",
+      "true_label": "isolated",
+      "ensemble_score": 0.339456,
+      "gnn_chain_prob": 0.269569,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
       "escape_fraction": 1.0
     },
     {
-      "rank": 4,
-      "cluster": "gitcontroller",
-      "true_label": "attack_chain",
-      "ensemble_score": 0.451733,
-      "gnn_chain_prob": 0.312362,
-      "rf_mean_risk": 0.04333,
-      "escape_signal": 1.0,
-      "escape_fraction": 0.021352
-    },
-    {
-      "rank": 5,
+      "rank": 8,
       "cluster": "microservices-deploy",
       "true_label": "isolated",
-      "ensemble_score": 0.388301,
-      "gnn_chain_prob": 0.09261,
+      "ensemble_score": 0.333562,
+      "gnn_chain_prob": 0.000191,
       "rf_mean_risk": 0.068875,
       "escape_signal": 1.0,
       "escape_fraction": 0.25
     },
     {
-      "rank": 6,
-      "cluster": "cloudify-kubernetes-plugin",
-      "true_label": "attack_chain",
-      "ensemble_score": 0.131527,
-      "gnn_chain_prob": 0.348362,
-      "rf_mean_risk": 0.051291,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
-    },
-    {
-      "rank": 7,
-      "cluster": "kubernetes_goat_poor-registry",
-      "true_label": "isolated",
-      "ensemble_score": 0.12253,
-      "gnn_chain_prob": 0.280158,
-      "rf_mean_risk": 0.0909,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
-    },
-    {
-      "rank": 8,
-      "cluster": "kubernetes_goat_kubernetes-goat-home",
-      "true_label": "clean",
-      "ensemble_score": 0.12253,
-      "gnn_chain_prob": 0.280158,
-      "rf_mean_risk": 0.0909,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
-    },
-    {
       "rank": 9,
-      "cluster": "kubernetes-with-spring-boot-microservices",
+      "cluster": "gatekeeper_host-filesystem_samples_psp-host-filesystem_example__allowed",
       "true_label": "isolated",
-      "ensemble_score": 0.017544,
-      "gnn_chain_prob": 0.008184,
-      "rf_mean_risk": 0.04404,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "ensemble_score": 0.327201,
+      "gnn_chain_prob": 0.193333,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
     },
     {
       "rank": 10,
-      "cluster": "caastle",
+      "cluster": "kubeaudit_mounts_fixtures_proc-mounted-allowed-multi-containers-single-label",
       "true_label": "isolated",
-      "ensemble_score": 0.016473,
-      "gnn_chain_prob": 0.004518,
-      "rf_mean_risk": 0.044429,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "ensemble_score": 0.303251,
+      "gnn_chain_prob": 0.044341,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
     },
     {
       "rank": 11,
-      "cluster": "kustomizegoat",
+      "cluster": "gatekeeper_host-network-ports_samples_port__range__block__host__network_example__disallowed__exempted__container__host__network__enabled",
       "true_label": "isolated",
-      "ensemble_score": 0.015907,
-      "gnn_chain_prob": 0.048515,
+      "ensemble_score": 0.298228,
+      "gnn_chain_prob": 0.013091,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 12,
+      "cluster": "kubeaudit_hostns_fixtures_host-pid-true",
+      "true_label": "isolated",
+      "ensemble_score": 0.296258,
+      "gnn_chain_prob": 0.000838,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 13,
+      "cluster": "checkov_example__KubeletReadOnlyPort_KubeletReadOnlyPort-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 14,
+      "cluster": "checkov_example__SchedulerBindAddress_SchedulerBindAddress-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 15,
+      "cluster": "checkov_example__ApiServerTlsCertAndKey_ApiServer-FAILED-2",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 16,
+      "cluster": "checkov_example__ControllerManagerBindAddress_ControllerManagerBindAddress-FAILED-2",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 17,
+      "cluster": "checkov_example__KubeControllerManagerRootCAFile_ApiServer-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 18,
+      "cluster": "checkov_example__ApiServerProfiling_ApiServer-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 19,
+      "cluster": "checkov_example__ApiServerTokenAuthFile_ApiServerTokenAuthFile-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 20,
+      "cluster": "checkov_example__ApiServerStrongCryptographicCiphers_ApiServerStrongCryptographicCiphers-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 21,
+      "cluster": "checkov_example__ApiServerNodeRestrictionPlugin_ApiServerNodeRestrictionPlugin-FAILED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 22,
+      "cluster": "checkov_example__KubeletReadOnlyPort_KubeletReadOnlyPort-FAILED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 23,
+      "cluster": "checkov_example__KubeletAuthorizationModeNotAlwaysAllow_KubeletAuthorizationModeNotAlwaysAllow-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 24,
+      "cluster": "checkov_example__EtcdCertAndKey_Etcd-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 25,
+      "cluster": "checkov_example__ApiServerServiceAccountLookup_ApiServer-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 26,
+      "cluster": "checkov_example__KubletRotateCertificates_KubletRotateCertificates-FAILED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 27,
+      "cluster": "checkov_example__ApiServerAlwaysPullImagesPlugin_ApiServerAlwaysPullImagesPlugin-FAILED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 28,
+      "cluster": "checkov_example__ApiServerServiceAccountPlugin_ApiServerServiceAccountPlugin-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.296146,
+      "gnn_chain_prob": 0.000139,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 29,
+      "cluster": "kubeaudit_hostns_fixtures_host-network-true",
+      "true_label": "isolated",
+      "ensemble_score": 0.296139,
+      "gnn_chain_prob": 0.0001,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 30,
+      "cluster": "kubeaudit_capabilities_fixtures_capabilities-some-allowed-multi-containers-mix-old-labels",
+      "true_label": "isolated",
+      "ensemble_score": 0.296127,
+      "gnn_chain_prob": 2.1e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0
+    },
+    {
+      "rank": 31,
+      "cluster": "checkov_example__KubernetesDashboard_kube-dashboard-FAILED",
+      "true_label": "isolated",
+      "ensemble_score": 0.08587,
+      "gnn_chain_prob": 0.53418,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
       "escape_fraction": 0.0
     },
     {
-      "rank": 12,
-      "cluster": "kubernetes-microservices",
+      "rank": 32,
+      "cluster": "wrongsecrets-aws",
       "true_label": "isolated",
-      "ensemble_score": 0.014855,
-      "gnn_chain_prob": 0.004619,
-      "rf_mean_risk": 0.039536,
+      "ensemble_score": 0.058146,
+      "gnn_chain_prob": 0.361718,
+      "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
       "escape_fraction": 0.0
     },
     {
-      "rank": 13,
+      "rank": 33,
+      "cluster": "kubernetes_goat_kubernetes-goat-home",
+      "true_label": "clean",
+      "ensemble_score": 0.049862,
+      "gnn_chain_prob": 0.003061,
+      "rf_mean_risk": 0.0909,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 34,
+      "cluster": "kubernetes_goat_build-code",
+      "true_label": "isolated",
+      "ensemble_score": 0.049862,
+      "gnn_chain_prob": 0.003061,
+      "rf_mean_risk": 0.0909,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 35,
+      "cluster": "cloudify-kubernetes-plugin",
+      "true_label": "isolated",
+      "ensemble_score": 0.028588,
+      "gnn_chain_prob": 0.004542,
+      "rf_mean_risk": 0.051291,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 36,
+      "cluster": "java-on-aks",
+      "true_label": "isolated",
+      "ensemble_score": 0.020655,
+      "gnn_chain_prob": 0.000651,
+      "rf_mean_risk": 0.037837,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 37,
+      "cluster": "githook",
+      "true_label": "isolated",
+      "ensemble_score": 0.01707,
+      "gnn_chain_prob": 2.9e-05,
+      "rf_mean_risk": 0.031421,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 38,
       "cluster": "skampi",
       "true_label": "clean",
-      "ensemble_score": 0.010554,
-      "gnn_chain_prob": 0.003888,
+      "ensemble_score": 0.015073,
+      "gnn_chain_prob": 0.000853,
       "rf_mean_risk": 0.0275,
       "escape_signal": 0.0,
       "escape_fraction": 0.0
     },
     {
-      "rank": 14,
+      "rank": 39,
       "cluster": "piggymetrics-k8s",
       "true_label": "clean",
-      "ensemble_score": 0.010554,
-      "gnn_chain_prob": 0.003888,
+      "ensemble_score": 0.015073,
+      "gnn_chain_prob": 0.000853,
       "rf_mean_risk": 0.0275,
       "escape_signal": 0.0,
       "escape_fraction": 0.0
     },
     {
-      "rank": 15,
+      "rank": 40,
       "cluster": "kubecf",
       "true_label": "clean",
-      "ensemble_score": 0.010554,
-      "gnn_chain_prob": 0.003888,
+      "ensemble_score": 0.015073,
+      "gnn_chain_prob": 0.000853,
       "rf_mean_risk": 0.0275,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 41,
+      "cluster": "simulator_build-a-backdoor",
+      "true_label": "isolated",
+      "ensemble_score": 0.013073,
+      "gnn_chain_prob": 0.081328,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 42,
+      "cluster": "wrongsecrets-k8s",
+      "true_label": "isolated",
+      "ensemble_score": 0.007201,
+      "gnn_chain_prob": 0.044799,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 43,
+      "cluster": "kubehound_TOKEN__BRUTEFORCE",
+      "true_label": "isolated",
+      "ensemble_score": 0.004631,
+      "gnn_chain_prob": 0.028812,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 44,
+      "cluster": "kubehound_ROLE__BIND__RB__R-SA",
+      "true_label": "isolated",
+      "ensemble_score": 0.004631,
+      "gnn_chain_prob": 0.028812,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 45,
+      "cluster": "kubehound_POD__CREATE",
+      "true_label": "isolated",
+      "ensemble_score": 0.004631,
+      "gnn_chain_prob": 0.028812,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 46,
+      "cluster": "gatekeeper_allow-privilege-escalation_samples_psp-allow-privilege-escalation-container_example__allowed__exempt",
+      "true_label": "isolated",
+      "ensemble_score": 0.004213,
+      "gnn_chain_prob": 0.026211,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 47,
+      "cluster": "k8s-security-lab",
+      "true_label": "isolated",
+      "ensemble_score": 0.001481,
+      "gnn_chain_prob": 0.009216,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 48,
+      "cluster": "checkov_example__ImagePullPolicy_cassandra-PullPolicyAlways-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.001428,
+      "gnn_chain_prob": 0.008885,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 49,
+      "cluster": "checkov_example__SecurityContexts_frontend-replicaset-both-FAILED",
+      "true_label": "isolated",
+      "ensemble_score": 0.000909,
+      "gnn_chain_prob": 0.005652,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 50,
+      "cluster": "gatekeeper_allow-privilege-escalation_samples_psp-allow-privilege-escalation-container_example__disallowed",
+      "true_label": "isolated",
+      "ensemble_score": 0.000321,
+      "gnn_chain_prob": 0.001996,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 51,
+      "cluster": "checkov_example__Tiller_nginx-deployment-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.000296,
+      "gnn_chain_prob": 0.00184,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 52,
+      "cluster": "checkov_example__Seccomp_pod-seccomp-PASSED6",
+      "true_label": "isolated",
+      "ensemble_score": 0.000296,
+      "gnn_chain_prob": 0.00184,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 53,
+      "cluster": "kubeaudit_image_fixtures_image-tag-present",
+      "true_label": "isolated",
+      "ensemble_score": 0.000296,
+      "gnn_chain_prob": 0.00184,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 54,
+      "cluster": "gatekeeper_capabilities_samples_psp-capabilities-baseline_example__allowed",
+      "true_label": "isolated",
+      "ensemble_score": 0.000187,
+      "gnn_chain_prob": 0.001161,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 55,
+      "cluster": "gatekeeper_proc-mount_samples_psp-proc-mount_example__allowed__exempt__image",
+      "true_label": "isolated",
+      "ensemble_score": 0.000174,
+      "gnn_chain_prob": 0.00108,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 56,
+      "cluster": "gatekeeper_seccompv2_samples_psp-seccomp-baseline_example__allowed__no__profile",
+      "true_label": "isolated",
+      "ensemble_score": 7.4e-05,
+      "gnn_chain_prob": 0.000463,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 57,
+      "cluster": "checkov_example__LivenessReadiness_pod-liveness-readiness-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 7.4e-05,
+      "gnn_chain_prob": 0.000463,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 58,
+      "cluster": "checkov_example__Requests__Limits_pod-requests-limits-1FAILED1PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 7.4e-05,
+      "gnn_chain_prob": 0.000463,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 59,
+      "cluster": "gatekeeper_host-network-ports_samples_psp-host-network-ports_example__allowed__no__ports__host__network__false",
+      "true_label": "isolated",
+      "ensemble_score": 7.4e-05,
+      "gnn_chain_prob": 0.000463,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 60,
+      "cluster": "checkov_example__ImageTagFixed_job-ImageTagLatest-FAILED",
+      "true_label": "isolated",
+      "ensemble_score": 7.4e-05,
+      "gnn_chain_prob": 0.000463,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 61,
+      "cluster": "checkov_example__KubernetesDashboard_kube-dashboard-no-image-FAILED",
+      "true_label": "isolated",
+      "ensemble_score": 7.4e-05,
+      "gnn_chain_prob": 0.000463,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 62,
+      "cluster": "gatekeeper_host-probes-lifecycle_samples_psp-host-probes-lifecycle_disallowed__init__probe",
+      "true_label": "isolated",
+      "ensemble_score": 7.4e-05,
+      "gnn_chain_prob": 0.000463,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 63,
+      "cluster": "gatekeeper_forbidden-sysctls_samples_psp-forbidden-sysctls_example__disallowed",
+      "true_label": "isolated",
+      "ensemble_score": 7.4e-05,
+      "gnn_chain_prob": 0.000463,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 64,
+      "cluster": "gatekeeper_host-probes-lifecycle_samples_psp-host-probes-lifecycle_disallowed__init__lifecycle",
+      "true_label": "isolated",
+      "ensemble_score": 7.4e-05,
+      "gnn_chain_prob": 0.000463,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 65,
+      "cluster": "gatekeeper_fsgroup_samples_psp-fsgroup_example__disallowed",
+      "true_label": "isolated",
+      "ensemble_score": 7.4e-05,
+      "gnn_chain_prob": 0.000463,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 66,
+      "cluster": "checkov_example__AllowPrivilegeEscalation_ds-nginx-ingress-FAILED",
+      "true_label": "isolated",
+      "ensemble_score": 3.1e-05,
+      "gnn_chain_prob": 0.000191,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 67,
+      "cluster": "checkov_example__ApiServerInsecurePort_api-server-insecure-port-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 1.4e-05,
+      "gnn_chain_prob": 8.8e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 68,
+      "cluster": "kubeaudit_privesc_fixtures_allow-privilege-escalation-true",
+      "true_label": "isolated",
+      "ensemble_score": 1e-05,
+      "gnn_chain_prob": 6.3e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 69,
+      "cluster": "checkov_example__DockerSocketVolume_CronJob-pass",
+      "true_label": "isolated",
+      "ensemble_score": 1e-05,
+      "gnn_chain_prob": 6.3e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 70,
+      "cluster": "checkov_example__Seccomp_cronjob-seccomp-securityContext-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 1e-05,
+      "gnn_chain_prob": 6.3e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 71,
+      "cluster": "checkov_example__DropCapabilities_pod-drop-all-capabilities-PASSED2",
+      "true_label": "isolated",
+      "ensemble_score": 9e-06,
+      "gnn_chain_prob": 5.8e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 72,
+      "cluster": "gatekeeper_apparmor_samples_psp-apparmor_example__allowed__override",
+      "true_label": "isolated",
+      "ensemble_score": 9e-06,
+      "gnn_chain_prob": 5.8e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 73,
+      "cluster": "gatekeeper_apparmor_samples_psp-apparmor_example__allowed__container",
+      "true_label": "isolated",
+      "ensemble_score": 9e-06,
+      "gnn_chain_prob": 5.8e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 74,
+      "cluster": "gatekeeper_proc-mount_samples_psp-proc-mount_example__disallowed",
+      "true_label": "isolated",
+      "ensemble_score": 9e-06,
+      "gnn_chain_prob": 5.8e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 75,
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-user-psc-0",
+      "true_label": "isolated",
+      "ensemble_score": 9e-06,
+      "gnn_chain_prob": 5.8e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 76,
+      "cluster": "kubeaudit_seccomp_fixtures_seccomp-profile-missing-annotations",
+      "true_label": "isolated",
+      "ensemble_score": 9e-06,
+      "gnn_chain_prob": 5.8e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 77,
+      "cluster": "kubeaudit_asat_fixtures_service-account-token-true-and-default-name",
+      "true_label": "isolated",
+      "ensemble_score": 9e-06,
+      "gnn_chain_prob": 5.8e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 78,
+      "cluster": "kubeaudit_asat_fixtures_service-account-token-nil-and-no-name",
+      "true_label": "isolated",
+      "ensemble_score": 9e-06,
+      "gnn_chain_prob": 5.8e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 79,
+      "cluster": "checkov_example__ShareHost_memcachedStatefulSet-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 8e-06,
+      "gnn_chain_prob": 5.1e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 80,
+      "cluster": "checkov_example__Seccomp_pod-seccomp-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 4e-06,
+      "gnn_chain_prob": 2.8e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 81,
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-user-redundant-override-pod",
+      "true_label": "isolated",
+      "ensemble_score": 4e-06,
+      "gnn_chain_prob": 2.3e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 82,
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-user-psc-1",
+      "true_label": "isolated",
+      "ensemble_score": 4e-06,
+      "gnn_chain_prob": 2.3e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 83,
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-psc-true",
+      "true_label": "isolated",
+      "ensemble_score": 4e-06,
+      "gnn_chain_prob": 2.3e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 84,
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-redundant-override-pod",
+      "true_label": "isolated",
+      "ensemble_score": 4e-06,
+      "gnn_chain_prob": 2.3e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 85,
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-false",
+      "true_label": "isolated",
+      "ensemble_score": 2e-06,
+      "gnn_chain_prob": 1.4e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 86,
+      "cluster": "kubeaudit_privesc_fixtures_allow-privilege-escalation-redundant-override",
+      "true_label": "isolated",
+      "ensemble_score": 2e-06,
+      "gnn_chain_prob": 1.4e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 87,
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-psc-false-csc-false",
+      "true_label": "isolated",
+      "ensemble_score": 2e-06,
+      "gnn_chain_prob": 1.3e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 88,
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-user-psc-1-csc-0",
+      "true_label": "isolated",
+      "ensemble_score": 2e-06,
+      "gnn_chain_prob": 1.3e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 89,
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-user-psc-0-csc-1",
+      "true_label": "isolated",
+      "ensemble_score": 2e-06,
+      "gnn_chain_prob": 1.1e-05,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0
+    },
+    {
+      "rank": 90,
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-psc-false-csc-true-multiple-cont",
+      "true_label": "isolated",
+      "ensemble_score": 2e-06,
+      "gnn_chain_prob": 1.1e-05,
+      "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
       "escape_fraction": 0.0
     }

@@ -1,7 +1,7 @@
 {
-  "created_utc": "2026-07-05T22:16:27.561993+00:00",
+  "created_utc": "2026-07-06T01:42:43.228968+00:00",
   "platform": "Linux x86_64",
-  "git_commit": "4ffa613c7079e9d14f5c1e9c18d6264d05247b91",
+  "git_commit": "c9da617733abacc6bf64c953ec393fd35d02b245",
   "versions": {
     "python": "3.12.13",
     "torch": "2.11.0+cu128",
@@ -12,63 +12,63 @@
     "skops": "0.14.0"
   },
   "data_checksums": {
-    "rf_dataset.csv": "cff671744e2fa42a219acc398f7cea76da06a7436a6b0b6ac5b887d809853bce",
-    "graph_manifest.csv": "41a8f65199dddf08df71dadc7ef6c20ab7f34209b73ae0a47dafeab4f2bf56f3",
-    "graphs_cache.npz": "239cbb2d39b1dd98c8cbf7b1a2e5e59864b7e26c05a25b4479a3b2804ad32406",
-    "splits_config.json": "9439b6a981393ee88df237511bc58401554aa534e4351443b918c4b6998ce547",
-    "fold_0_train.txt": "97cf23531d0061a5e02169daa78bb27f37714b0630631e38c154a28ba5e4b112",
-    "fold_0_val.txt": "32fdee67b3e7cfd33e8c8ba6bb56591824a3c5d35db95ae2a0d84afac16184e1",
-    "fold_1_train.txt": "0e30928d93eb7ad9d1e6c6607bac11c298d482830fe8596a35dabd3756c1fdb2",
-    "fold_1_val.txt": "b2839e00b74864d1816ebf420c578a65c405bacf90ce664d848f3f78961d34f6",
-    "fold_2_train.txt": "8a8db669089ccf7c5e47da06c1ea8844d3131c30a066cd1057824c6ca3cbc674",
-    "fold_2_val.txt": "0c9dc89d706855888422f13d4f8517aefd6c0c279b8d3e7f6accf353de383e7a",
-    "fold_3_train.txt": "aae84da3fe6d3b1c4132e2e6461c71f1e95a88f6dbef6e552366576fb9d59540",
-    "fold_3_val.txt": "239eb08b7f8d0821d52923dbc08045d1012fda91232081582bffd2ca03215b75",
-    "fold_4_train.txt": "4ce204c32c5fcb94e7b2135a0065d6787bf6c25b42e3e3c7177b821f6ddbbbfc",
-    "fold_4_val.txt": "47504ab8719312bb14876118068525148170cf517e3e7909080b61cde651b599",
-    "test.txt": "872b02efaee2b4b5d21ee5aeecdf43308bbf3741ffe50f70dc66e0131d340db7",
-    "train.txt": "bf43fe4d7f4b655d087aed55e2b1be029def0bbbd7ba670e16e658442ad5cb92",
-    "val.txt": "a705926948daa2a8cf42d8f95c3ed5b9f553b27bcdeac0dbd23f91e7d354d271"
+    "rf_dataset.csv": "74cc0c0e87cec26f33a61c887b4fe3b1370b24c705389c078d713cb8c42764ac",
+    "graph_manifest.csv": "5a70907aeb8b1d41d9996baecf720aec1d89560d19ae361aff8d789ae96da542",
+    "graphs_cache.npz": "12cf803de63f75e698f87848f9dfc153e188990922433f8d4f32d357e750f9e4",
+    "splits_config.json": "a9457b0ea5b083853585603067cc3ec7d5fa882aafa901f56246943afbd9b363",
+    "fold_0_train.txt": "0d83d989e6ca82664833e8cbf68cf64c5c9589dabb510c198bc0dadb54afcf31",
+    "fold_0_val.txt": "10ad0e0b5b7ca7e1a4942fd17e2fb9af8010f7869b741343667b0aa73226079d",
+    "fold_1_train.txt": "44aa1dd9728190ae08291da27264447fdd4ccb981020252f8c8f4ba11c497686",
+    "fold_1_val.txt": "5bacb514280e86f00f449e30fc5de415f1beb6543206112faee3203fb5594ac8",
+    "fold_2_train.txt": "51f7c530010b0c234d9f43b89d6bbdd7ac9d9bc773b65580cefd4d1cd2c57bfd",
+    "fold_2_val.txt": "cd4c09b57a2130205a3bdc7336d447de77f25a19bdcfd9e8a6269e9dd131efef",
+    "fold_3_train.txt": "a6cac3c7e51d3df7118025368520b5cfd9b0390db2f33ca4c6b2c9cc47856bb1",
+    "fold_3_val.txt": "a9f69874b71b9b8e362097b312d8af6c01d47c165f64839862c09a5831e5d793",
+    "fold_4_train.txt": "512ef2d81282cd801ba7fee7a477219a638a3bc56fbb7d823a1d797669960316",
+    "fold_4_val.txt": "181513ce5640ad0acbe9b8a2476ef24fa145494ef352024619a86850914d956b",
+    "test.txt": "02a1fe5bba93a51b6bd0794603e487b4c38f5270c3266198563d8375679e6d4b",
+    "train.txt": "2e76b73e1054aa0bfabd1ca600cb089a0f4beb47239bf604223c013c12128701",
+    "val.txt": "243165c91013b603f50684ea00b3e2c357f51f416d4fdf0be4564bda88420044"
   },
   "checkpoint_checksums": {
-    "cv_results.json": "709c2080ccccd0afe14b3951ac7178b482f3bc0cff7206ef8a72a2c3b7e02f01",
-    "ga_results.json": "3b580a3f5fcdd385bbe6423476054802cd24824dcd1bd508124afa35d2813880",
-    "ga_weights.json": "57ae64821f6c842239de343c921b16ebe3ac9753fdf58e906ae7dda806bfa575",
-    "gnn_config.json": "45245b2fb5ed0403c3815d263ddb1c4ceee0f68edaa593d6bde18e2a6ce50f1a",
-    "gnn_fold_0.pt": "a841095f95fdbaaed6faf535604f8cfdea6667ffffe6a0a450a88878ed65c6e1",
-    "gnn_fold_1.pt": "a65eaa68c4dfd7a085c4efd4738dc8b52e6d5bbcfee360d1d3c7edb3ce9cc60c",
-    "gnn_fold_2.pt": "ecbcac1d03dfa25c71b46831c99e6cf931d66f2bc05ef839efa79658ce0b50be",
-    "gnn_fold_3.pt": "bde29c21e50b93c1ece55cbfd5600075513243b8c9a980634b6f09e08e103d42",
-    "gnn_fold_4.pt": "a5d34182e3fb63863b0d0f506073d760dae6ae839dc059dd7bb86df0b30b7572",
-    "rf_model.skops": "ba95e349fbf85d50894eec77bf3f89d216607ee4260e69dbe03459a63318f720",
-    "rf_results.json": "5d029733c2459529db87db5b45a1bbce27f31e72b91f5d95f60d8b34701ed547",
-    "rf_severity.skops": "ea1f84ad8c3d42ecac093599ed8ced3f9833d03c5d798f7114787455eec9f4a5",
-    "test_results.json": "acf87f2a3e2e647947f4bee3b57c18ab708e91e266fc2daf5b392497f89c1f9f"
+    "cv_results.json": "9cdcee2cde16d3b3579be3fff3a306acc9e76d0ad44379e60196edf47a911a01",
+    "ga_results.json": "2cf9b55a569e05abe2e10eabab89d132045f88b46460ae06d839bfb2e6557b2e",
+    "ga_weights.json": "1dc9b99bbb4fc0c0ac203f44cf3ce6b32b5b632099643360050f1ff3604c8811",
+    "gnn_config.json": "2c8d0a3dbf533f3979205aceaa6231051acbc2720ede1416865a14dfaab7b54d",
+    "gnn_fold_0.pt": "8f69ca6dfb9a7d68713b49f23c770930954063b761ef0dd820f9f14529f11efb",
+    "gnn_fold_1.pt": "b6c9217a23ba7a75f25b9887c96a658ade5ebe02b16073a3d957d38a566e99e5",
+    "gnn_fold_2.pt": "f827f0a798c23dcb196edf456c53b7f276921f562cdaa7b4937431d3475bcfad",
+    "gnn_fold_3.pt": "0f8a0da76ca351b564c317fd24ac964cc8150630f4b8c19d3fc21006d9693a7a",
+    "gnn_fold_4.pt": "c28d8cccddb351c7110b33c449777fc6ef1565acf987b20297d6a17cf2b32887",
+    "rf_model.skops": "98e64f78db3525b57f2ae47c656ce89fa91bb2c036b28a69fccb406d89925c7a",
+    "rf_results.json": "d9929f77e91bde43c281cb4b33333eb091d03be6cb1a89264d1aea20a2837c68",
+    "rf_severity.skops": "b369249316089df367309c6de267a8904a1179d9f6a780fa11b3b0e745984da2",
+    "test_results.json": "a918596eb5fbab017982881f016b29dec5db56db5fcfe1284296f6d403c0c290"
   },
   "headline_metrics": {
     "gnn_cv": {
       "num_folds": 5,
       "binary": false,
-      "macro_f1_mean": 0.8462349415290593,
-      "macro_f1_std": 0.06473650213118619,
-      "precision_at_5_mean": 0.82,
-      "precision_at_5_std": 0.15684387141358122,
+      "macro_f1_mean": 0.8615951190791646,
+      "macro_f1_std": 0.037981099732820586,
+      "precision_at_5_mean": 0.56,
+      "precision_at_5_std": 0.07999999999999999,
       "precision_at_5_target": 0.7,
-      "accuracy_mean": 0.8383333333333333,
-      "accuracy_std": 0.06766954016887265,
+      "accuracy_mean": 0.9548198258739902,
+      "accuracy_std": 0.01173198479171264,
       "fold_f1s": [
-        0.8424242424242424,
-        0.8857142857142858,
-        0.8321678321678322,
-        0.9327731092436974,
-        0.7380952380952381
+        0.8975155279503105,
+        0.8077623651394142,
+        0.8594202898550725,
+        0.9091760299625468,
+        0.8341013824884792
       ],
       "fold_p5s": [
         0.6,
-        1.0,
-        0.75,
-        1.0,
-        0.75
+        0.4,
+        0.6,
+        0.6,
+        0.6
       ],
       "model_config": {
         "conv": "gat",
@@ -80,8 +80,8 @@
         "epochs": 300
       },
       "_provenance": {
-        "created_utc": "2026-07-05T22:14:57.104493+00:00",
-        "git_commit": "4ffa613c7079e9d14f5c1e9c18d6264d05247b91",
+        "created_utc": "2026-07-06T01:40:52.117030+00:00",
+        "git_commit": "c9da617733abacc6bf64c953ec393fd35d02b245",
         "git_dirty": true,
         "platform": "Linux x86_64",
         "versions": {
@@ -99,29 +99,33 @@
       }
     },
     "ga": {
-      "w_rf": 0.33742524431364523,
-      "w_gnn": 0.3278789386574905,
-      "w_escape": 0.33469581702886425,
-      "p_at_k": 0.6,
+      "w_rf": 0.5431266433218398,
+      "w_gnn": 0.1607502167734574,
+      "w_escape": 0.2961231399047029,
+      "p_at_k": 0.8,
       "fpr_clean": 0.0,
-      "objective": 0.72,
+      "objective": 0.8599999999999999,
       "k": 5,
       "alpha": 0.7,
       "beta": 0.3,
+      "min_weight": 0.1,
+      "reg_lambda": 2.0,
+      "floor_penalty": 0.0,
+      "select_method": "ga",
       "p_at_k_ceiling": 1.0,
       "mode": "oof",
-      "oof_n_graphs": 81,
-      "oof_n_chains": 21,
+      "oof_n_graphs": 509,
+      "oof_n_chains": 31,
       "grid_best": {
-        "w_rf": 0.0,
-        "w_gnn": 0.0,
-        "w_escape": 1.0,
+        "w_rf": 0.5,
+        "w_gnn": 0.15,
+        "w_escape": 0.35,
         "p_at_k": 0.8
       },
-      "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector.",
+      "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) that discourages degenerate zero-weight solutions; see audit/model_fixes.md.",
       "_provenance": {
-        "created_utc": "2026-07-05T22:15:36.477776+00:00",
-        "git_commit": "4ffa613c7079e9d14f5c1e9c18d6264d05247b91",
+        "created_utc": "2026-07-06T01:41:26.539265+00:00",
+        "git_commit": "c9da617733abacc6bf64c953ec393fd35d02b245",
         "git_dirty": true,
         "platform": "Linux x86_64",
         "versions": {
@@ -135,31 +139,32 @@
         },
         "seed": 42,
         "mode": "oof",
+        "select_method": "ga",
         "generations": 150,
         "pop_size": 60
       }
     },
     "test": {
       "precision_at_1": 1.0,
-      "precision_at_3": 0.6666666666666666,
-      "precision_at_5": 0.75,
-      "precision_at_5_ceiling": 0.8,
+      "precision_at_3": 1.0,
+      "precision_at_5": 0.8,
+      "precision_at_5_ceiling": 1.0,
       "hits_ceiling": false,
       "fpr_clean": 0.0
     },
     "test_cis": {
       "n_bootstrap": 10000,
       "p_at_k_ci95": [
-        0.4,
+        0.6,
         1.0
       ],
       "fpr_clean_ci95": [
         0.0,
-        0.2
+        0.0
       ],
       "macro_f1_ci95": [
-        0.4222222222222222,
-        0.9327731092436974
+        0.6090477272481363,
+        1.0
       ]
     }
   }
