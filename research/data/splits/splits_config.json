@@ -1,11 +1,11 @@
 {
   "seed": 42,
-  "total_graphs": 1153,
-  "original_graphs": 598,
-  "augmented_graphs": 555,
+  "total_graphs": 1139,
+  "original_graphs": 599,
+  "augmented_graphs": 540,
   "val_frac": 0.15,
   "test_frac": 0.15,
-  "train_count": 793,
+  "train_count": 809,
   "val_count": 90,
   "test_count": 90,
   "k_folds": 5,
@@ -17,15 +17,15 @@
   },
   "label_distribution_total": {
     "0": 25,
-    "1": 536,
-    "2": 592
+    "1": 538,
+    "2": 576
   },
   "label_distribution_originals": {
     "0": 25,
-    "1": 536,
-    "2": 37
+    "1": 538,
+    "2": 36
   },
-  "cv_pool_originals": 508,
-  "augmented_in_global_train": 375,
-  "augmented_excluded_from_train": 180
+  "cv_pool_originals": 509,
+  "augmented_in_global_train": 390,
+  "augmented_excluded_from_train": 150
 }
