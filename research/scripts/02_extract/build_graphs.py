@@ -49,6 +49,7 @@ import networkx as nx
 import numpy as np
 
 from kubescan.utils.graph_builder import (
+    DEFAULT_NAMESPACE,
     EDGE_DIR_PROXIMITY,
     EDGE_PRIV_REACH,
     EDGE_RBAC_PRIV,
@@ -58,6 +59,7 @@ from kubescan.utils.graph_builder import (
     LATERAL_FLAGS,
     NODE_FEATURE_DIM,
     _collect_privileged_roles,
+    _idx_to_namespace,
 )
 from kubescan.utils.yaml_parser import (
     FEATURE_COLS,
@@ -253,10 +255,10 @@ def build_cluster_graph(
     for idx, row in enumerate(rows):
         local = _resolve_local(row.get("yaml_path", ""), key_to_url, manifest_ok)
         if not local:
-            ns_groups["_default"].append(idx)
+            ns_groups[DEFAULT_NAMESPACE].append(idx)
             continue
         sem = parse_yaml_semantics(local, privileged_roles)
-        ns = sem.get("namespace") or "_default"
+        ns = sem.get("namespace") or DEFAULT_NAMESPACE
         ns_groups[ns].append(idx)
 
         # HOSTPATH_MOUNT: from YAML, override CSV value for escape detection
@@ -293,28 +295,36 @@ def build_cluster_graph(
                 G.add_edge(b, a, edge_type=EDGE_DIR_PROXIMITY)
 
     # ------------------------------------------------------------------
-    # 4. Edge type 1 — privilege-reach  (directed: escape_node → all others)
+    # 4. Edge type 1 — privilege-reach  (directed: escape_node → all others
+    #    IN THE SAME NAMESPACE, not the whole cluster). Reachability is
+    #    bounded by what a compromised pod can actually reach (shared
+    #    network/RBAC scope), not by "was ingested as part of the same
+    #    manifest set" — otherwise a CNI/ingress installer manifest bundled
+    #    in kube-system alongside an unrelated app in the default namespace
+    #    wrongly looks reachable from the installer's privileged DaemonSet.
     #    Now includes HOSTPATH_MOUNT escape nodes (detected from YAML above)
     # ------------------------------------------------------------------
     escape_nodes = [
         idx for idx, nd in enumerate(node_data)
         if any(nd.get(f, 0) for f in ESCAPE_FLAGS)
     ]
+    idx_to_ns = _idx_to_namespace(ns_groups)
     # PRIV_REACH always overwrites lower-priority edge types (FIN-004: no has_edge guard)
     for src in escape_nodes:
-        for dst in range(n):
+        for dst in ns_groups.get(idx_to_ns.get(src, DEFAULT_NAMESPACE), []):
             if dst != src:
                 G.add_edge(src, dst, edge_type=EDGE_PRIV_REACH)
 
     # ------------------------------------------------------------------
-    # 5. Edge type 2 — SA lateral movement  (directed: sa_node → all others)
+    # 5. Edge type 2 — SA lateral movement  (directed: sa_node → all others
+    #    in the same namespace)
     # ------------------------------------------------------------------
     sa_nodes = [
         idx for idx, nd in enumerate(node_data)
         if any(nd.get(f, 0) for f in LATERAL_FLAGS)
     ]
     for src in sa_nodes:
-        for dst in range(n):
+        for dst in ns_groups.get(idx_to_ns.get(src, DEFAULT_NAMESPACE), []):
             if dst != src and not G.has_edge(src, dst):
                 G.add_edge(src, dst, edge_type=EDGE_SA_LATERAL)
 
@@ -336,14 +346,15 @@ def build_cluster_graph(
     # 6b. Edge type 4 — RBAC privilege escalation
     #     Pods whose ServiceAccount has an elevated RoleBinding (SA name
     #     appears as a subject in any RoleBinding/ClusterRoleBinding parsed
-    #     across this cluster) get directed edges to all other pods.
+    #     across this cluster) get directed edges to all other pods in the
+    #     same namespace (RoleBindings are themselves namespace-scoped).
     #     This captures privilege escalation via RBAC that isn't reflected
     #     in individual pod flags (e.g., cluster-admin SA binding).
     # ------------------------------------------------------------------
     if elevated_sas:
         rbac_priv_nodes = [idx for idx, sa in pod_sa.items() if sa in elevated_sas]
         for src in rbac_priv_nodes:
-            for dst in range(n):
+            for dst in ns_groups.get(idx_to_ns.get(src, DEFAULT_NAMESPACE), []):
                 if dst != src and not G.has_edge(src, dst):
                     G.add_edge(src, dst, edge_type=EDGE_RBAC_PRIV)
 
@@ -378,6 +389,14 @@ def _compute_graph_label(
     2 – chain       : at least two attack stages connected by a path:
                       (escape_node → … → lateral_node) or
                       ≥ 2 escape-capable nodes in the same cluster
+
+    The path check only follows PRIV_REACH/SA_LATERAL/RBAC_PRIV edges --
+    those are the only edge types that assert an actual escalation/
+    reachability relationship. DIR_PROXIMITY (same source directory) and
+    SEMANTIC_NS (same declared namespace) are structural/contextual edges
+    for the GNN's message passing, not reachability claims; letting them
+    count here would label two unrelated manifests merely bundled in the
+    same repo folder as a compound attack chain.
     """
     all_secure = all(nd["label"] == 0 for nd in node_data)
     if all_secure:
@@ -392,13 +411,20 @@ def _compute_graph_label(
     if len(escape_idxs) >= 2:
         return 2
 
-    # escape → lateral path (or reverse)
+    # escape → lateral path (or reverse), reachability edges only
     if escape_idxs and lateral_idxs:
+        reach_edge_types = (EDGE_PRIV_REACH, EDGE_SA_LATERAL, EDGE_RBAC_PRIV)
+        reach_graph = nx.DiGraph()
+        reach_graph.add_nodes_from(G.nodes)
+        reach_graph.add_edges_from(
+            (u, v) for u, v, d in G.edges(data=True)
+            if d.get("edge_type") in reach_edge_types
+        )
         for src in escape_idxs:
             for dst in lateral_idxs:
                 if src == dst:
                     continue
-                if nx.has_path(G, src, dst) or nx.has_path(G, dst, src):
+                if nx.has_path(reach_graph, src, dst) or nx.has_path(reach_graph, dst, src):
                     return 2
 
     return 1
@@ -579,12 +605,12 @@ def build_lookups(
 
 def main():
     script_dir   = Path(__file__).parent
-    project_root = script_dir.parent
+    project_root = script_dir.parent.parent  # research/
 
     default_rf       = project_root / "data" / "tabular" / "rf_dataset.csv"
     default_out      = project_root / "data" / "graphs"
     default_manifest = project_root / "data" / "raw" / "rahman" / "download_manifest.csv"
-    default_urls     = project_root / "original-dataset" / "rahman" / "DATASET" / "GITHUB-URLS.csv"
+    default_urls     = project_root / "data" / "raw" / "rahman" / "DATASET" / "GITHUB-URLS.csv"
 
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,

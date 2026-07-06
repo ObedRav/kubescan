@@ -198,6 +198,17 @@ CLUSTERS: list[dict] = [
         "note":    "kubernetes-sigs/aws-ebs-csi-driver: production CSI driver — "
                    "privileged node DaemonSet + ClusterRole",
     },
+    {
+        "cluster": "kube-prometheus",
+        "dir":     ATTACK_REPOS_DIR / "kube-prometheus" / "manifests",
+        "recurse": False,
+        "note":    "prometheus-operator/kube-prometheus: full monitoring stack — "
+                   "exactly 1 of 84 manifests (nodeExporter-daemonset.yaml) sets "
+                   "hostNetwork/hostPID/hostPath; the other 83 (Prometheus, "
+                   "Alertmanager, Grafana, kube-state-metrics, blackbox-exporter) "
+                   "are unprivileged. Targets the sparse-escape-in-a-large-graph "
+                   "hard-negative pattern (see audit/model_fixes.md option 3b).",
+    },
     # --- Purpose-built attack-graph tooling fixtures ---
     # Flat directory, one self-contained SA+Role/ClusterRole+RoleBinding+Pod
     # chain per technique file — split_by_file (no subdirs to split on).
