@@ -1,7 +1,7 @@
 {
-  "w_rf": 0.5431266433218398,
-  "w_gnn": 0.1607502167734574,
-  "w_escape": 0.2961231399047029,
+  "w_rf": 0.33742524431364523,
+  "w_gnn": 0.3278789386574905,
+  "w_escape": 0.33469581702886425,
   "p_at_k": 0.8,
   "fpr_clean": 0.0,
   "objective": 0.8599999999999999,
@@ -14,18 +14,18 @@
   "select_method": "ga",
   "p_at_k_ceiling": 1.0,
   "mode": "oof",
-  "oof_n_graphs": 509,
+  "oof_n_graphs": 508,
   "oof_n_chains": 31,
   "grid_best": {
-    "w_rf": 0.5,
-    "w_gnn": 0.15,
-    "w_escape": 0.35,
+    "w_rf": 0.30000000000000004,
+    "w_gnn": 0.1,
+    "w_escape": 0.6,
     "p_at_k": 0.8
   },
   "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) that discourages degenerate zero-weight solutions; see audit/model_fixes.md.",
   "_provenance": {
-    "created_utc": "2026-07-06T01:41:26.539265+00:00",
-    "git_commit": "c9da617733abacc6bf64c953ec393fd35d02b245",
+    "created_utc": "2026-07-06T02:35:49.247576+00:00",
+    "git_commit": "f142e1e646fdd6d9405bc75c1166f4d835566760",
     "git_dirty": true,
     "platform": "Linux x86_64",
     "versions": {
