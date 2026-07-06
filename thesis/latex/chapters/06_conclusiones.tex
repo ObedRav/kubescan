@@ -130,23 +130,25 @@ objetivo \(F = 0{,}7 \cdot P@5 + 0{,}3 \cdot (1 - \text{\ac{FPR}\_clean})\) sobr
 predicciones \textit{out-of-fold} (\acs{OOF}) de los 5~modelos de validación
 cruzada, calculadas sobre los 81~grafos originales de entrenamiento/validación
 (21~cadenas); bajo el protocolo \textit{group-aware}, ningún clúster de test
-participa en este ajuste. La limitación restante es de identificabilidad: con una
-función objetivo basada en P@5 —que solo toma seis valores discretos— y 81~muestras,
-el paisaje de \textit{fitness} presenta amplias mesetas en las que múltiples
-combinaciones de pesos alcanzan un objetivo idéntico. El \ac{GA} no mejora sobre
-su población inicial en ninguna de las 150~generaciones, manteniendo pesos casi
-uniformes
-\((w_{\text{rf}} \approx 0{,}34,\, w_{\text{gnn}} \approx 0{,}33,\,
-w_{\text{esc}} \approx 0{,}33)\) desde la generación~0 — evidencia de una meseta
-plana más que de convergencia dirigida por la selección. La búsqueda en rejilla
-determinística, ejecutada como \textit{baseline}, encuentra un punto distinto y con
-mayor P@5 de validación (puntuar únicamente por la señal de escape), lo que confirma
-que el óptimo global de esta función de \textit{fitness} no coincide con la solución
-de pesos equilibrados finalmente adoptada. Los pesos concretos
-deben interpretarse, por tanto, como una solución representativa de una clase de
-equivalencia, no como un óptimo único; el tamaño del conjunto de test (15~grafos)
-limita además la significación estadística de la comparación entre configuraciones
-de pesos, como reflejan los intervalos de confianza reportados.
+participa en este ajuste. Un diagnóstico del algoritmo descartó que su
+estancamiento inicial en pesos casi uniformes se debiera, como se supuso en un
+primer momento, a una meseta plana en la función de \textit{fitness}: el cruce por
+promedio aritmético y la mutación gaussiana local no podían alcanzar los vértices
+del símplex de pesos, no porque esos vértices fueran indistinguibles en la función
+objetivo. Al corregir la exploración —sembrando los vértices y aristas del símplex
+en la población inicial y añadiendo una mutación de salto de frontera— el
+\ac{GA} converge de forma determinista, en 5~semillas independientes, al mismo
+óptimo que la búsqueda en rejilla: puntuar únicamente por la señal binaria de
+escape (\textit{objective}\,=\,0,86 frente a 0,72 de los pesos equilibrados). La
+limitación real no es, por tanto, una meseta de \textit{fitness} sino la
+identificabilidad del criterio de selección: el óptimo \acs{OOF} no generaliza al
+conjunto de test, donde el colapso a una señal binaria produce un ranking por
+empates que falla estructuralmente ante cualquier cadena de ataque sin bandera de
+escape (Sección~\ref{sec:layer3}). Los pesos equilibrados, pese a no ser el óptimo
+\acs{OOF}, se conservan para el despliegue porque no exhiben esa falla
+estructural; aun así, el tamaño de ambos conjuntos —81~grafos \acs{OOF} y
+15~de test— limita la confianza estadística de cualquier selección de pesos
+basada en datos, como reflejan los intervalos de confianza reportados.
 
 \textbf{L6 — Etiquetado derivado de reglas sobre el mismo espacio de
 características.} Las etiquetas de grafo (clean / isolated / attack\_chain) se

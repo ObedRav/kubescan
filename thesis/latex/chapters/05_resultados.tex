@@ -252,36 +252,49 @@ en lugar de \textit{flags} de escape explícitas).
 \label{sec:layer3}
 % -----------------------------------------------------------
 
-El mejor individuo del \ac{GA} mantiene pesos aproximadamente iguales entre los tres
-componentes —
+El mejor individuo del \ac{GA} original mantenía pesos aproximadamente iguales
+entre los tres componentes —
 \((w_{\text{rf}}, w_{\text{gnn}}, w_{\text{esc}}) \approx (0{,}34,\, 0{,}33,\, 0{,}33)\),
 \textit{objective}\,=\,0,72 sobre el conjunto \textit{out-of-fold}— desde la
-generación~0 hasta la~149: el algoritmo no mejora sobre su población inicial en
-ninguna generación, lo que indica una superficie de \textit{fitness} plana en la
-región de pesos casi uniformes más que una convergencia dirigida por la selección.
-La búsqueda en rejilla determinística (Sección~\ref{sec:capa3_diseno}, 231~evaluaciones)
-encuentra un punto distinto y con mayor P@5 de validación (\(w_{\text{esc}}=1\),
-P@5\,=\,0,80, es decir, puntuar únicamente por la señal binaria de escape), lo que
-indica que el óptimo global de esta función de \textit{fitness} no coincide con la
-solución de pesos equilibrados. Se conserva la solución del \ac{GA} —no la de la
-rejilla— porque generaliza estructura de clúster además de la señal de escape, y
-su comportamiento en el conjunto de test (más abajo) es consistente con esa
-robustez; esta discrepancia entre óptimo de rejilla y solución elegida se discute
-en las limitaciones (L5).
+generación~0 hasta la~149, sin mejorar sobre su población inicial. La búsqueda en
+rejilla determinística (Sección~\ref{sec:capa3_diseno}, 231~evaluaciones) encuentra
+un punto distinto y con mayor \textit{objective} (\(w_{\text{esc}}=1\),
+\textit{objective}\,=\,0,86, P@5\,=\,0,80, es decir, puntuar únicamente por la
+señal binaria de escape). Un diagnóstico posterior descartó que el estancamiento
+del \ac{GA} se debiera a una meseta plana en la función de \textit{fitness}: el
+cruce por promedio aritmético es contractivo y no puede alcanzar los vértices del
+símplex de pesos desde una población inicializada por muestreo de Dirichlet, y la
+mutación gaussiana (\(\sigma=0{,}08\)) es demasiado local para recorrer esa
+distancia en 150~generaciones. Al añadir los vértices y aristas del símplex a la
+población inicial y una mutación de salto de frontera de baja probabilidad, el
+\ac{GA} converge de forma determinista al mismo óptimo que la rejilla en las
+5~semillas independientes probadas, confirmando que la función objetivo tiene un
+óptimo global único y alcanzable, no una meseta degenerada.
+
+Sin embargo, este óptimo \textit{out-of-fold} no generaliza al conjunto de test:
+al puntuar únicamente por la señal de escape —binaria— el ranking se colapsa a un
+grupo de empates, y como exactamente 5 de los 15~clústeres de test tienen la señal
+activa —coincidiendo con \(k=5\)—, el orden dentro del top-5 pasa a depender del
+orden de empate, no de una señal discriminativa. La cuarta cadena de ataque del
+conjunto de test (\textit{cloudify-kubernetes-plugin}) carece de bandera de
+escape, por lo que ningún reordenamiento de los empates puede recuperarla bajo
+\(w_{\text{esc}}=1\). Por ello se conservan los pesos equilibrados —no los de la
+rejilla— para el despliegue; esta discrepancia y su causa se discuten en las
+limitaciones (L5).
 
 La evaluación final se realiza sobre el conjunto de test (15~grafos, 4~cadenas,
 techo P@5\,=\,0,80), que bajo el protocolo \textit{group-aware} queda excluido de
 los pliegues de validación cruzada, del ajuste de pesos del \ac{GA} y del
 entrenamiento con variantes aumentadas — es decir, genuinamente no visto durante
 el desarrollo. El ensemble alcanza: P@1\,=\,1,00 (el clúster de mayor puntuación
-es una cadena de ataque), P@3\,=\,0,67 y P@5\,=\,0,60, recuperando 3~de las
-4~cadenas en las primeras 5~posiciones (la cuarta aparece en la posición~8).
+es una cadena de ataque), P@3\,=\,0,67 y P@5\,=\,0,75, recuperando 3~de las
+4~cadenas en las primeras 5~posiciones (la cuarta aparece en la posición~6).
 \ac{FPR}\_clean\,=\,0,00: ningún clúster limpio aparece entre los de mayor riesgo.
 La F1~macro por clasificación \textit{argmax} del ensemble de pliegues es 0,726.
 
 Dado el tamaño del conjunto de test, estas estimaciones llevan asociados
 intervalos de confianza amplios (bootstrap de 10\,000 remuestreos, 95\,\%):
-P@5 \([0{,}00,\ 1{,}00]\), \ac{FPR}\_clean \([0{,}00,\ 0{,}40]\) y F1~macro
+P@5 \([0{,}40,\ 1{,}00]\), \ac{FPR}\_clean \([0{,}00,\ 0{,}20]\) y F1~macro
 \([0{,}42,\ 0{,}93]\). Los valores puntuales deben interpretarse como
 \textit{consistentes con} los objetivos de diseño, no como demostraciones
 concluyentes; la ampliación del corpus de test es la vía directa para estrechar
@@ -289,15 +302,18 @@ estos intervalos (TF1).
 
 La Tabla~\ref{tab:ensemble_ablation} desglosa la contribución de cada componente
 sobre el conjunto de test. Tres observaciones honestas: (i)~la configuración
-RF-sólo degrada el ranking (P@5\,=\,0,40) e introduce un falso positivo de clúster
+RF-sólo degrada el ranking (P@5\,=\,0,50) e introduce un falso positivo de clúster
 limpio (\ac{FPR}\,=\,0,20), confirmando que el componente estructural es necesario;
 (ii)~la señal de escape por sí sola pierde por completo la precisión en el primer
 puesto (P@1\,=\,0,00), al no poder distinguir cadenas compuestas de
-misconfiguraciones aisladas con capacidad de escape; y (iii)~en este conjunto de
-test los pesos optimizados por el \ac{GA} no superan a los pesos uniformes ni al
-\ac{GNN} solo — el valor del ensemble en estos datos reside en su robustez frente a
-la degradación de componentes individuales, no en una mejora del ranking sobre el
-mejor componente. Este resultado se discute en las limitaciones (L5).
+misconfiguraciones aisladas con capacidad de escape, y su P@5\,=\,0,75 se explica
+por el orden de empate descrito arriba, no por una señal discriminativa real; y
+(iii)~en este conjunto de test el \ac{GNN} por sí solo (P@5\,=\,1,00) supera tanto
+a los pesos optimizados por el \ac{GA} como a los pesos uniformes (P@5\,=\,0,75
+ambos) — el valor del ensemble en estos datos reside en su robustez frente a la
+degradación de componentes individuales (evita el falso positivo de RF-sólo y el
+fallo en P@1 de escape-sólo), no en una mejora del ranking sobre el mejor
+componente individual. Este resultado se discute en las limitaciones (L5).
 
 \begin{table}[htbp]
 \centering
@@ -308,11 +324,11 @@ mejor componente. Este resultado se discute en las limitaciones (L5).
 \toprule
 Configuración & P@1 & P@3 & P@5 & FPR\_clean \\
 \midrule
-GA-óptimo \((0{,}34/0{,}33/0{,}33)\) & 1,00 & 0,67 & 0,60 & 0,00 \\
-Pesos uniformes \((1/3)\)            & 1,00 & 0,67 & 0,60 & 0,00 \\
-Solo \ac{GNN}                        & 1,00 & 0,67 & 0,60 & 0,00 \\
-Solo \ac{RF}                         & 1,00 & 0,33 & 0,40 & 0,20 \\
-Solo señal de escape                 & 0,00 & 0,33 & 0,60 & 0,00 \\
+GA-óptimo \((0{,}34/0{,}33/0{,}33)\) & 1,00 & 0,67 & 0,75 & 0,00 \\
+Pesos uniformes \((1/3)\)            & 1,00 & 0,67 & 0,75 & 0,00 \\
+Solo \ac{GNN}                        & 1,00 & 0,67 & 1,00 & 0,00 \\
+Solo \ac{RF}                         & 1,00 & 0,33 & 0,50 & 0,20 \\
+Solo señal de escape                 & 0,00 & 0,33 & 0,75 & 0,00 \\
 \bottomrule
 \end{tabular}
 \fuentepropia
