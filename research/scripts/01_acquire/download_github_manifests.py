@@ -386,9 +386,9 @@ def build_gitlab_tasks(urls_csv: Path, out_dir: Path, limit: int | None) -> list
 
 def main():
     script_dir   = Path(__file__).parent
-    project_root = script_dir.parent
+    project_root = script_dir.parent.parent  # research/
 
-    default_data_dir    = project_root / "original-dataset" / "rahman" / "DATASET"
+    default_data_dir    = project_root / "data" / "raw" / "rahman" / "DATASET"
     default_out_dir     = project_root / "data" / "raw" / "rahman" / "yamls"
     default_manifest    = project_root / "data" / "raw" / "rahman" / "download_manifest.csv"
 
