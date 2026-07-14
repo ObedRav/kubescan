@@ -1,53 +1,59 @@
 {
   "test_set": {
-    "n_graphs": 91,
-    "n_chains": 6,
+    "n_graphs": 86,
+    "n_chains": 5,
     "p5_ceiling": 1.0,
     "distribution": {
-      "1": 81,
-      "2": 6,
-      "0": 4
+      "1": 78,
+      "0": 3,
+      "2": 5
     }
   },
   "ensemble": {
     "weights": {
-      "w_rf": 0.33742524431364523,
-      "w_gnn": 0.3278789386574905,
-      "w_escape": 0.33469581702886425
+      "w_rf": 0.5168437819447826,
+      "w_gnn": 0.11549761749148135,
+      "w_escape": 0.367658600563736
     },
     "n_fold_models": 5
   },
   "ranking_metrics": {
     "precision_at_1": 1.0,
-    "precision_at_3": 0.6666666666666666,
+    "precision_at_3": 1.0,
     "precision_at_5": 0.8,
     "precision_at_5_ceiling": 1.0,
     "hits_ceiling": false,
-    "fpr_clean": 0.0
+    "fpr_clean": 0.0,
+    "structural_gate": true
+  },
+  "ranking_metrics_ungated": {
+    "precision_at_1": 0.0,
+    "precision_at_3": 0.3333333333333333,
+    "precision_at_5": 0.6
   },
   "confidence_intervals_95": {
     "n_bootstrap": 10000,
     "p_at_k_ci95": [
-      0.4,
+      0.6,
       1.0
     ],
     "fpr_clean_ci95": [
       0.0,
-      0.0
+      0.4
     ],
     "macro_f1_ci95": [
-      0.48151826106145873,
-      0.8459366803706425
+      0.660377358490566,
+      1.0
     ]
   },
   "ablation": [
     {
       "config": "GA-best",
-      "w_rf": 0.3374,
-      "w_gnn": 0.3279,
-      "w_escape": 0.3347,
+      "w_rf": 0.5168,
+      "w_gnn": 0.1155,
+      "w_escape": 0.3677,
       "p_at_1": 1.0,
-      "p_at_3": 0.6666666666666666,
+      "p_at_3": 1.0,
       "p_at_5": 0.8,
       "fpr_clean": 0.0
     },
@@ -57,7 +63,7 @@
       "w_gnn": 0.3333,
       "w_escape": 0.3333,
       "p_at_1": 1.0,
-      "p_at_3": 0.6666666666666666,
+      "p_at_3": 1.0,
       "p_at_5": 0.8,
       "fpr_clean": 0.0
     },
@@ -66,10 +72,10 @@
       "w_rf": 1.0,
       "w_gnn": 0.0,
       "w_escape": 0.0,
-      "p_at_1": 1.0,
-      "p_at_3": 0.6666666666666666,
+      "p_at_1": 0.0,
+      "p_at_3": 0.3333333333333333,
       "p_at_5": 0.4,
-      "fpr_clean": 0.2
+      "fpr_clean": 0.0
     },
     {
       "config": "GNN-only",
@@ -77,7 +83,7 @@
       "w_gnn": 1.0,
       "w_escape": 0.0,
       "p_at_1": 1.0,
-      "p_at_3": 0.6666666666666666,
+      "p_at_3": 1.0,
       "p_at_5": 0.8,
       "fpr_clean": 0.0
     },
@@ -87,34 +93,34 @@
       "w_gnn": 0.0,
       "w_escape": 1.0,
       "p_at_1": 0.0,
-      "p_at_3": 0.0,
-      "p_at_5": 0.2,
+      "p_at_3": 0.6666666666666666,
+      "p_at_5": 0.8,
       "fpr_clean": 0.0
     }
   ],
   "classification_metrics": {
-    "macro_f1": 0.6991826738662182,
-    "accuracy": 0.8901098901098901,
+    "macro_f1": 0.8825194621372966,
+    "accuracy": 0.9651162790697675,
     "per_class_f1": {
-      "clean": 0.5454545454545454,
-      "isolated": 0.9367088607594937,
-      "attack_chain": 0.6153846153846154
+      "clean": 1.0,
+      "isolated": 0.9808917197452229,
+      "attack_chain": 0.6666666666666666
     },
     "confusion_matrix": [
       [
         3,
-        1,
+        0,
         0
       ],
       [
-        4,
-        74,
-        3
+        0,
+        77,
+        1
       ],
       [
         0,
         2,
-        4
+        3
       ]
     ]
   },
@@ -122,913 +128,1035 @@
   "ranked_clusters": [
     {
       "rank": 1,
-      "cluster": "datadog_cluster-checks-runners",
+      "cluster": "cloudify-kubernetes-plugin",
       "true_label": "attack_chain",
-      "ensemble_score": 0.661769,
-      "gnn_chain_prob": 0.997543,
-      "rf_mean_risk": 0.0,
+      "ensemble_score": 0.462626,
+      "gnn_chain_prob": 0.592717,
+      "rf_mean_risk": 0.051291,
       "escape_signal": 1.0,
-      "escape_fraction": 0.333333
+      "escape_fraction": 0.043478,
+      "n_nodes": 46,
+      "chain_feasible": true
     },
     {
       "rank": 2,
-      "cluster": "micro-apps",
-      "true_label": "isolated",
-      "ensemble_score": 0.661622,
-      "gnn_chain_prob": 0.96538,
-      "rf_mean_risk": 0.030817,
+      "cluster": "kubernetes-native-testbed",
+      "true_label": "attack_chain",
+      "ensemble_score": 0.459423,
+      "gnn_chain_prob": 0.627092,
+      "rf_mean_risk": 0.037414,
       "escape_signal": 1.0,
-      "escape_fraction": 0.033333
+      "escape_fraction": 0.02454,
+      "n_nodes": 163,
+      "chain_feasible": true
     },
     {
       "rank": 3,
-      "cluster": "kubernetes_goat_kube-bench-security",
+      "cluster": "calico",
       "true_label": "attack_chain",
-      "ensemble_score": 0.589125,
-      "gnn_chain_prob": 0.591672,
-      "rf_mean_risk": 0.1791,
+      "ensemble_score": 0.428969,
+      "gnn_chain_prob": 0.530834,
+      "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 0.9375,
+      "n_nodes": 16,
+      "chain_feasible": true
     },
     {
       "rank": 4,
-      "cluster": "longhorn",
+      "cluster": "infra-goof-k8s",
       "true_label": "attack_chain",
-      "ensemble_score": 0.550021,
-      "gnn_chain_prob": 0.656723,
+      "ensemble_score": 0.421519,
+      "gnn_chain_prob": 0.466338,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 0.833333,
+      "n_nodes": 24,
+      "chain_feasible": true
     },
     {
       "rank": 5,
-      "cluster": "infra-goof-k8s",
-      "true_label": "attack_chain",
-      "ensemble_score": 0.529555,
-      "gnn_chain_prob": 0.594303,
-      "rf_mean_risk": 0.0,
+      "cluster": "kubernetes-extras",
+      "true_label": "isolated",
+      "ensemble_score": 0.416409,
+      "gnn_chain_prob": 0.217542,
+      "rf_mean_risk": 0.04571,
       "escape_signal": 1.0,
-      "escape_fraction": 0.833333
+      "escape_fraction": 0.1,
+      "n_nodes": 10,
+      "chain_feasible": true
     },
     {
       "rank": 6,
-      "cluster": "gatekeeper_volumes_samples_psp-volume-types_example__disallowed",
-      "true_label": "isolated",
-      "ensemble_score": 0.514748,
-      "gnn_chain_prob": 0.549141,
+      "cluster": "minik8s-ctf",
+      "true_label": "attack_chain",
+      "ensemble_score": 0.367694,
+      "gnn_chain_prob": 0.000303,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 0.5,
+      "n_nodes": 4,
+      "chain_feasible": true
     },
     {
       "rank": 7,
-      "cluster": "kubernetes-goof",
-      "true_label": "attack_chain",
-      "ensemble_score": 0.498253,
-      "gnn_chain_prob": 0.498833,
-      "rf_mean_risk": 0.0,
-      "escape_signal": 1.0,
-      "escape_fraction": 0.444444
+      "cluster": "opentracing-istio-troubleshooting",
+      "true_label": "isolated",
+      "ensemble_score": 0.026665,
+      "gnn_chain_prob": 0.0,
+      "rf_mean_risk": 0.051591,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0,
+      "n_nodes": 23,
+      "chain_feasible": true
     },
     {
       "rank": 8,
-      "cluster": "badpods_priv",
-      "true_label": "attack_chain",
-      "ensemble_score": 0.409361,
-      "gnn_chain_prob": 0.096947,
-      "rf_mean_risk": 0.127075,
-      "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "cluster": "GameOn-Java-Microservices-on-Kubernetes",
+      "true_label": "isolated",
+      "ensemble_score": 0.020444,
+      "gnn_chain_prob": 0.0,
+      "rf_mean_risk": 0.039556,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0,
+      "n_nodes": 16,
+      "chain_feasible": true
     },
     {
       "rank": 9,
-      "cluster": "kubernetes-microservices-yoloo",
-      "true_label": "isolated",
-      "ensemble_score": 0.360204,
-      "gnn_chain_prob": 0.023974,
-      "rf_mean_risk": 0.0523,
-      "escape_signal": 1.0,
-      "escape_fraction": 0.2
+      "cluster": "kubernetes-sigs-kubespray",
+      "true_label": "clean",
+      "ensemble_score": 0.014213,
+      "gnn_chain_prob": 1e-06,
+      "rf_mean_risk": 0.0275,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0,
+      "n_nodes": 12,
+      "chain_feasible": true
     },
     {
       "rank": 10,
-      "cluster": "kubehound_CE__SYS__PTRACE",
-      "true_label": "isolated",
-      "ensemble_score": 0.347548,
-      "gnn_chain_prob": 0.039199,
-      "rf_mean_risk": 0.0,
-      "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "cluster": "spring-cloud-microservices-on-kubernetes",
+      "true_label": "clean",
+      "ensemble_score": 0.014213,
+      "gnn_chain_prob": 1e-06,
+      "rf_mean_risk": 0.0275,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0,
+      "n_nodes": 11,
+      "chain_feasible": true
     },
     {
       "rank": 11,
-      "cluster": "kubeaudit_hostns_fixtures_namespaces-all-true",
-      "true_label": "isolated",
-      "ensemble_score": 0.337696,
-      "gnn_chain_prob": 0.009151,
-      "rf_mean_risk": 0.0,
-      "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "cluster": "MicroCouriers",
+      "true_label": "clean",
+      "ensemble_score": 0.014213,
+      "gnn_chain_prob": 1e-06,
+      "rf_mean_risk": 0.0275,
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0,
+      "n_nodes": 2,
+      "chain_feasible": true
     },
     {
       "rank": 12,
-      "cluster": "gatekeeper_host-network-ports_samples_port__range__block__host__network_example__disallowed__out__of__range__host__network__true",
+      "cluster": "wrongsecrets-okteto",
       "true_label": "isolated",
-      "ensemble_score": 0.336497,
-      "gnn_chain_prob": 0.005493,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
-      "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_signal": 0.0,
+      "escape_fraction": 0.0,
+      "n_nodes": 2,
+      "chain_feasible": true
     },
     {
       "rank": 13,
-      "cluster": "kubeaudit_hostns_fixtures_host-ipc-true-allowed",
+      "cluster": "sa-traefik",
       "true_label": "isolated",
-      "ensemble_score": 0.334828,
-      "gnn_chain_prob": 0.000402,
-      "rf_mean_risk": 0.0,
+      "ensemble_score": 0.517642,
+      "gnn_chain_prob": 0.805447,
+      "rf_mean_risk": 0.1102,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 14,
-      "cluster": "kubehound_CE__NET__MITM",
+      "cluster": "ansible-hetzner-ubuntu-1804-k8s-setup",
       "true_label": "isolated",
-      "ensemble_score": 0.334781,
-      "gnn_chain_prob": 0.000261,
-      "rf_mean_risk": 0.0,
+      "ensemble_score": 0.509048,
+      "gnn_chain_prob": 0.422712,
+      "rf_mean_risk": 0.1791,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 15,
-      "cluster": "checkov_example__KubeletReadOnlyPort_KubeletReadOnlyPort-FAILED",
+      "cluster": "kubeaudit_mounts_fixtures_proc-mounted-allowed-multi-containers-multi-labels",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367967,
+      "gnn_chain_prob": 0.002674,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 16,
-      "cluster": "checkov_example__SchedulerProfiling_SchedulerProfiling-FAILED",
+      "cluster": "kubehound_ENDPOINT__EXPLOIT",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367787,
+      "gnn_chain_prob": 0.001116,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 17,
-      "cluster": "checkov_example__ApiServerTlsCertAndKey_ApiServer-FAILED-2",
+      "cluster": "kubeaudit_hostns_fixtures_host-pid-true-allowed",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.36769,
+      "gnn_chain_prob": 0.000274,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 18,
-      "cluster": "checkov_example__SchedulerBindAddress_SchedulerBindAddress-FAILED-2",
+      "cluster": "gatekeeper_privileged-containers_samples_psp-privileged-container_example__allowed__exempt",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367679,
+      "gnn_chain_prob": 0.000173,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 19,
-      "cluster": "checkov_example__ControllerManagerBindAddress_ControllerManagerBindAddress-FAILED-2",
+      "cluster": "gatekeeper_host-network-ports_samples_port__range__block__host__network_example__disallowed__out__of__range__host__network__true",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.36766,
+      "gnn_chain_prob": 1.1e-05,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 20,
-      "cluster": "checkov_example__KubeControllerManagerTerminatedPods_ApiServer-FAILED",
+      "cluster": "kubehound_CE__PRIV__MOUNT",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 2e-06,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 21,
-      "cluster": "checkov_example__KubeControllerManagerRootCAFile_ApiServer-PASSED",
+      "cluster": "kubeaudit_hostns_fixtures_namespaces-all-true-allowed",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 1e-06,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 22,
-      "cluster": "checkov_example__ApiServerServiceAccountLookup_ApiServer-PASSED",
+      "cluster": "checkov_example__ApiServerAuditLog_ApiServer-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 23,
-      "cluster": "checkov_example__RotateKubeletServerCertificate_KubletRotateKubeletServerCertificate-PASSED",
+      "cluster": "checkov_example__KubeletMakeIptablesUtilChains_KubeletMakeIptablesUtilChains-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 24,
-      "cluster": "checkov_example__RotateKubeletServerCertificate_KubeControllerManagerRotateKubeletServerCertificate-PASSED",
+      "cluster": "checkov_example__ApiServerServiceAccountKeyFile_ApiServerServiceAccountKeyFile-FAILED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 25,
-      "cluster": "checkov_example__KubeletAnonymousAuth_KubeletAnonymousAuth-PASSED",
+      "cluster": "checkov_example__ApiServerAuditLogMaxSize_ApiServer-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 26,
-      "cluster": "checkov_example__KubeletAuthorizationModeNotAlwaysAllow_KubeletAuthorizationModeNotAlwaysAllow-PASSED",
+      "cluster": "checkov_example__ApiServerKubeletHttps_ApiServer-FAILED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 27,
-      "cluster": "checkov_example__ApiServerAlwaysPullImagesPlugin_ApiServerAlwaysPullImagesPlugin-FAILED",
+      "cluster": "checkov_example__KubeletAuthorizationModeNotAlwaysAllow_KubeletAuthorizationModeNotAlwaysAllow-FAILED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 28,
-      "cluster": "checkov_example__ApiServerServiceAccountPlugin_ApiServerServiceAccountPlugin-PASSED",
+      "cluster": "checkov_example__EtcdCertAndKey_Etcd-FAILED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 29,
-      "cluster": "checkov_example__KubeletStreamingConnectionIdleTimeout_KubeletStreamingConnectionIdleTimeout-PASSED",
+      "cluster": "checkov_example__ApiServerAuditLogMaxBackup_ApiServer-FAILED-2",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 30,
-      "cluster": "checkov_example__ApiServerNodeRestrictionPlugin_ApiServerNodeRestrictionPlugin-FAILED",
+      "cluster": "checkov_example__ControllerManagerBindAddress_ControllerManagerBindAddress-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 31,
-      "cluster": "checkov_example__KubeControllerManagerBlockProfiles_ApiServer-FAILED",
+      "cluster": "checkov_example__ApiServerAuditLogMaxSize_ApiServer-FAILED-2",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 32,
-      "cluster": "checkov_example__ApiServerProfiling_ApiServer-PASSED",
+      "cluster": "checkov_example__KubeletProtectKernelDefaults_KubeletProtectKernelDefaults-FAILED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 33,
-      "cluster": "checkov_example__EtcdClientCertAuth_Etcd-FAILED-2",
+      "cluster": "checkov_example__KubeletCryptographicCiphers_KubeletCryptographicCiphers-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 34,
-      "cluster": "checkov_example__ApiServerTokenAuthFile_ApiServerTokenAuthFile-PASSED",
+      "cluster": "checkov_example__ApiServerServiceAccountLookup_ApiServer-FAILED",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 35,
-      "cluster": "checkov_example__ApiServerStrongCryptographicCiphers_ApiServerStrongCryptographicCiphers-PASSED",
+      "cluster": "checkov_example__ApiServerKubeletHttps_ApiServer-PASSED-2",
       "true_label": "isolated",
-      "ensemble_score": 0.334775,
-      "gnn_chain_prob": 0.00024,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 36,
-      "cluster": "kubeaudit_hostns_fixtures_host-network-true-allowed",
+      "cluster": "checkov_example__ApiServerAuthorizationModeNotAlwaysAllow_ApiServer-FAILED-2",
       "true_label": "isolated",
-      "ensemble_score": 0.334713,
-      "gnn_chain_prob": 5.4e-05,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 37,
-      "cluster": "kubeaudit_capabilities_fixtures_capabilities-some-allowed-multi-containers-mix-labels",
+      "cluster": "checkov_example__ApiServerEtcdCertAndKey_ApiServer-FAILED-2",
       "true_label": "isolated",
-      "ensemble_score": 0.334698,
-      "gnn_chain_prob": 5e-06,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 1.0,
-      "escape_fraction": 1.0
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 38,
-      "cluster": "checkov_example__KubernetesDashboard_kube-dashboard-FAILED",
+      "cluster": "checkov_example__ApiServerAuditLogMaxBackup_ApiServer-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 0.163984,
-      "gnn_chain_prob": 0.500134,
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 39,
-      "cluster": "kubernetes_goat_kubernetes-goat-home",
-      "true_label": "clean",
-      "ensemble_score": 0.033133,
-      "gnn_chain_prob": 0.007506,
-      "rf_mean_risk": 0.0909,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "cluster": "checkov_example__PeerClientCertAuthTrue_PeerClientCertAuthTrue-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 40,
-      "cluster": "kubernetes_goat_hunger-check",
+      "cluster": "kubeaudit_hostns_fixtures_host-network-true",
       "true_label": "isolated",
-      "ensemble_score": 0.030746,
-      "gnn_chain_prob": 0.000225,
-      "rf_mean_risk": 0.0909,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 41,
-      "cluster": "kubernetes_goat_cache-store",
+      "cluster": "kubeaudit_capabilities_fixtures_capabilities-some-allowed-multi-containers-all-labels",
       "true_label": "isolated",
-      "ensemble_score": 0.030679,
-      "gnn_chain_prob": 2.1e-05,
-      "rf_mean_risk": 0.0909,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 42,
-      "cluster": "k8s-springboot-data-rest",
+      "cluster": "kubeaudit_capabilities_fixtures_capabilities-some-allowed-multi-containers-mix-old-labels",
       "true_label": "isolated",
-      "ensemble_score": 0.022247,
-      "gnn_chain_prob": 0.000735,
-      "rf_mean_risk": 0.065216,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "ensemble_score": 0.367659,
+      "gnn_chain_prob": 0.0,
+      "rf_mean_risk": 0.0,
+      "escape_signal": 1.0,
+      "escape_fraction": 1.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 43,
-      "cluster": "spring-microservices-k8s",
+      "cluster": "checkov_example__TillerDeploymentListener_tiller-deployment__FAILED__WRONGARG",
       "true_label": "isolated",
-      "ensemble_score": 0.017553,
-      "gnn_chain_prob": 0.000401,
-      "rf_mean_risk": 0.051631,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 2e-06,
+      "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 44,
-      "cluster": "kubernetes-microservices",
+      "cluster": "kubeaudit_asat_fixtures_service-account-token-redundant-override",
       "true_label": "isolated",
-      "ensemble_score": 0.013342,
-      "gnn_chain_prob": 3e-06,
-      "rf_mean_risk": 0.039536,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 1e-06,
+      "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 45,
-      "cluster": "java-on-aks",
+      "cluster": "checkov_example__ImagePullPolicy_kafka-PullPolicyAlways-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 0.012841,
-      "gnn_chain_prob": 0.000226,
-      "rf_mean_risk": 0.037837,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 1e-06,
+      "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 46,
-      "cluster": "k8s-ingress",
+      "cluster": "kubeaudit_image_fixtures_image-tag-missing",
       "true_label": "isolated",
-      "ensemble_score": 0.010347,
-      "gnn_chain_prob": 0.000189,
-      "rf_mean_risk": 0.03048,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
+      "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 47,
-      "cluster": "skampi",
-      "true_label": "clean",
-      "ensemble_score": 0.009344,
-      "gnn_chain_prob": 0.000197,
-      "rf_mean_risk": 0.0275,
+      "cluster": "checkov_example__ImagePullPolicy_job-ImageTagLatest-PASSED",
+      "true_label": "isolated",
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
+      "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 48,
-      "cluster": "kubecf",
-      "true_label": "clean",
-      "ensemble_score": 0.009344,
-      "gnn_chain_prob": 0.000197,
-      "rf_mean_risk": 0.0275,
+      "cluster": "checkov_example__ImageDigest_job-ImageTagLatest-FAILED",
+      "true_label": "isolated",
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
+      "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 49,
-      "cluster": "piggymetrics-k8s",
-      "true_label": "clean",
-      "ensemble_score": 0.009344,
-      "gnn_chain_prob": 0.000197,
-      "rf_mean_risk": 0.0275,
+      "cluster": "gatekeeper_host-probes-lifecycle_samples_psp-host-probes-lifecycle_disallowed__init__probe",
+      "true_label": "isolated",
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
+      "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 50,
-      "cluster": "wrongsecrets-k8s",
+      "cluster": "kubehound_CONTROL__POD",
       "true_label": "isolated",
-      "ensemble_score": 0.003172,
-      "gnn_chain_prob": 0.009675,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 51,
-      "cluster": "gatekeeper_allow-privilege-escalation_samples_psp-allow-privilege-escalation-container_example__disallowed",
+      "cluster": "gatekeeper_apparmor_samples_psp-apparmor_example__disallowed__no__profile",
       "true_label": "isolated",
-      "ensemble_score": 0.001516,
-      "gnn_chain_prob": 0.004623,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 52,
-      "cluster": "checkov_example__KubernetesDashboard_nginx-deployment-PASSED",
+      "cluster": "checkov_example__Seccomp_cronjob-seccomp-PASSED3",
       "true_label": "isolated",
-      "ensemble_score": 0.001497,
-      "gnn_chain_prob": 0.004566,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 53,
-      "cluster": "checkov_example__DefaultNamespace_nginx-statefulset-FAILED",
+      "cluster": "checkov_example__LivenessReadiness_pod-liveness-readiness-2pods",
       "true_label": "isolated",
-      "ensemble_score": 0.001497,
-      "gnn_chain_prob": 0.004566,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 54,
-      "cluster": "checkov_example__Secrets_nginx-NoSecret-PASSED",
+      "cluster": "gatekeeper_flexvolume-drivers_samples_psp-flexvolume-drivers_example__disallowed",
       "true_label": "isolated",
-      "ensemble_score": 0.001497,
-      "gnn_chain_prob": 0.004566,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 55,
-      "cluster": "checkov_example__Tiller_nginx-deployment-PASSED",
+      "cluster": "kubehound_POD__EXEC",
       "true_label": "isolated",
-      "ensemble_score": 0.001497,
-      "gnn_chain_prob": 0.004566,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 56,
-      "cluster": "gatekeeper_apparmor_samples_psp-apparmor_example__allowed__pod",
+      "cluster": "kubehound_ROLE__BIND__RB__CR-SA",
       "true_label": "isolated",
-      "ensemble_score": 0.000561,
-      "gnn_chain_prob": 0.001711,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 57,
-      "cluster": "checkov_example__ImageTagFixed_job-ImageTagLatest-FAILED",
+      "cluster": "gatekeeper_seccomp_samples_psp-seccomp_example__disallowed",
       "true_label": "isolated",
-      "ensemble_score": 0.000561,
-      "gnn_chain_prob": 0.001711,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 58,
-      "cluster": "checkov_example__LivenessReadiness_pod-liveness-readiness-PASSED",
+      "cluster": "kubeaudit_rootfs_fixtures_read-only-root-filesystem-nil",
       "true_label": "isolated",
-      "ensemble_score": 0.000561,
-      "gnn_chain_prob": 0.001711,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 59,
-      "cluster": "checkov_example__ServiceAccountTokens_ServiceAccountTokensFAILED",
+      "cluster": "gatekeeper_seccompv2_samples_psp-seccomp-baseline_example__allowed__localhost",
       "true_label": "isolated",
-      "ensemble_score": 0.000561,
-      "gnn_chain_prob": 0.001711,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 60,
-      "cluster": "gatekeeper_fsgroup_samples_psp-fsgroup_example__disallowed",
+      "cluster": "gatekeeper_privileged-containers_samples_psp-privileged-container_example__allowed",
       "true_label": "isolated",
-      "ensemble_score": 0.000561,
-      "gnn_chain_prob": 0.001711,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 61,
-      "cluster": "kubehound_SHARE__PS__NAMESPACE",
+      "cluster": "gatekeeper_apparmor_samples_psp-apparmor_example__disallowed__override",
       "true_label": "isolated",
-      "ensemble_score": 0.000561,
-      "gnn_chain_prob": 0.001711,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 62,
-      "cluster": "checkov_example__ImagePullPolicy_imageWithDigest-DefaultPullPolicy-PASSED",
+      "cluster": "gatekeeper_apparmor_samples_psp-apparmor_example__allowed__override",
       "true_label": "isolated",
-      "ensemble_score": 0.000306,
-      "gnn_chain_prob": 0.000934,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 63,
-      "cluster": "gatekeeper_proc-mount_samples_psp-proc-mount_example__allowed__exempt__image",
+      "cluster": "gatekeeper_seccomp_samples_psp-seccomp_example__allowed__localhost",
       "true_label": "isolated",
-      "ensemble_score": 0.000206,
-      "gnn_chain_prob": 0.000627,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 64,
-      "cluster": "gatekeeper_proc-mount_samples_psp-proc-mount_example__allowed",
+      "cluster": "checkov_example__ImageTagFixed_imageWithDigest-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 0.000102,
-      "gnn_chain_prob": 0.000311,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 65,
-      "cluster": "gatekeeper_proc-mount_samples_psp-proc-mount_example__disallowed",
+      "cluster": "checkov_example__ImageTagFixed_kafka-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 0.000102,
-      "gnn_chain_prob": 0.000311,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 66,
-      "cluster": "gatekeeper_apparmor_samples_psp-apparmor_example__allowed__override",
+      "cluster": "gatekeeper_seccompv2_samples_psp-seccomp-restricted_example__disallowed",
       "true_label": "isolated",
-      "ensemble_score": 0.000102,
-      "gnn_chain_prob": 0.000311,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 67,
-      "cluster": "checkov_example__DropCapabilities_pod-drop-all-capabilities-PASSED2",
+      "cluster": "gatekeeper_allow-privilege-escalation_samples_psp-allow-privilege-escalation-container_example__disallowed",
       "true_label": "isolated",
-      "ensemble_score": 0.000102,
-      "gnn_chain_prob": 0.000311,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 68,
-      "cluster": "checkov_example__RootContainers_rootContainersPASSED",
+      "cluster": "gatekeeper_users_samples_psp-pods-allowed-user-ranges_disallowed__ephemeral",
       "true_label": "isolated",
-      "ensemble_score": 6.2e-05,
-      "gnn_chain_prob": 0.00019,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 69,
-      "cluster": "checkov_example__AllowPrivilegeEscalation_ds-nginx-ingress-FAILED",
+      "cluster": "gatekeeper_seccompv2_samples_psp-seccomp-baseline_allowed__ephemeral",
       "true_label": "isolated",
-      "ensemble_score": 2.9e-05,
-      "gnn_chain_prob": 8.7e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 70,
-      "cluster": "checkov_example__Seccomp_pod-seccomp-PASSED",
+      "cluster": "kubeaudit_privesc_fixtures_allow-privilege-escalation-true-multi-allowed-multi-containers",
       "true_label": "isolated",
-      "ensemble_score": 1e-05,
-      "gnn_chain_prob": 3e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 71,
-      "cluster": "checkov_example__SecurityContexts_pod-container-both-PASSED",
+      "cluster": "kubeaudit_privesc_fixtures_allow-privilege-escalation-true-single-allowed-multi-containers",
       "true_label": "isolated",
-      "ensemble_score": 1e-05,
-      "gnn_chain_prob": 3e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 72,
-      "cluster": "checkov_example__ShareHost_memcachedStatefulSet-PASSED",
+      "cluster": "kubeaudit_rootfs_fixtures_read-only-root-filesystem-false",
       "true_label": "isolated",
-      "ensemble_score": 9e-06,
-      "gnn_chain_prob": 2.6e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 73,
-      "cluster": "checkov_example__ApiServerInsecurePort_api-server-insecure-port-PASSED",
+      "cluster": "kubeaudit_capabilities_fixtures_capabilities-added",
       "true_label": "isolated",
-      "ensemble_score": 7e-06,
-      "gnn_chain_prob": 2.2e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 74,
-      "cluster": "kubeaudit_apparmor_fixtures_apparmor-bad-value-override",
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-user-0",
       "true_label": "isolated",
-      "ensemble_score": 6e-06,
-      "gnn_chain_prob": 1.7e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 75,
-      "cluster": "kubeaudit_apparmor_fixtures_apparmor-invalid-annotation",
+      "cluster": "gatekeeper_users_samples_psp-pods-allowed-user-ranges_example__allowed",
       "true_label": "isolated",
-      "ensemble_score": 6e-06,
-      "gnn_chain_prob": 1.7e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 76,
-      "cluster": "kubeaudit_apparmor_fixtures_apparmor-annotation-missing",
+      "cluster": "checkov_example__Seccomp_cronjob-seccomp-PASSED2",
       "true_label": "isolated",
-      "ensemble_score": 6e-06,
-      "gnn_chain_prob": 1.7e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 77,
-      "cluster": "kubeaudit_asat_fixtures_service-account-token-nil-and-no-name-and-default-sa",
+      "cluster": "checkov_example__Seccomp_pod-seccomp-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 6e-06,
-      "gnn_chain_prob": 1.7e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 78,
-      "cluster": "kubeaudit_asat_fixtures_service-account-token-false",
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-user-psc-0",
       "true_label": "isolated",
-      "ensemble_score": 6e-06,
-      "gnn_chain_prob": 1.7e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 79,
-      "cluster": "gatekeeper_apparmor_samples_psp-apparmor_disallowed__ephemeral",
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-psc-false-csc-nil-multiple-cont",
       "true_label": "isolated",
-      "ensemble_score": 5e-06,
-      "gnn_chain_prob": 1.6e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 80,
-      "cluster": "checkov_example__DockerSocketVolume_CronJob-pass",
+      "cluster": "kubeaudit_apparmor_fixtures_apparmor-disabled-overriden",
       "true_label": "isolated",
-      "ensemble_score": 5e-06,
-      "gnn_chain_prob": 1.6e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 81,
-      "cluster": "kubeaudit_capabilities_fixtures_capabilities-nil",
+      "cluster": "kubeaudit_asat_fixtures_service-account-token-true-and-default-name",
       "true_label": "isolated",
-      "ensemble_score": 5e-06,
-      "gnn_chain_prob": 1.6e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 82,
-      "cluster": "kubeaudit_privesc_fixtures_allow-privilege-escalation-nil",
+      "cluster": "kubeaudit_hostns_fixtures_namespaces-redundant-override",
       "true_label": "isolated",
-      "ensemble_score": 5e-06,
-      "gnn_chain_prob": 1.6e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 83,
-      "cluster": "kubeaudit_seccomp_fixtures_seccomp-disabled",
+      "cluster": "checkov_example__ApiServerSecurePort_api-server-secure-port-PASSED",
       "true_label": "isolated",
-      "ensemble_score": 4e-06,
-      "gnn_chain_prob": 1.3e-05,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 84,
-      "cluster": "kubeaudit_nonroot_fixtures_run-as-user-psc-1-run-as-non-root-psc-false",
+      "cluster": "kubeaudit_asat_fixtures_service-account-token-false",
       "true_label": "isolated",
-      "ensemble_score": 2e-06,
-      "gnn_chain_prob": 5e-06,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 85,
-      "cluster": "kubeaudit_rootfs_fixtures_read-only-root-filesystem-redundant-override",
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-user-psc-1",
       "true_label": "isolated",
-      "ensemble_score": 2e-06,
-      "gnn_chain_prob": 5e-06,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     },
     {
       "rank": 86,
-      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-psc-false-allowed-multi-containers-single-label",
+      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-psc-true-csc-false",
       "true_label": "isolated",
-      "ensemble_score": 1e-06,
-      "gnn_chain_prob": 4e-06,
+      "ensemble_score": 0.0,
+      "gnn_chain_prob": 0.0,
       "rf_mean_risk": 0.0,
       "escape_signal": 0.0,
-      "escape_fraction": 0.0
-    },
-    {
-      "rank": 87,
-      "cluster": "kubeaudit_seccomp_fixtures_seccomp-enabled",
-      "true_label": "isolated",
-      "ensemble_score": 1e-06,
-      "gnn_chain_prob": 4e-06,
-      "rf_mean_risk": 0.0,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
-    },
-    {
-      "rank": 88,
-      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-psc-false-csc-true-multiple-cont",
-      "true_label": "isolated",
-      "ensemble_score": 1e-06,
-      "gnn_chain_prob": 3e-06,
-      "rf_mean_risk": 0.0,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
-    },
-    {
-      "rank": 89,
-      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-psc-false-csc-true",
-      "true_label": "isolated",
-      "ensemble_score": 1e-06,
-      "gnn_chain_prob": 3e-06,
-      "rf_mean_risk": 0.0,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
-    },
-    {
-      "rank": 90,
-      "cluster": "kubeaudit_nonroot_fixtures_run-as-non-root-redundant-override-container",
-      "true_label": "isolated",
-      "ensemble_score": 1e-06,
-      "gnn_chain_prob": 3e-06,
-      "rf_mean_risk": 0.0,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
-    },
-    {
-      "rank": 91,
-      "cluster": "kubeaudit_nonroot_fixtures_run-as-user-1-run-as-non-root-true",
-      "true_label": "isolated",
-      "ensemble_score": 1e-06,
-      "gnn_chain_prob": 3e-06,
-      "rf_mean_risk": 0.0,
-      "escape_signal": 0.0,
-      "escape_fraction": 0.0
+      "escape_fraction": 0.0,
+      "n_nodes": 1,
+      "chain_feasible": false
     }
   ]
 }

@@ -69,7 +69,8 @@ except ImportError as e:
 
 # Canonical escape-flag indices from the kubescan package (single source of truth)
 from bootstrap_utils import resample_indices
-from kubescan.model.ga_ensemble import ESCAPE_FLAG_INDICES
+
+from kubescan.model.ga_ensemble import ESCAPE_FLAG_INDICES, chain_rank_key, is_chain_feasible
 from kubescan.utils.device_utils import dataloader_kwargs, resolve_device
 from kubescan.utils.seed_utils import set_global_seed
 
@@ -204,14 +205,17 @@ def bootstrap_cis(
 def main():
     graphs_dir  = PROJECT_ROOT / "data" / "graphs"
     splits_dir  = PROJECT_ROOT / "data" / "splits"
-    checkpoints = PROJECT_ROOT / "models" / "checkpoints"
-    default_weights = checkpoints / "ga_weights.json"
+    default_checkpoints = PROJECT_ROOT / "models" / "checkpoints"
 
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--weights",       type=Path, default=default_weights,
-                        help="Path to ga_weights.json")
+    parser.add_argument("--checkpoints-dir", type=Path, default=default_checkpoints,
+                        help="Directory holding gnn_fold_*.pt and ga_weights.json; "
+                             f"test_results.json is written there (default {default_checkpoints})")
+    parser.add_argument("--weights",       type=Path, default=None,
+                        help="Path to ga_weights.json (defaults to the one inside "
+                             "--checkpoints-dir)")
     parser.add_argument("--hidden",        type=int,   default=64)
     parser.add_argument("--heads",         type=int,   default=4)
     parser.add_argument("--layers",        type=int,   default=3)
@@ -223,14 +227,16 @@ def main():
 
     set_global_seed(args.seed)
     device = resolve_device()
+    checkpoints  = args.checkpoints_dir
+    weights_path = args.weights if args.weights is not None else checkpoints / "ga_weights.json"
 
     # ------------------------------------------------------------------
     # Load ensemble weights
     # ------------------------------------------------------------------
-    if not args.weights.exists():
-        sys.exit(f"ga_weights.json not found at {args.weights}. Run layer3_ga.py first.")
+    if not weights_path.exists():
+        sys.exit(f"ga_weights.json not found at {weights_path}. Run run_ga_ensemble.py first.")
 
-    with args.weights.open(encoding="utf-8") as f:
+    with weights_path.open(encoding="utf-8") as f:
         weights = json.load(f)
 
     w_rf     = weights["w_rf"]
@@ -302,9 +308,14 @@ def main():
     )
     gnn_chain_probs = [float(p[2]) for p in mean_probs]
     n_test = len(true_labels)
+    n_nodes = [int(test_dataset[i].x.shape[0]) for i in range(n_test)]
 
     # ------------------------------------------------------------------
-    # Ensemble scoring & ranking — binary escape signal (same as GA + CLI)
+    # Ensemble scoring & ranking — binary escape signal (same as GA + CLI).
+    # Ranking applies the structural feasibility gate (chain_rank_key): a
+    # single-manifest cluster cannot host a multi-hop chain, so it never
+    # outranks a structurally feasible cluster. Ungated metrics are kept in
+    # the output for comparison with pre-gate runs.
     # ------------------------------------------------------------------
     def score_with(wr: float, wg: float, we: float) -> list[float]:
         return [
@@ -312,9 +323,16 @@ def main():
             for i in range(n_test)
         ]
 
+    def rank_indices(scores: list[float]) -> list[int]:
+        return sorted(
+            range(n_test),
+            key=lambda i: chain_rank_key(scores[i], n_nodes[i]),
+            reverse=True,
+        )
+
     ensemble_scores = score_with(w_rf, w_gnn, w_escape)
 
-    ranked_idx  = sorted(range(n_test), key=lambda i: ensemble_scores[i], reverse=True)
+    ranked_idx  = rank_indices(ensemble_scores)
     ranked_true = [true_labels[i] for i in ranked_idx]
 
     p_at_1 = precision_at_k(ranked_true, 1)
@@ -322,6 +340,16 @@ def main():
     p_at_5 = precision_at_k(ranked_true, 5)
 
     fpr_clean = sum(1 for i in ranked_idx[:5] if true_labels[i] == 0) / 5
+
+    ranked_true_ungated = [
+        true_labels[i] for i in
+        sorted(range(n_test), key=lambda i: ensemble_scores[i], reverse=True)
+    ]
+    ungated_metrics = {
+        "precision_at_1": precision_at_k(ranked_true_ungated, 1),
+        "precision_at_3": precision_at_k(ranked_true_ungated, 3),
+        "precision_at_5": precision_at_k(ranked_true_ungated, 5),
+    }
 
     # ------------------------------------------------------------------
     # Component ablation — what does each layer contribute on its own?
@@ -336,8 +364,7 @@ def main():
     ablation_results = []
     for name, wr, wg, we in ablation_configs:
         sc = score_with(wr, wg, we)
-        ranked = [true_labels[i] for i in
-                  sorted(range(n_test), key=lambda i, _sc=sc: _sc[i], reverse=True)]
+        ranked = [true_labels[i] for i in rank_indices(sc)]
         ablation_results.append({
             "config":    name,
             "w_rf":      round(wr, 4),
@@ -363,9 +390,17 @@ def main():
     cm  = confusion_matrix(true_arr, preds, labels=[0,1,2]).tolist()
 
     # ------------------------------------------------------------------
-    # Bootstrap confidence intervals (95%, resampling test graphs)
+    # Bootstrap confidence intervals (95%, resampling test graphs).
+    # bootstrap_cis ranks by plain score, so encode the structural gate as an
+    # order-preserving additive bonus (scores live in [0, 1], so any feasible
+    # cluster outranks any infeasible one, matching chain_rank_key ordering).
     # ------------------------------------------------------------------
-    cis = bootstrap_cis(ensemble_scores, true_labels, preds, seed=args.seed)
+    feasible_rank_bonus = 1.0 + max(ensemble_scores)
+    gated_scores = [
+        s + (feasible_rank_bonus if is_chain_feasible(nn) else 0.0)
+        for s, nn in zip(ensemble_scores, n_nodes)
+    ]
+    cis = bootstrap_cis(gated_scores, true_labels, preds, seed=args.seed)
 
     # ------------------------------------------------------------------
     # Print report
@@ -375,10 +410,11 @@ def main():
     print("FINAL TEST SET EVALUATION")
     print("(test clusters excluded from CV folds, GA tuning and augmentation)")
     print(SEP)
-    print("\n  Ensemble ranking metrics:")
-    print(f"    P@1        : {p_at_1:.2f}")
-    print(f"    P@3        : {p_at_3:.2f}")
-    print(f"    P@5        : {p_at_5:.2f}  (ceiling={p5_ceiling:.2f})  "
+    print("\n  Ensemble ranking metrics (structural gate: single-node clusters demoted):")
+    print(f"    P@1        : {p_at_1:.2f}  (ungated: {ungated_metrics['precision_at_1']:.2f})")
+    print(f"    P@3        : {p_at_3:.2f}  (ungated: {ungated_metrics['precision_at_3']:.2f})")
+    print(f"    P@5        : {p_at_5:.2f}  (ungated: {ungated_metrics['precision_at_5']:.2f}, "
+          f"ceiling={p5_ceiling:.2f})  "
           f"95% CI [{cis['p_at_k_ci95'][0]:.2f}, {cis['p_at_k_ci95'][1]:.2f}]")
     print(f"    FPR_clean  : {fpr_clean:.2f}  "
           f"95% CI [{cis['fpr_clean_ci95'][0]:.2f}, {cis['fpr_clean_ci95'][1]:.2f}]")
@@ -440,7 +476,9 @@ def main():
             "precision_at_5_ceiling": p5_ceiling,
             "hits_ceiling": p_at_5 >= p5_ceiling,
             "fpr_clean": fpr_clean,
+            "structural_gate": True,
         },
+        "ranking_metrics_ungated": ungated_metrics,
         "confidence_intervals_95": cis,
         "ablation": ablation_results,
         "classification_metrics": {
@@ -460,6 +498,8 @@ def main():
                 "rf_mean_risk":   round(rf_risks[idx], 6),
                 "escape_signal":  escape_signals[idx],
                 "escape_fraction": round(escape_fracs[idx], 6),
+                "n_nodes":        n_nodes[idx],
+                "chain_feasible": is_chain_feasible(n_nodes[idx]),
             }
             for rank, idx in enumerate(ranked_idx)
         ],

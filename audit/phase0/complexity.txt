@@ -1,0 +1,106 @@
+kubescan/src/kubescan/cli.py
+    F 195:0 _expand_yaml_to_files - B (8)
+    F 443:0 live - B (8)
+    F 219:0 _fetch_live_manifests - B (7)
+    F 261:0 _run_inference_pipeline - B (7)
+kubescan/src/kubescan/utils/graph_builder.py
+    F 154:0 _parse_yaml_semantics - D (21)
+    F 249:0 _enrich_with_yaml_semantics - B (10)
+    F 123:0 _collect_privileged_roles - B (8)
+    F 342:0 _add_rbac_edges - B (8)
+    F 361:0 build_cluster_graph - B (7)
+    F 328:0 _add_semantic_edges - B (6)
+    F 405:0 graph_to_pyg - B (6)
+kubescan/src/kubescan/utils/yaml_parser.py
+    F 226:0 _extract_container_features - D (26)
+    F 335:0 _extract_file - C (15)
+    F 302:0 _extract_workload_metadata - C (11)
+    F 411:0 extract_cluster_features - B (10)
+    F 153:0 _spec_has_insecure_http - B (8)
+    F 118:0 _image_from_untrusted_registry - B (6)
+    F 189:0 _extract_volume_features - B (6)
+kubescan/src/kubescan/model/gat_encoder.py
+    F 135:0 load_fold_ensemble - B (6)
+research/models/train_rf.py
+    F 87:0 load_dataset - D (23)
+    F 240:0 run_loco_cv - C (15)
+    F 316:0 main - C (15)
+    F 195:0 run_cv - B (7)
+research/models/run_ga_ensemble.py
+    F 304:0 run_ga - C (13)
+    F 212:0 compute_objective - B (10)
+    F 410:0 main - B (10)
+research/models/predict.py
+    F 182:0 build_graph - F (41)
+    F 425:0 main - D (26)
+    F 355:0 print_text_report - B (8)
+research/models/train_gnn.py
+    F 337:0 main - D (24)
+    F 254:0 train_fold - C (14)
+research/models/evaluate_test_set.py
+    F 200:0 main - E (32)
+    F 81:0 ensemble_predict - B (6)
+research/scripts/snapshot_run_manifest.py
+    F 66:0 main - B (7)
+research/scripts/fixes/patch_hostpath_column.py
+    F 127:0 main - C (20)
+    F 84:0 _build_gitlab_lookup - C (11)
+    F 44:0 detect_hostpath - B (10)
+research/scripts/05_split/create_splits.py
+    F 142:0 main - C (18)
+    F 101:0 k_fold_splits - B (9)
+research/scripts/03_augment/augment_graphs.py
+    F 131:0 sample_subgraph - C (15)
+    F 257:0 main - C (13)
+    F 213:0 generate_variants - B (8)
+research/scripts/04_build_datasets/build_rf_dataset.py
+    F 151:0 build_dataset - C (18)
+research/scripts/04_build_datasets/build_graph_cache.py
+    F 37:0 _read_one - B (6)
+    F 53:0 main - B (6)
+research/scripts/04_build_datasets/gnn_dataset.py
+    M 151:4 KubeClusterDataset._load_graphs - C (13)
+research/scripts/04_build_datasets/enrich_rf_dataset.py
+    F 343:0 main - C (15)
+    F 280:0 process_kubernetes_goat - C (14)
+    F 189:0 flags_to_row - B (6)
+    F 237:0 process_badpods - B (6)
+research/scripts/01_acquire/download_github_manifests.py
+    F 387:0 main - C (11)
+    M 205:4 YamlDownloader.download_one - B (9)
+    F 302:0 build_github_tasks - B (6)
+    F 343:0 build_gitlab_tasks - B (6)
+research/scripts/01_acquire/ingest_attack_repos.py
+    F 171:0 main - D (30)
+    F 159:0 find_yamls - B (6)
+research/scripts/02_extract/scan_security_tools.py
+    F 248:0 main - D (27)
+    F 180:0 build_path_lookup - C (13)
+    F 96:0 run_checkov - B (6)
+research/scripts/02_extract/build_graphs.py
+    F 217:0 build_cluster_graph - F (54)
+    F 113:0 parse_yaml_semantics - D (21)
+    F 379:0 _compute_graph_label - C (17)
+    F 591:0 main - C (14)
+    F 94:0 _get_pod_spec - C (13)
+    F 548:0 build_lookups - C (12)
+    F 457:0 graph_to_arrays - B (8)
+    F 175:0 row_to_feature_vector - B (6)
+research/scripts/02_extract/extract_yaml_features.py
+    F 243:0 _check_seccomp_unconfined - C (13)
+    F 154:0 _check_docker_sock - C (12)
+    F 117:0 _get_pod_spec - C (11)
+    F 205:0 _check_capabilities - B (10)
+    F 341:0 _check_no_run_as_non_root - B (9)
+    F 423:0 _check_untrusted_registry - B (9)
+    F 523:0 extract_features_from_file - B (9)
+    F 571:0 extract_features_from_dir - B (8)
+    F 175:0 _check_hostpath_mount - B (7)
+    F 281:0 _check_no_rolling_update - B (7)
+    F 309:0 _check_insecure_http - B (7)
+    F 91:0 _get_vals_for_key - B (6)
+    F 322:0 _is_plausible_secret - B (6)
+    F 380:0 _check_image_uses_latest - B (6)
+
+81 blocks (classes, functions, methods) analyzed.
+Average complexity: C (12.37037037037037)

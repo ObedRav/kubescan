@@ -11,6 +11,13 @@ GNN_EPOCHS  := 300
 GNN_HIDDEN  := 64
 GNN_HEADS   := 4
 GNN_LAYERS  := 3
+# Loss / checkpoint-selection knobs (ablatable: `make reproduce GNN_FOCAL=1 GNN_SELECT_BY=f1`).
+# Defaults from the 2026-07-14 loss x selection ablation (audit/gnn_p5_refit_2026-07-14.md §G):
+# weighted CE + P@5 checkpoint selection is the only arm meeting the >0.70 CV P@5
+# target (0.72 ± 0.16); focal loss costs 0.12 CV P@5 and zeroes test chain F1.
+GNN_FOCAL     ?= 0
+GNN_SELECT_BY ?= p5
+GNN_FOCAL_FLAG := $(if $(filter 1,$(GNN_FOCAL)),--focal-loss,)
 PDFLATEX    := /Library/TeX/texbin/pdflatex
 BIBTEX      := /Library/TeX/texbin/bibtex
 THESIS_DIR  := thesis/latex
@@ -62,7 +69,7 @@ reproduce: data   ## full pipeline: data → RF → GNN(5-fold) → GA → test 
 	cd $(RESEARCH)/models && $(PYTHON) train_gnn.py \
 	  --cv-folds 5 --epochs $(GNN_EPOCHS) \
 	  --hidden $(GNN_HIDDEN) --heads $(GNN_HEADS) --layers $(GNN_LAYERS) \
-	  --focal-loss --seed $(SEED)
+	  $(GNN_FOCAL_FLAG) --select-by $(GNN_SELECT_BY) --seed $(SEED)
 	cd $(RESEARCH)/models && $(PYTHON) run_ga_ensemble.py --oof --seed $(SEED)
 	cd $(RESEARCH)/models && $(PYTHON) evaluate_test_set.py --show-rankings
 	$(PYTHON) $(RESEARCH)/scripts/snapshot_run_manifest.py

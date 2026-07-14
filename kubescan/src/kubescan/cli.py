@@ -142,7 +142,7 @@ def _print_text_report(
     sa_nodes:       list[int],
     show_nodes:     bool,
 ) -> None:
-    label   = scorer.predict_label(ensemble_score)
+    label   = scorer.predict_label(ensemble_score, n_nodes=len(node_data))
     sep     = "=" * _SEP_WIDTH
     click.echo(f"\n{sep}")
     click.echo("  KUBESCAN  ·  Attack-Chain Risk Report")
@@ -315,7 +315,7 @@ def _run_inference_pipeline(
     ensemble_score = scorer.score(mean_rf_risk, chain_prob, escape_signal)
 
     if output_format == "json":
-        label  = scorer.predict_label(ensemble_score)
+        label  = scorer.predict_label(ensemble_score, n_nodes=len(node_data))
         result = {
             "cluster":           cluster_name,
             "cluster_dir":       str(cluster_dir),

@@ -19,9 +19,12 @@ from torch_geometric.data import Data
 
 from kubescan.model.ga_ensemble import (
     ESCAPE_FLAG_INDICES,
+    MIN_CHAIN_NODES,
     EnsembleScorer,
+    chain_rank_key,
     compute_escape_fraction,
     compute_escape_signal,
+    is_chain_feasible,
     run_gnn_ensemble,
 )
 from kubescan.model.gat_encoder import KubeGAT
@@ -84,6 +87,27 @@ def test_predict_label_escape_weight_alone_reaches_isolated(tmp_path: Path) -> N
     # binary escape signal times w_escape (~1/3) must already cross the 0.30 bar
     s = _scorer(tmp_path)
     assert s.predict_label(s.score(0.0, 0.0, 1.0)) == 1
+
+
+def test_is_chain_feasible_single_node_returns_false() -> None:
+    assert is_chain_feasible(MIN_CHAIN_NODES - 1) is False
+
+
+def test_is_chain_feasible_two_nodes_returns_true() -> None:
+    assert is_chain_feasible(MIN_CHAIN_NODES) is True
+
+
+def test_predict_label_high_score_single_node_capped_at_isolated(tmp_path: Path) -> None:
+    assert _scorer(tmp_path).predict_label(0.99, n_nodes=1) == 1
+
+
+def test_predict_label_high_score_multi_node_stays_attack_chain(tmp_path: Path) -> None:
+    assert _scorer(tmp_path).predict_label(0.99, n_nodes=2) == 2
+
+
+def test_chain_rank_key_infeasible_never_outranks_feasible() -> None:
+    # highest-scoring single-node cluster still sorts below the lowest feasible one
+    assert chain_rank_key(0.99, n_nodes=1) < chain_rank_key(0.01, n_nodes=2)
 
 
 # ---------------------------------------------------------------------------
