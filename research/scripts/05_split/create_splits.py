@@ -4,21 +4,31 @@ create_splits.py
 Create stratified train/val/test splits and 5-fold cross-validation splits
 for the GNN graph dataset.
 
-Leakage rules (group-aware by origin cluster):
+Leakage rules (group-aware by template family):
   1. Augmented variants ('_aug_' in the name) are derived near-duplicates of
      their base cluster. A variant joins a TRAINING partition only when its
      base cluster is in that same partition — variants of val/test clusters
      are excluded from training entirely, never just relabelled.
-  2. The test clusters are held out of the CV folds altogether: folds
+  2. Base clusters that share a template family (e.g. 'badpods_priv' and
+     'badpods_hostpid', both derived from the same BadPods fixture and
+     differing only in which escape flag is toggled) are near-duplicates of
+     each other, not independent samples. They are kept together in a single
+     partition — never scattered across train/val/test or across CV folds —
+     otherwise a model trained on five siblings of a family can trivially
+     "solve" the one held out, or conversely a family's only rare-flag
+     variant can land alone in test with no in-distribution training signal.
+  3. The test clusters are held out of the CV folds altogether: folds
      partition only the train+val originals. Fold models therefore never see
      a test cluster (raw or augmented), and out-of-fold predictions used for
      GA ensemble-weight tuning contain no test cluster either.
 
 Split logic:
   1. Separate original and augmented graphs from manifest
-  2. Stratify-split original graphs into train/val/test
-  3. Build k folds over the train+val originals only
-  4. Per partition, append only the augmented variants whose base is in
+  2. Group original graphs into template families (family_of)
+  3. Stratify-split families (by each family's dominant label) into
+     train/val/test, then expand back into member cluster names
+  4. Build k folds over the train+val families only
+  5. Per partition, append only the augmented variants whose base is in
      that partition's training originals
 
 Outputs (dataset/splits/):
@@ -39,10 +49,38 @@ import random
 from collections import defaultdict
 from pathlib import Path
 
+# Attack-chain is the rarest, highest-value class: if a family contains any
+# member of a class, that class should win the family's stratification label
+# (e.g. a family with one 'chain' and five 'isolated' members is a chain
+# family for splitting purposes, not an isolated one).
+LABEL_PRIORITY: list[int] = [2, 0, 1]  # attack_chain > clean > isolated
+
 
 def base_cluster(name: str) -> str:
     """Origin cluster of a graph name: 'foo_aug_03' → 'foo', 'foo' → 'foo'."""
     return name.split("_aug_", maxsplit=1)[0]
+
+
+def family_of(name: str) -> str:
+    """Template family of a graph's origin cluster.
+
+    'badpods_priv' -> 'badpods', 'datadog_cluster-agent' -> 'datadog',
+    'longhorn' -> 'longhorn' (single-repo clusters are their own family).
+    Groups near-duplicate template variants that differ only in which
+    flag/rule is toggled, so splitting treats the whole family as one
+    leakage-prone unit instead of scattering its variants across partitions.
+    """
+    base = base_cluster(name)
+    return base.split("_", maxsplit=1)[0] if "_" in base else base
+
+
+def family_label(members: list[int]) -> int:
+    """Dominant label for a family, preferring the rarest class present."""
+    present = set(members)
+    for lbl in LABEL_PRIORITY:
+        if lbl in present:
+            return lbl
+    return members[0]
 
 
 def augmented_for(
@@ -54,6 +92,74 @@ def augmented_for(
     return [name for name, _ in augmented if base_cluster(name) in allowed]
 
 
+def group_by_family(
+    clusters: list[tuple[str, int]],
+) -> dict[str, list[tuple[str, int]]]:
+    """Group (name, label) pairs into leakage units for splitting.
+
+    A template family becomes one atomic unit only when it is
+    label-mixed (e.g. 'badpods_hostpid' is isolated-adjacent chain
+    scaffolding while 'badpods_priv' is chain — near-duplicate variants
+    that differ across the chain/non-chain boundary must not be scattered
+    across partitions). Label-pure families (e.g. the 245 'checkov_*'
+    fixtures, all isolated) don't exhibit that risk — grouping them
+    atomically would instead badly distort the stratified proportions
+    given their size — so each of their members is kept independently
+    splittable.
+    """
+    by_family: dict[str, list[tuple[str, int]]] = defaultdict(list)
+    for name, lbl in clusters:
+        by_family[family_of(name)].append((name, lbl))
+
+    units: dict[str, list[tuple[str, int]]] = {}
+    for family_id, members in by_family.items():
+        if len({lbl for _, lbl in members}) > 1:
+            units[family_id] = members
+        else:
+            for name, lbl in members:
+                units[name] = [(name, lbl)]
+    return units
+
+
+def _stratum_weight(members: list[int], stratum_label: int) -> int:
+    """Count of a unit's members that actually carry the stratum's label.
+
+    A mixed-label family (e.g. 12-member kubernetes_goat, 2 of them chain)
+    is one atomic unit, but its *weight* inside the chain stratum should be
+    2, not 12 — otherwise one large family swings a bucket's true chain
+    count unpredictably.
+    """
+    return sum(1 for lbl in members if lbl == stratum_label)
+
+
+def _greedy_allocate(
+    unit_ids: list[str],
+    weights: dict[str, int],
+    frac_by_bucket: dict[str, float],
+    rng: random.Random,
+) -> dict[str, list[str]]:
+    """Assign units to buckets so each bucket's total weight tracks its
+    target fraction, largest-weight unit first (longest-processing-time
+    bin balancing). Plain per-unit *count* splitting would let one large
+    family's presence or absence swing a bucket's true class
+    representation unpredictably; balancing by weight keeps the number of
+    stratum-label graphs per bucket close to the requested fraction
+    regardless of which units happen to land where.
+    """
+    ids = unit_ids.copy()
+    rng.shuffle(ids)
+    ids.sort(key=lambda fid: -weights[fid])
+    total = sum(weights[fid] for fid in ids)
+    totals = dict.fromkeys(frac_by_bucket, 0)
+    assigned: dict[str, list[str]] = {b: [] for b in frac_by_bucket}
+    for fid in ids:
+        deficits = {b: frac_by_bucket[b] * total - totals[b] for b in frac_by_bucket}
+        best = max(deficits, key=lambda b: deficits[b])
+        assigned[best].append(fid)
+        totals[best] += weights[fid]
+    return assigned
+
+
 def stratified_split(
     clusters: list[tuple[str, int]],  # (name, label)
     val_frac: float,
@@ -61,41 +167,36 @@ def stratified_split(
     seed: int,
 ) -> tuple[list[str], list[str], list[str]]:
     """
-    Stratified train/val/test split.
-    Maintains label distribution across splits.
+    Stratified train/val/test split, grouped by template family so that
+    near-duplicate variants of the same family never land in different
+    partitions, and weighted so each family's true stratum-label count
+    (not its unit count) tracks the requested val/test fractions.
     """
     rng = random.Random(seed)
+    families = group_by_family(clusters)
+    fracs = {"train": 1 - val_frac - test_frac, "val": val_frac, "test": test_frac}
 
-    # Group by label
     by_label: dict[int, list[str]] = defaultdict(list)
-    for name, lbl in clusters:
-        by_label[lbl].append(name)
+    for family_id, members in families.items():
+        lbl = family_label([m_lbl for _, m_lbl in members])
+        by_label[lbl].append(family_id)
 
-    train_names, val_names, test_names = [], [], []
+    buckets: dict[str, list[str]] = {"train": [], "val": [], "test": []}
+    for lbl, family_ids in sorted(by_label.items()):
+        weights = {
+            fid: _stratum_weight([m_lbl for _, m_lbl in families[fid]], lbl)
+            for fid in family_ids
+        }
+        allocation = _greedy_allocate(family_ids, weights, fracs, rng)
+        for bucket, ids in allocation.items():
+            buckets[bucket] += ids
 
-    for _lbl, names in sorted(by_label.items()):
-        names = names.copy()
+    def expand(ids: list[str]) -> list[str]:
+        names = [name for fid in ids for name, _ in families[fid]]
         rng.shuffle(names)
-        n = len(names)
-        n_test = max(1, round(n * test_frac))
-        n_val  = max(1, round(n * val_frac))
-        n_train = n - n_val - n_test
+        return names
 
-        # Guard: ensure at least 1 in train when group is tiny
-        if n_train <= 0:
-            n_train = 1
-            if n_val + n_test + n_train > n:
-                n_val = max(0, n - n_train - n_test)
-
-        test_names  += names[:n_test]
-        val_names   += names[n_test:n_test + n_val]
-        train_names += names[n_test + n_val:]
-
-    rng.shuffle(train_names)
-    rng.shuffle(val_names)
-    rng.shuffle(test_names)
-
-    return train_names, val_names, test_names
+    return expand(buckets["train"]), expand(buckets["val"]), expand(buckets["test"])
 
 
 def k_fold_splits(
@@ -104,34 +205,40 @@ def k_fold_splits(
     seed: int,
 ) -> list[tuple[list[str], list[str]]]:
     """
-    Stratified k-fold cross-validation.
+    Stratified k-fold cross-validation, grouped by template family so that
+    no family's variants are split between a fold's train and validation
+    sets, and weighted so each fold's true stratum-label count tracks 1/k.
     Returns list of (train_names, val_names) for each fold.
     """
     rng = random.Random(seed)
-    by_label: dict[int, list[str]] = defaultdict(list)
-    for name, lbl in clusters:
-        by_label[lbl].append(name)
+    families = group_by_family(clusters)
 
-    # Assign fold indices per stratum
-    label_folds: dict[int, list[list[str]]] = {}
-    for lbl, names in sorted(by_label.items()):
-        names = names.copy()
-        rng.shuffle(names)
-        # Distribute into k buckets
-        buckets: list[list[str]] = [[] for _ in range(k)]
-        for i, name in enumerate(names):
-            buckets[i % k].append(name)
-        label_folds[lbl] = buckets
+    by_label: dict[int, list[str]] = defaultdict(list)
+    for family_id, members in families.items():
+        lbl = family_label([m_lbl for _, m_lbl in members])
+        by_label[lbl].append(family_id)
+
+    fold_keys = [str(i) for i in range(k)]
+    fracs = dict.fromkeys(fold_keys, 1.0 / k)
+    fold_ids: dict[str, list[str]] = {key: [] for key in fold_keys}
+    for lbl, family_ids in sorted(by_label.items()):
+        weights = {
+            fid: _stratum_weight([m_lbl for _, m_lbl in families[fid]], lbl)
+            for fid in family_ids
+        }
+        allocation = _greedy_allocate(family_ids, weights, fracs, rng)
+        for key, ids in allocation.items():
+            fold_ids[key] += ids
+
+    def expand(ids: list[str]) -> list[str]:
+        return [name for fid in ids for name, _ in families[fid]]
 
     folds = []
-    for fold_idx in range(k):
-        val   = []
-        train = []
-        for _lbl, buckets in label_folds.items():
-            val   += buckets[fold_idx]
-            for j, bucket in enumerate(buckets):
-                if j != fold_idx:
-                    train += bucket
+    for fold_idx, val_key in enumerate(fold_keys):
+        val_ids   = fold_ids[val_key]
+        train_ids = [fid for key in fold_keys if key != val_key for fid in fold_ids[key]]
+        train = expand(train_ids)
+        val   = expand(val_ids)
         rng.shuffle(train)
         rng.shuffle(val)
         folds.append((train, val))
@@ -271,7 +378,9 @@ def main():
         "augmentation_note": (
             "Group-aware splits: an augmented graph (_aug_ suffix) joins a training "
             "partition only when its base cluster is in that partition. Variants of "
-            "val/test clusters are excluded from training entirely. Test clusters are "
+            "val/test clusters are excluded from training entirely. Original clusters "
+            "sharing a template family (e.g. badpods_*, datadog_*) are kept together "
+            "in one partition and never split across CV folds. Test clusters are "
             "held out of the CV folds, so OOF predictions used for GA weight tuning "
             "contain no test cluster."
         ),

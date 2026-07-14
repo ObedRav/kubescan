@@ -62,7 +62,7 @@ reproduce: data   ## full pipeline: data → RF → GNN(5-fold) → GA → test 
 	cd $(RESEARCH)/models && $(PYTHON) train_gnn.py \
 	  --cv-folds 5 --epochs $(GNN_EPOCHS) \
 	  --hidden $(GNN_HIDDEN) --heads $(GNN_HEADS) --layers $(GNN_LAYERS) \
-	  --seed $(SEED)
+	  --focal-loss --seed $(SEED)
 	cd $(RESEARCH)/models && $(PYTHON) run_ga_ensemble.py --oof --seed $(SEED)
 	cd $(RESEARCH)/models && $(PYTHON) evaluate_test_set.py --show-rankings
 	$(PYTHON) $(RESEARCH)/scripts/snapshot_run_manifest.py
