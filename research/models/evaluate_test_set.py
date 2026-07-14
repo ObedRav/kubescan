@@ -24,16 +24,16 @@ Also reports:
   - Component ablation on the test set (escape-only / RF-only / GNN-only /
     equal weights / GA-best) so the marginal value of each layer is explicit.
   - 95% bootstrap confidence intervals (resampling test graphs) for P@5,
-    macro-F1 and FPR_clean — mandatory context for a 15-graph test set.
+    macro-F1 and FPR_clean — mandatory context for a test set with few chains.
 
 Output:
     models/checkpoints/test_results.json
     (printed report to stdout)
 
 Usage:
-    python models/evaluate_test.py
-    python models/evaluate_test.py --weights models/checkpoints/ga_weights.json
-    python models/evaluate_test.py --show-rankings
+    python models/evaluate_test_set.py
+    python models/evaluate_test_set.py --show-rankings
+    python models/evaluate_test_set.py --checkpoints-dir /path/to/arm  # saved fold models
 """
 
 import argparse
@@ -169,7 +169,8 @@ def bootstrap_cis(
 ) -> dict:
     """
     95% percentile bootstrap CIs over test graphs for P@k, FPR_clean and
-    macro-F1. With 15 graphs the intervals are wide by construction — that is
+    macro-F1. With only a handful of chain positives the intervals are wide by
+    construction — that is
     precisely the information they convey.
     """
     rng = np.random.default_rng(seed)

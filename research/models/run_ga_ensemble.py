@@ -21,10 +21,11 @@ where:
                      escape-capable manifest is still a critical risk.
 
 Two validation modes:
-  --val (default): use val.txt + gnn_best.pt  (15 graphs, 4 chains, ceiling 0.80)
-  --oof           : use all fold_X_val.txt + gnn_fold_X.pt out-of-fold predictions
-                    (96 original graphs, 25 chains, ceiling 1.00)
-                    Recommended — gives a much more reliable weight estimate.
+  --oof (default) : use all fold_X_val.txt + gnn_fold_X.pt out-of-fold predictions
+                    (the full CV pool of original clusters; 513 graphs / 32 chains
+                    on the current corpus). Recommended — gives a much more
+                    reliable weight estimate.
+  --val           : use val.txt + gnn_best.pt (small fixed validation split).
 
 Optimisation objective:
     F = α * Precision@5 + β * (1 - FPR_clean) + γ * chain_MRR
@@ -52,11 +53,11 @@ Output:
     models/checkpoints/ga_results.json      — full run statistics
 
 Usage:
-    python models/layer3_ga.py
-    python models/layer3_ga.py --oof                         # recommended
-    python models/layer3_ga.py --oof --generations 200 --pop-size 60
-    python models/layer3_ga.py --alpha 0.7 --beta 0.3
-    python models/layer3_ga.py --select-method bootstrap --n-bootstrap 500
+    python models/run_ga_ensemble.py --oof                  # default, recommended
+    python models/run_ga_ensemble.py --oof --generations 200 --pop-size 60
+    python models/run_ga_ensemble.py --alpha 0.7 --beta 0.3
+    python models/run_ga_ensemble.py --select-method bootstrap --n-bootstrap 500
+    python models/run_ga_ensemble.py --checkpoints-dir /path/to/arm  # fit saved fold models
 """
 
 import argparse
@@ -180,7 +181,7 @@ def load_val_predictions(
     heads: int = 4,
     num_layers: int = 3,
 ) -> tuple[list[int], list[float], list[float], list[float], list[bool], list[str]]:
-    """Load predictions from gnn_best.pt on val.txt (15 graphs)."""
+    """Load predictions from gnn_best.pt on val.txt."""
     val_dataset = load_split(graphs_dir, splits_dir / "val.txt")
     in_channels = val_dataset[0].x.shape[1]
 
@@ -212,7 +213,7 @@ def load_oof_predictions(
     For each fold k, loads gnn_fold_k.pt and runs inference on fold_k_val.txt.
     Because each fold model never saw its val clusters during training, these
     are genuinely held-out predictions — much more reliable for weight tuning
-    than a single 15-graph validation set.
+    than a single small validation set.
 
     Returns predictions for all CV-pool original clusters.
     """

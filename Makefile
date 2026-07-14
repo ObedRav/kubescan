@@ -75,10 +75,12 @@ reproduce: data   ## full pipeline: data → RF → GNN(5-fold) → GA → test 
 	$(PYTHON) $(RESEARCH)/scripts/snapshot_run_manifest.py
 	@echo "reproduce: done — see research/models/checkpoints/run_manifest.json"
 
-reproduce-ablations:   ## architecture ablations (GAT 2-layer, GCN 3-layer)
+reproduce-ablations:   ## architecture ablations (GAT 2-layer, GCN 3-layer), same loss/selection as reproduce
 	cd $(RESEARCH)/models && $(PYTHON) train_gnn.py --cv-folds 5 --layers 2 \
+	  $(GNN_FOCAL_FLAG) --select-by $(GNN_SELECT_BY) \
 	  --seed $(SEED) --out-dir checkpoints_ablation/gat_2layer
 	cd $(RESEARCH)/models && $(PYTHON) train_gnn.py --cv-folds 5 --conv gcn \
+	  $(GNN_FOCAL_FLAG) --select-by $(GNN_SELECT_BY) \
 	  --seed $(SEED) --out-dir checkpoints_ablation/gcn_3layer
 
 ## ── Thesis ───────────────────────────────────────────────────────────────────
