@@ -13,6 +13,12 @@
 \usepackage[utf8]{inputenc} %descomentar esta línea si se trabaja en linux
 %\usepackage[latin1]{inputenc} %comentar esta línea si se trabaja en linux
 
+%--- Tipografía exigida por la plantilla UNIR: Calibri.
+%    Carlito es el clon métrico libre de Calibri, compatible con pdfLaTeX.
+\usepackage[T1]{fontenc}
+\usepackage{carlito}
+\renewcommand{\familydefault}{\sfdefault}
+
 
 %simbolos
 \usepackage{amsmath}
@@ -34,11 +40,25 @@
 
 %cabeceras y pies de página
 \usepackage{vmargin}
+%--- Márgenes exigidos por la plantilla UNIR: izq 3,0 cm, der 2,0 cm, sup/inf 2,5 cm.
+\setpapersize{A4}
+\setmarginsrb{3cm}{0.9cm}{2cm}{2.5cm}{40pt}{12pt}{0pt}{24pt}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhfoffset{20pt}
 \renewcommand{\headrulewidth}{0.0pt}
-\setlength{\headheight}{14pt}% 
+\setlength{\headheight}{40pt}%
+
+%--- Formato de párrafo de la plantilla: sin sangría, 6 pt de separación.
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+%--- Títulos de tablas y figuras (arriba), fuente al pie: número en negrita,
+%    nombre en cursiva, según la plantilla UNIR.
+\usepackage{caption}
+\captionsetup{labelfont=bf,textfont=it,labelsep=period,justification=justified,font=small}
+\captionsetup[table]{position=above,skip=6pt}
+\captionsetup[figure]{position=above,skip=6pt}
 
 \renewcommand{\maketitle}{\creaportada}
 
@@ -67,6 +87,9 @@
 \nombreciudad{}
 
 \titleformat{\chapter}[hang]{\vspace{-4cm}\Huge\bfseries\color{azulunir}}{\thechapter. }{0pt}{\Huge\bfseries}
+% Títulos de nivel 2 y 3 en azul, según la plantilla UNIR (Título 2/Título 3).
+\titleformat{\section}{\Large\bfseries\color{azulunir}}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\large\bfseries\color{azulunir}}{\thesubsection.}{0.5em}{}
 
 
 
@@ -153,7 +176,7 @@
 %cabecera del trabajo
 %---------------------------
 \lhead{}
-\rhead{\theauthor\\\@titulacion}
+\rhead{\footnotesize\theauthor\\\itshape\@title}
 %\lfoot{\thetitle}
 \rfoot{\thepage}
 \cfoot[]{}
