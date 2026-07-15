@@ -11,6 +11,7 @@
 %   chapters/06_conclusiones.tex  Cap. 6 Conclusiones y Trabajo Futuro
 %   appendix/acronimos.tex        Apéndice A: Acrónimos
 %   appendix/repositorio.tex      Apéndice B: Repositorio de código
+%   appendix/guia_uso.tex         Apéndice C: Guía de uso y reproducción
 %
 % To compile only selected chapters during editing, uncomment \includeonly:
 %   \includeonly{chapters/05_resultados,chapters/06_conclusiones}
@@ -26,14 +27,24 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{acronym}  % definitions only; list built manually below
+\usepackage{tocloft}
 \graphicspath{{../figures/}}
 \setlength{\headheight}{25.3pt}
 \addtolength{\topmargin}{-11.3pt}
+\raggedbottom
+\emergencystretch=3em
 \newcommand{\safeincludegraphics}[2][]{%
   \includegraphics[#1]{#2}%
 }
 \numberwithin{equation}{chapter}
 \numberwithin{figure}{chapter}
+\newlistof{ecuaciones}{loe}{Índice de Ecuaciones}
+\cftsetindents{ecuaciones}{1.5em}{2.3em}
+\newcommand{\addequationtoindex}[1]{%
+  \addcontentsline{loe}{ecuaciones}{\protect\numberline{\theequation}#1}%
+}
+\newcommand{\startchapter}{\addtocontents{loe}{\protect\addvspace{10pt}}}
+\newcommand{\fuentepropia}{\par\noindent{\footnotesize\textit{Fuente: elaboración propia.}}}
 
 %---------------------------
 % Metadatos del trabajo
@@ -59,28 +70,42 @@
 \maketitle
 
 % ---- Front matter ----------------------------------------
+% Orden mandado por las instrucciones del TFE: el resumen/abstract precede a
+% los índices numerados.
 \frontmatter
-\tableofcontents
-\listoffigures
-\listoftables
 \include{chapters/00_resumen}
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+\listofecuaciones
+\clearpage
 
 % ---- Main chapters ----------------------------------------
 \mainmatter
-\include{chapters/01_introduccion}
-\include{chapters/02_estado_arte}
-\include{chapters/03_objetivos}
-\include{chapters/04_diseno}
-\include{chapters/05_resultados}
-\include{chapters/06_conclusiones}
+\startchapter\include{chapters/01_introduccion}
+\startchapter\include{chapters/02_estado_arte}
+\startchapter\include{chapters/03_objetivos}
+\startchapter\include{chapters/04_diseno}
+\startchapter\include{chapters/05_resultados}
+\startchapter\include{chapters/06_conclusiones}
 
 % ---- Bibliography -----------------------------------------
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Referencias bibliográficas}
 \bibliographystyle{apacite}
 \bibliography{bibliografia}
 
 % ---- Appendices -------------------------------------------
+% Las instrucciones del TFE prescriben la denominación «Anexo» y sitúan el
+% índice de acrónimos tras los anexos de contenido.
 \appendix
-\include{appendix/acronimos}
-\include{appendix/repositorio}
+\renewcommand{\appendixname}{Anexo}
+\startchapter\include{appendix/repositorio}
+\startchapter\include{appendix/guia_uso}
+\startchapter\include{appendix/acronimos}
 
 \end{document}

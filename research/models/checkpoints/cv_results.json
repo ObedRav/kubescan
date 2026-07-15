@@ -1,33 +1,55 @@
 {
   "num_folds": 5,
   "binary": false,
-  "macro_f1_mean": 0.8695430495430495,
-  "macro_f1_std": 0.0753839348628551,
-  "precision_at_5_mean": 0.72,
-  "precision_at_5_std": 0.09797958971132716,
+  "macro_f1_mean": 0.8029125915336138,
+  "macro_f1_std": 0.13653389060342613,
+  "precision_at_5_mean": 0.7200000000000001,
+  "precision_at_5_std": 0.16,
   "precision_at_5_target": 0.7,
-  "accuracy_mean": 0.8633333333333333,
-  "accuracy_std": 0.07607562027351471,
+  "accuracy_mean": 0.9493458401744546,
+  "accuracy_std": 0.034854843823212786,
   "fold_f1s": [
-    0.8424242424242424,
-    0.8857142857142858,
-    0.9407407407407407,
-    0.9407407407407407,
-    0.7380952380952381
+    1.0,
+    0.5799635701275045,
+    0.8628822158233923,
+    0.8013468013468014,
+    0.7703703703703705
   ],
   "fold_p5s": [
+    1.0,
     0.6,
-    0.8,
-    0.8,
-    0.8,
-    0.6
+    0.6,
+    0.6,
+    0.8
   ],
   "model_config": {
+    "conv": "gat",
     "hidden": 64,
     "heads": 4,
     "layers": 3,
     "dropout": 0.3,
     "lr": 0.0005,
-    "epochs": 300
+    "epochs": 300,
+    "focal_loss": false,
+    "focal_gamma": null,
+    "select_by": "p5"
+  },
+  "_provenance": {
+    "created_utc": "2026-07-14T22:23:08.337540+00:00",
+    "git_commit": "14c95e4c9f5e593ddb135e676a6c94c3eca821af",
+    "git_dirty": true,
+    "platform": "Linux x86_64",
+    "versions": {
+      "python": "3.12.13",
+      "torch": "2.11.0+cu128",
+      "torch_geometric": "2.8.0",
+      "sklearn": "1.6.1",
+      "numpy": "2.0.2",
+      "networkx": "3.6.1",
+      "skops": "0.14.0"
+    },
+    "seed": 42,
+    "conv": "gat",
+    "layers": 3
   }
 }

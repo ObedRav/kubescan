@@ -64,9 +64,57 @@ from provenance import provenance
 
 __all__ = ["KubeGAT", "KubeGCN"]
 
+from enum import Enum
 from typing import Final
 
 _GRAD_CLIP_NORM: Final[float] = 2.0
+_FOCAL_GAMMA_DEFAULT: Final[float] = 2.0
+
+
+class SelectMetric(str, Enum):
+    """Validation metric that decides which epoch's weights are kept.
+
+    The project's primary metric is Precision@5 (ranking), but checkpoint
+    selection historically used macro-F1 (classification). With family-atomic
+    CV folds the two can diverge badly — a fold can classify its template
+    family perfectly (F1=1.0) while ranking unseen chains poorly — so P@5
+    selection is offered to align training with the metric that is actually
+    reported against the >0.70 design target. The non-selected metric is the
+    tiebreaker in both modes.
+    """
+
+    MACRO_F1 = "f1"
+    P_AT_5 = "p5"
+
+    def __str__(self) -> str:  # argparse renders choices as 'f1' / 'p5'
+        return self.value
+
+
+# ---------------------------------------------------------------------------
+# Focal loss — down-weights easy examples so rare within-class patterns
+# (e.g. a chain graph whose only escape signal is a corpus-rare flag) still
+# get meaningful gradient instead of being drowned out by common examples of
+# the same class. Class-frequency weighting alone reweights clean/isolated/
+# chain as whole classes; it can't fix a specific rare *pattern* within the
+# chain class being systematically under-scored.
+# ---------------------------------------------------------------------------
+
+class FocalLoss(nn.Module):
+    """Multi-class focal loss (Lin et al. 2017): FL = -alpha_t (1-p_t)^gamma log(p_t)."""
+
+    def __init__(self, alpha: torch.Tensor, gamma: float = _FOCAL_GAMMA_DEFAULT) -> None:
+        super().__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
+        log_probs = F.log_softmax(logits, dim=-1)
+        target_log_probs = log_probs.gather(1, targets.unsqueeze(1)).squeeze(1)
+        target_probs = target_log_probs.exp()
+        alpha_t = self.alpha.to(logits.device)[targets]
+        loss = -alpha_t * (1 - target_probs) ** self.gamma * target_log_probs
+        return loss.mean()
+
 
 # ---------------------------------------------------------------------------
 # GCN ablation baseline
@@ -277,7 +325,11 @@ def train_fold(
         model = torch.compile(model)
 
     class_weights = compute_class_weights(train_set, num_classes).to(device)
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    criterion: nn.Module = (
+        FocalLoss(alpha=class_weights, gamma=args.focal_gamma)
+        if args.focal_loss
+        else nn.CrossEntropyLoss(weight=class_weights)
+    )
 
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=args.lr, weight_decay=args.weight_decay,
@@ -290,6 +342,7 @@ def train_fold(
         torch.cuda.amp.GradScaler() if device.type == "cuda" else None
     )
 
+    best_key    = (-1.0, -1.0)
     best_f1     = 0.0
     best_epoch  = 0
     best_state  = None
@@ -303,10 +356,17 @@ def train_fold(
         scheduler.step()
 
         val_f1 = val_metrics["macro_f1"]
+        val_p5 = val_metrics["precision_at_5"]
         history.append({"epoch": epoch, "train_loss": train_loss, "val_f1": val_f1,
-                         "val_acc": val_metrics["accuracy"]})
+                         "val_p5": val_p5, "val_acc": val_metrics["accuracy"]})
 
-        if val_f1 > best_f1:
+        # Selected metric first, the other as tiebreaker (see SelectMetric).
+        epoch_key = (
+            (val_p5, val_f1) if args.select_by is SelectMetric.P_AT_5
+            else (val_f1, val_p5)
+        )
+        if epoch_key > best_key:
+            best_key   = epoch_key
             best_f1    = val_f1
             best_epoch = epoch
             best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
@@ -375,6 +435,19 @@ def main():
     parser.add_argument("--weight-decay",type=float, default=1e-4)
     parser.add_argument("--patience",    type=int,   default=50,
                         help="Early stopping patience (epochs)")
+    parser.add_argument("--focal-loss",  action="store_true",
+                        help=("Use focal loss instead of plain weighted cross-entropy, "
+                              "to stop rare within-class patterns (e.g. a chain graph "
+                              "whose only escape signal is a corpus-rare flag) from "
+                              "being under-scored relative to common examples."))
+    parser.add_argument("--focal-gamma", type=float, default=_FOCAL_GAMMA_DEFAULT,
+                        help="Focusing parameter for --focal-loss (higher = more focus "
+                             "on hard examples)")
+    parser.add_argument("--select-by",   type=SelectMetric, choices=list(SelectMetric),
+                        default=SelectMetric.MACRO_F1,
+                        help="Validation metric for checkpoint selection: 'f1' "
+                             "(historical default) or 'p5' (the project's primary "
+                             "ranking metric). The other metric breaks ties.")
     # Cross-validation
     parser.add_argument("--cv-folds",    type=int,   default=5,
                         help="Number of CV folds (0 = use train/val/test split)")
@@ -490,6 +563,9 @@ def main():
                     "hidden": args.hidden, "heads": args.heads,
                     "layers": args.layers, "dropout": args.dropout,
                     "lr": args.lr, "epochs": args.epochs,
+                    "focal_loss": args.focal_loss,
+                    "focal_gamma": args.focal_gamma if args.focal_loss else None,
+                    "select_by": args.select_by.value,
                 },
                 "_provenance": provenance(
                     seed=args.seed, conv=args.conv, layers=args.layers,

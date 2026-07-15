@@ -92,17 +92,17 @@
 
 % ----- Kubernetes security / datasets -----------------------
 
-@inproceedings{Rahman2022,
-  author    = {Akond Rahman and Md Rayhanur Rahman and Chris Parnin
-               and Laurie Williams},
-  title     = {Security Smells in Infrastructure as Code: An Investigation
-               of {Ansible}, {Chef}, and {Kubernetes} Scripts},
-  booktitle = {IEEE Transactions on Software Engineering},
-  volume    = {48},
-  number    = {8},
-  pages     = {2827--2843},
-  year      = {2022},
-  doi       = {10.1109/TSE.2021.3054582},
+@article{Rahman2022,
+  author    = {Akond Rahman and Shazibul Islam Shamim and Dibyendu Brinto Bose
+               and Rahul Pandita},
+  title     = {Security Misconfigurations in Open Source {Kubernetes}
+               Manifests: An Empirical Study},
+  journal   = {ACM Transactions on Software Engineering and Methodology},
+  volume    = {32},
+  number    = {4},
+  pages     = {1--36},
+  year      = {2023},
+  doi       = {10.1145/3579639},
 }
 
 @inproceedings{Moustafa2015,
@@ -116,10 +116,11 @@
   doi       = {10.1109/MilCIS.2015.7348942},
 }
 
-@misc{Backes2024,
-  author    = {Jana Backes and Thomas Wies and Martin Strecker},
+@misc{Malul2024,
+  author    = {Ehud Malul and Yair Meidan and Dudu Mimran and Yuval Elovici
+               and Asaf Shabtai},
   title     = {{GenKubeSec}: {LLM}-Based {Kubernetes} Misconfiguration
-               Detection, Explanation, and Remediation},
+               Detection, Localization, Reasoning, and Remediation},
   year      = {2024},
   eprint    = {2405.19954},
   archivePrefix = {arXiv},
@@ -128,37 +129,41 @@
 }
 
 @misc{BishopFox2021,
-  author    = {Seth Tabor},
+  author    = {Seth Art},
   title     = {Bad Pods: {Kubernetes} Pod Privilege Escalation},
   howpublished = {BishopFox Blog},
   year      = {2021},
   url       = {https://bishopfox.com/blog/kubernetes-pod-privilege-escalation},
+  note      = {Accedido: 14 de julio de 2026},
 }
 
 @misc{KubernetesGoat,
-  author    = {Madhuakula},
+  author    = {Madhu Akula},
   title     = {{Kubernetes Goat}: Interactive {Kubernetes} Security Learning
                Playground},
   howpublished = {GitHub},
   year      = {2020},
   url       = {https://github.com/madhuakula/kubernetes-goat},
+  note      = {Accedido: 14 de julio de 2026},
 }
 
 @misc{NSA2022,
   author    = {{National Security Agency} and
                {Cybersecurity and Infrastructure Security Agency}},
-  title     = {{Kubernetes} Hardening Guidance},
+  title     = {{Kubernetes} Hardening Guidance (v1.2)},
   howpublished = {NSA/CISA Technical Report},
   year      = {2022},
   url       = {https://media.defense.gov/2022/Aug/29/2003066362/-1/-1/0/CTR_KUBERNETES_HARDENING_GUIDANCE_1.2_20220829.PDF},
+  note      = {Publicado originalmente en agosto de 2021; revisión v1.2, agosto de 2022. Accedido: 14 de julio de 2026},
 }
 
 @misc{CNCF2022,
   author    = {{Cloud Native Computing Foundation}},
-  title     = {Cloud Native Security Whitepaper v2},
-  howpublished = {CNCF White Paper},
+  title     = {{CNCF} Annual Survey 2021},
+  howpublished = {CNCF Report},
   year      = {2022},
-  url       = {https://github.com/cncf/tag-security/blob/main/security-whitepaper/CNCF_cloud-native-security-whitepaper-Nov2022.pdf},
+  url       = {https://www.cncf.io/reports/cncf-annual-survey-2021/},
+  note      = {Published February 2022. Accedido: 14 de julio de 2026},
 }
 
 @misc{Checkov2021,
@@ -167,6 +172,7 @@
   howpublished = {GitHub},
   year      = {2021},
   url       = {https://github.com/bridgecrewio/checkov},
+  note      = {Accedido: 14 de julio de 2026},
 }
 
 @misc{KubeLinter2021,
@@ -175,6 +181,7 @@
   howpublished = {GitHub},
   year      = {2021},
   url       = {https://github.com/stackrox/kube-linter},
+  note      = {Accedido: 14 de julio de 2026},
 }
 
 @misc{KubernetesDocs2024,
@@ -183,11 +190,12 @@
   howpublished = {kubernetes.io},
   year      = {2024},
   url       = {https://kubernetes.io/docs/},
+  note      = {Accedido: 14 de julio de 2026},
 }
 
 % ----- GNN for cybersecurity --------------------------------
 
-@inproceedings{Bilot2023,
+@article{Bilot2023,
   author    = {Tristan Bilot and Nour El Madhoun and Khaldoun Al Agha
                and Anis Zouaoui},
   title     = {Graph Neural Networks for Intrusion Detection: A Survey},
@@ -208,16 +216,15 @@
   doi       = {10.1109/NOMS54207.2022.9789878},
 }
 
-@article{Cai2023,
-  author    = {Li Cai and Zhi Chen and Linghui Li and Xinrui Han and
-               Yongjun Wang},
-  title     = {AttackG: Constructing Technique Knowledge Graph from
+@inproceedings{Li2022,
+  author    = {Zhenyuan Li and Jun Zeng and Yan Chen and Zhenkai Liang},
+  title     = {{AttacKG}: Constructing Technique Knowledge Graph from
                Cyber Threat Intelligence Reports},
-  journal   = {Computers \& Security},
-  volume    = {132},
-  pages     = {103343},
-  year      = {2023},
-  doi       = {10.1016/j.cose.2023.103343},
+  booktitle = {Computer Security -- ESORICS 2022},
+  series    = {Lecture Notes in Computer Science},
+  pages     = {589--609},
+  year      = {2022},
+  doi       = {10.1007/978-3-031-17140-6_29},
 }
 
 % ----- Tools and frameworks ---------------------------------
@@ -232,7 +239,7 @@
   url       = {https://conference.scipy.org/proceedings/SciPy2008/paper_2/},
 }
 
-@misc{Paszke2019,
+@inproceedings{Paszke2019,
   author    = {Adam Paszke and Sam Gross and Francisco Massa and Adam Lerer
                and James Bradbury and Gregory Chanan and Trevor Killeen
                and Zeming Lin and Natalia Gimelshein and Luca Antiga and others},
@@ -255,24 +262,25 @@
 
 % ----- IaC and DevSecOps -----------------------------------
 
-@article{Kochhar2016,
+@inproceedings{Kochhar2013,
   author    = {Pavneet Singh Kochhar and Tegawend\'{e} F. Bissyand\'{e}
                and David Lo and Lingxiao Jiang},
   title     = {An Empirical Study of Adoption of Software Testing in
                Open Source Projects},
-  journal   = {2013 13th International Conference on Quality Software},
+  booktitle = {2013 13th International Conference on Quality Software},
   year      = {2013},
   doi       = {10.1109/QSIC.2013.57},
 }
 
 @inproceedings{Shamim2020,
-  author    = {Md Shamim Hossain and Akond Rahman},
-  title     = {An Empirical Study of {IoT} Security Aspects at
-               Sentence-Level in Developer Textual Discussions},
-  booktitle = {Information and Software Technology},
-  volume    = {150},
-  year      = {2022},
-  doi       = {10.1016/j.infsof.2022.106970},
+  author    = {Md. Shazibul Islam Shamim and Farzana Ahamed Bhuiyan
+               and Akond Rahman},
+  title     = {{XI} Commandments of {Kubernetes} Security: A Systematization
+               of Knowledge Related to {Kubernetes} Security Practices},
+  booktitle = {2020 IEEE Secure Development (SecDev)},
+  pages     = {58--64},
+  year      = {2020},
+  doi       = {10.1109/SecDev45635.2020.00025},
 }
 
 @inproceedings{Wist2021,
@@ -291,7 +299,7 @@
   title        = {{KubeHound}: Identifying attack paths in {Kubernetes} clusters},
   year         = {2023},
   howpublished = {Open source tool. \url{https://github.com/DataDog/KubeHound}},
-  note         = {Released October 2023},
+  note         = {Released October 2023. Accedido: 14 de julio de 2026},
 }
 
 @misc{IceKube2023,
@@ -299,6 +307,7 @@
   title        = {{IceKube}: Finding complex attack paths in {Kubernetes} clusters},
   year         = {2023},
   howpublished = {Open source tool. \url{https://github.com/WithSecureLabs/IceKube}},
+  note         = {Accedido: 14 de julio de 2026},
 }
 
 @misc{MITRE2021Containers,
@@ -306,7 +315,7 @@
   title        = {{ATT\&CK} for {Containers}},
   year         = {2021},
   howpublished = {\url{https://ctid.mitre.org/projects/attck-for-containers/}},
-  note         = {Incorporated in ATT\&CK version 9},
+  note         = {Incorporated in ATT\&CK version 9. Accedido: 14 de julio de 2026},
 }
 
 @inproceedings{Hutchins2011,
@@ -325,6 +334,7 @@
   year         = {2021},
   howpublished = {Open source tool, CNCF incubating project.
                   \url{https://github.com/kubescape/kubescape}},
+  note         = {Accedido: 14 de julio de 2026},
 }
 
 % ----- Industry reports & new survey references -----------
@@ -335,10 +345,11 @@
   institution  = {Red Hat, Inc.},
   year         = {2024},
   url          = {https://www.redhat.com/en/resources/kubernetes-adoption-security-market-trends-overview},
+  note         = {Accedido: 14 de julio de 2026},
 }
 
 @article{GNNSurvey2024,
-  author    = {Huante Liu and others},
+  author    = {Meihui Zhong and Mingwei Lin and Chao Zhang and Zeshui Xu},
   title     = {A survey on graph neural networks for intrusion detection systems:
                Methods, trends and challenges},
   journal   = {Computers \& Security},
@@ -346,4 +357,15 @@
   pages     = {103821},
   year      = {2024},
   doi       = {10.1016/j.cose.2024.103821},
+}
+
+@inproceedings{Lin2017,
+  author    = {Tsung-Yi Lin and Priya Goyal and Ross Girshick and Kaiming He
+               and Piotr Doll{\'a}r},
+  title     = {Focal Loss for Dense Object Detection},
+  booktitle = {Proceedings of the IEEE International Conference on Computer
+               Vision (ICCV)},
+  pages     = {2980--2988},
+  year      = {2017},
+  doi       = {10.1109/ICCV.2017.324},
 }

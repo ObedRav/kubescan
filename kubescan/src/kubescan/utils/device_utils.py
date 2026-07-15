@@ -40,7 +40,7 @@ def dataloader_kwargs(device: torch.device) -> dict[str, object]:
 
     Workers only help on CUDA (GPU-CPU overlap via async prefetch + pinned memory).
     On MPS and CPU the IPC round-trip to worker processes costs ~17s/epoch vs 0.03s
-    with num_workers=0 — a 580× regression on in-memory data.
+    with num_workers=0 — a 580x regression on in-memory data.
     """
     num_workers = min(_MAX_DATALOADER_WORKERS, os.cpu_count() or 1) if device.type == "cuda" else 0
     return {

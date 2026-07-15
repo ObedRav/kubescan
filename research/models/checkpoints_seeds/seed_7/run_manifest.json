@@ -1,0 +1,171 @@
+{
+  "created_utc": "2026-07-06T02:37:16.823751+00:00",
+  "platform": "Linux x86_64",
+  "git_commit": "f142e1e646fdd6d9405bc75c1166f4d835566760",
+  "versions": {
+    "python": "3.12.13",
+    "torch": "2.11.0+cu128",
+    "torch_geometric": "2.8.0",
+    "sklearn": "1.6.1",
+    "numpy": "2.0.2",
+    "networkx": "3.6.1",
+    "skops": "0.14.0"
+  },
+  "data_checksums": {
+    "rf_dataset.csv": "74cc0c0e87cec26f33a61c887b4fe3b1370b24c705389c078d713cb8c42764ac",
+    "graph_manifest.csv": "3cc2b50c6c7a9d6029be6680cec7df298ee7ba288b75520da647b65d14bf5d84",
+    "graphs_cache.npz": "f210a5cfbb142344d7c1c497900598b81176577e9795aa8d7d1e92f30f81a897",
+    "splits_config.json": "f73875abba9bcbe18c00e79361daacfa6c4b8119a78ffd90415f4f66bd9d8289",
+    "fold_0_train.txt": "dae8a91b5fabbde195d35f1e7876010aea8ddd24073dd017a4e4eb288ccec433",
+    "fold_0_val.txt": "4c6a327fd879886af71be841cb937e4b12c154d995af47d55f83102d239bfbc2",
+    "fold_1_train.txt": "6434a78422037bccb7c65e81a6b52015ab0bb1da48f4c147b4120374e5ab77a9",
+    "fold_1_val.txt": "f8964032bdf68a40fc8486fcc811e8b34b6c08ec70b04bc33757b8bd761e6aad",
+    "fold_2_train.txt": "0329cf4a83386e656b67c168cd11bec5206b741d59252b5c951718c43d8ae541",
+    "fold_2_val.txt": "3c815a1cd20a6a1d0db60ebb112eaad441315ce154d9b30ca392b54333be91f2",
+    "fold_3_train.txt": "ab6c62b3645ecd60d4f24d89481ec2cbe9372fc5afa81485cf5a3882186dd0d5",
+    "fold_3_val.txt": "c12ead7d8a14c9516edf5019d4cf4bd53933f3befd0e0c31a5df9f47bc8337ec",
+    "fold_4_train.txt": "776e70391f909ecf34aa30a6086f28e03e209324bef66c2a04961d8cf8d5945c",
+    "fold_4_val.txt": "0843b22b457b6cb5e2d1c745195d0762e64310e8cc4bb2d39026792540d9917a",
+    "test.txt": "5cc170a218aedefb90495263406419d06ce63a646d3d132d25769d2efbd59bc3",
+    "train.txt": "3e86b92d5933cfd1487912d93a9e17608d740bb9dc5506cbf57c05a922e72943",
+    "val.txt": "554ef24e40e3d3a4453096af8cff88fa1ed33b4b1ce61d83697df8afccfd27bb"
+  },
+  "checkpoint_checksums": {
+    "cv_results.json": "338f270814c859c645f09fd46444fb4e2510f2106a9e1c86b9560210dadfd06f",
+    "ga_results.json": "64f48b96af1d87743920854bd639b475e3cd105274f7d93541a58fc4cdffe1b8",
+    "ga_weights.json": "4fe4ff674e6a4861131ef5349b1d469809891bbf903d758e08c9f13d5fbef8f9",
+    "gnn_config.json": "87fce17bd80c1b36f60c9877858bd1cc690d5ffec5cbbc19d09f0f63aa864fb8",
+    "gnn_fold_0.pt": "8b3dce7ba194cb6dc5d839ea9b56cd5b2ff5eb0c0aa43db95ec8f3a4eef540a6",
+    "gnn_fold_1.pt": "3e40683fd86dbb42ee81bb8115abaaa383aa83796678b5053b0464908e8943ac",
+    "gnn_fold_2.pt": "86b80aa19a97cfbcd1d7c197059a1b513f6dbffc5ea3896cc03c662e1bc3da49",
+    "gnn_fold_3.pt": "790e19aadbb0f9b4957d57b22ce3e08b1e1d0798bf91c53a1bd6afbbe5f37d28",
+    "gnn_fold_4.pt": "4ff163a6e5f33e7fdae6c8c1aa258b710d35ff3c8166561f988921ae8e6be654",
+    "rf_model.skops": "675c7a4d7e214c68874648bcf86d9006ee689209863c526ebe7a5cea10ab2f36",
+    "rf_results.json": "d9929f77e91bde43c281cb4b33333eb091d03be6cb1a89264d1aea20a2837c68",
+    "rf_severity.skops": "0fec54be0244f3bbec1d0402263b6e09eb6c3a111c863f7bdc3a566f73fbdcc4",
+    "test_results.json": "169a2c1d080a54622b86d12d03c2b7515553bfad6d061c3a08d7e6cce5b8040b"
+  },
+  "headline_metrics": {
+    "gnn_cv": {
+      "num_folds": 5,
+      "binary": false,
+      "macro_f1_mean": 0.8511726718208179,
+      "macro_f1_std": 0.024705275135734384,
+      "precision_at_5_mean": 0.52,
+      "precision_at_5_std": 0.0979795897113271,
+      "precision_at_5_target": 0.7,
+      "accuracy_mean": 0.9507806549885757,
+      "accuracy_std": 0.010861022414945016,
+      "fold_f1s": [
+        0.8653514063350128,
+        0.8625867686641167,
+        0.8834834834834835,
+        0.8223443223443224,
+        0.8220973782771536
+      ],
+      "fold_p5s": [
+        0.6,
+        0.4,
+        0.6,
+        0.4,
+        0.6
+      ],
+      "model_config": {
+        "conv": "gat",
+        "hidden": 64,
+        "heads": 4,
+        "layers": 3,
+        "dropout": 0.3,
+        "lr": 0.0005,
+        "epochs": 300
+      },
+      "_provenance": {
+        "created_utc": "2026-07-06T02:35:00.089381+00:00",
+        "git_commit": "f142e1e646fdd6d9405bc75c1166f4d835566760",
+        "git_dirty": true,
+        "platform": "Linux x86_64",
+        "versions": {
+          "python": "3.12.13",
+          "torch": "2.11.0+cu128",
+          "torch_geometric": "2.8.0",
+          "sklearn": "1.6.1",
+          "numpy": "2.0.2",
+          "networkx": "3.6.1",
+          "skops": "0.14.0"
+        },
+        "seed": 42,
+        "conv": "gat",
+        "layers": 3
+      }
+    },
+    "ga": {
+      "w_rf": 0.33742524431364523,
+      "w_gnn": 0.3278789386574905,
+      "w_escape": 0.33469581702886425,
+      "p_at_k": 0.8,
+      "fpr_clean": 0.0,
+      "objective": 0.8599999999999999,
+      "k": 5,
+      "alpha": 0.7,
+      "beta": 0.3,
+      "min_weight": 0.1,
+      "reg_lambda": 2.0,
+      "floor_penalty": 0.0,
+      "select_method": "ga",
+      "p_at_k_ceiling": 1.0,
+      "mode": "oof",
+      "oof_n_graphs": 508,
+      "oof_n_chains": 31,
+      "grid_best": {
+        "w_rf": 0.30000000000000004,
+        "w_gnn": 0.1,
+        "w_escape": 0.6,
+        "p_at_k": 0.8
+      },
+      "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) that discourages degenerate zero-weight solutions.",
+      "_provenance": {
+        "created_utc": "2026-07-06T02:35:49.247576+00:00",
+        "git_commit": "f142e1e646fdd6d9405bc75c1166f4d835566760",
+        "git_dirty": true,
+        "platform": "Linux x86_64",
+        "versions": {
+          "python": "3.12.13",
+          "torch": "2.11.0+cu128",
+          "torch_geometric": "2.8.0",
+          "sklearn": "1.6.1",
+          "numpy": "2.0.2",
+          "networkx": "3.6.1",
+          "skops": "0.14.0"
+        },
+        "seed": 42,
+        "mode": "oof",
+        "select_method": "ga",
+        "generations": 150,
+        "pop_size": 60
+      }
+    },
+    "test": {
+      "precision_at_1": 1.0,
+      "precision_at_3": 0.6666666666666666,
+      "precision_at_5": 0.8,
+      "precision_at_5_ceiling": 1.0,
+      "hits_ceiling": false,
+      "fpr_clean": 0.0
+    },
+    "test_cis": {
+      "n_bootstrap": 10000,
+      "p_at_k_ci95": [
+        0.4,
+        1.0
+      ],
+      "fpr_clean_ci95": [
+        0.0,
+        0.0
+      ],
+      "macro_f1_ci95": [
+        0.48151826106145873,
+        0.8459366803706425
+      ]
+    }
+  }
+}

@@ -1,22 +1,48 @@
 {
-  "w_rf": 0.33742524431364523,
-  "w_gnn": 0.3278789386574905,
-  "w_escape": 0.33469581702886425,
+  "w_rf": 0.5168437819447826,
+  "w_gnn": 0.11549761749148135,
+  "w_escape": 0.367658600563736,
   "p_at_k": 0.6,
   "fpr_clean": 0.0,
   "objective": 0.72,
   "k": 5,
   "alpha": 0.7,
   "beta": 0.3,
+  "min_weight": 0.1,
+  "reg_lambda": 2.0,
+  "mrr_weight": 0.0,
+  "chain_mrr": 0.07331371570225433,
+  "floor_penalty": 0.0,
+  "select_method": "ga",
   "p_at_k_ceiling": 1.0,
   "mode": "oof",
-  "oof_n_graphs": 81,
-  "oof_n_chains": 21,
+  "oof_n_graphs": 513,
+  "oof_n_chains": 32,
   "grid_best": {
-    "w_rf": 0.0,
-    "w_gnn": 0.0,
-    "w_escape": 1.0,
-    "p_at_k": 0.8
+    "w_rf": 0.8,
+    "w_gnn": 0.1,
+    "w_escape": 0.1,
+    "p_at_k": 0.6
   },
-  "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES = [0,1,2,3,4,5,7,24] in 26-dim node feature vector."
+  "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) that discourages degenerate zero-weight solutions , and a chain-MRR tie-breaker (mrr_weight * mean reciprocal rank of true chains) that orders solutions within a P@k plateau.",
+  "_provenance": {
+    "created_utc": "2026-07-14T22:23:33.604247+00:00",
+    "git_commit": "14c95e4c9f5e593ddb135e676a6c94c3eca821af",
+    "git_dirty": true,
+    "platform": "Linux x86_64",
+    "versions": {
+      "python": "3.12.13",
+      "torch": "2.11.0+cu128",
+      "torch_geometric": "2.8.0",
+      "sklearn": "1.6.1",
+      "numpy": "2.0.2",
+      "networkx": "3.6.1",
+      "skops": "0.14.0"
+    },
+    "seed": 42,
+    "mode": "oof",
+    "select_method": "ga",
+    "generations": 150,
+    "pop_size": 60
+  }
 }

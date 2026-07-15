@@ -7,10 +7,11 @@
 
 La adopción masiva de \textit{Kubernetes} como plataforma de orquestación de
 contenedores ha transformado la manera en que las organizaciones despliegan y gestionan
-sus aplicaciones. La \textit{Cloud Native Computing Foundation} reporta que el 96\,\%
-de las organizaciones utilizan o evalúan \textit{Kubernetes}, y que el 53\,\% ha
-sufrido un incidente de seguridad en entornos de contenedores en el último año
-\citep{CNCF2022}. Sin embargo, esta proliferación ha ampliado considerablemente la
+sus aplicaciones. La \ac{CNCF} reporta que el 96\,\%
+de las organizaciones utilizan o evalúan \textit{Kubernetes} \citep{CNCF2022}, y
+los informes sectoriales de seguridad documentan que la mayoría de las
+organizaciones ha sufrido al menos un incidente de seguridad en sus entornos de
+contenedores durante el último año \citep{RedHat2024}. Sin embargo, esta proliferación ha ampliado considerablemente la
 superficie de ataque: una sola misconfiguration en un manifiesto \acs{YAML} puede habilitar
 la escalada de privilegios desde un contenedor comprometido hasta el nodo anfitrión
 del clúster o, en casos extremos, hasta la infraestructura subyacente completa
@@ -22,15 +23,16 @@ misconfiguraciones aisladas en manifiestos individuales, pero no modelan las rel
 entre recursos del clúster. Una única flag de privilegio en un pod no es suficiente
 para determinar si existe una cadena de ataque viable; es la combinación de nodos de
 escape con recursos de movimiento lateral la que habilita rutas de explotación
-completas, tal como describen las técnicas de escalada de privilegios en contenedores
-documentadas por \citeauthor{Hutchins2011} \citeyear{Hutchins2011} e incorporadas
+completas, siguiendo la lógica de encadenamiento de etapas del modelo de
+\textit{kill chain} de \citeauthor{Hutchins2011} \citeyear{Hutchins2011}; las
+técnicas concretas de escalada de privilegios en contenedores están catalogadas
 en el marco MITRE ATT\&CK for Containers \citep{MITRE2021Containers}.
 
 Herramientas más recientes como \textit{KubeHound} \citep{KubeHound2023} e
 \textit{IceKube} \citep{IceKube2023} abordan este problema construyendo grafos de
 ataque sobre clústeres activos. Sin embargo, requieren acceso con privilegios al
 servidor \acs{API} de \textit{Kubernetes}, lo que limita su aplicabilidad como control
-preventivo en el pipeline de integración y entrega continua (CI/CD) —un principio
+preventivo en el pipeline de \ac{CICD} —un principio
 conocido como \textit{shift-left security}: adelantar los controles de seguridad a
 las etapas más tempranas del desarrollo.
 
@@ -58,15 +60,16 @@ Formalmente, dado un conjunto de manifiestos \ac{YAML} que describen un clúster
 La restricción de operar sobre manifiestos \ac{YAML} estáticos —sin requerir acceso al
 clúster activo— es un requisito de diseño explícito que diferencia el presente trabajo
 de las soluciones de grafo de ataque existentes y lo posiciona como un control de
-seguridad integrable en pipelines CI/CD.
+seguridad integrable en pipelines \acs{CICD}.
 
 \section{Objetivos generales}
 
 El objetivo general es diseñar, implementar y evaluar un sistema de detección de
-cadenas de ataque en \textit{Kubernetes} que supere las limitaciones de los enfoques
-basados en análisis estático puro, mediante la combinación de aprendizaje automático
-clásico y aprendizaje sobre grafos, operando exclusivamente sobre manifiestos \ac{YAML}
-sin necesidad de un clúster activo.
+cadenas de ataque en \textit{Kubernetes} que complemente los enfoques de análisis
+estático por manifiesto individual con el contexto estructural del clúster, mediante
+la combinación de aprendizaje automático clásico y aprendizaje sobre grafos, operando
+principalmente sobre manifiestos \ac{YAML} estáticos, si bien incorpora opcionalmente
+una vía de consulta directa a un clúster activo (Capítulo~\ref{cap:objetivos}).
 
 \section{Estructura del trabajo}
 
@@ -78,8 +81,9 @@ de \textit{kubescan}. El Capítulo~\ref{cap:objetivos} define los objetivos espe
 y la metodología de cinco fases. El Capítulo~\ref{cap:diseno} describe el diseño e
 implementación del sistema, incluyendo el análisis de requisitos, la arquitectura de
 tres capas, la construcción del dataset y el grafo, y la tabla completa de las
-25~características del clasificador. El Capítulo~\ref{cap:resultados} presenta los
-resultados experimentales de cada capa, la validación cruzada con herramientas
-externas y la evaluación funcional de la herramienta. El
+28~características del clasificador. El Capítulo~\ref{cap:resultados} presenta los
+resultados experimentales de cada capa, la validación cruzada con una
+herramienta de auditoría externa (\textit{Checkov}) y la evaluación funcional de
+la herramienta. El
 Capítulo~\ref{cap:conclusiones} recoge las conclusiones vinculadas a cada objetivo,
 las limitaciones, las consideraciones éticas y las líneas de trabajo futuro.

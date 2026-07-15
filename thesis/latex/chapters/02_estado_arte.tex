@@ -18,7 +18,7 @@ trabajo respecto a ellos.
 
 \textit{Kubernetes} es la plataforma de orquestación de contenedores dominante en
 entornos de producción empresariales, con un 96\,\% de organizaciones que la utilizan
-o evalúan según la encuesta anual de la \textit{Cloud Native Computing Foundation}
+o evalúan según la encuesta anual de la \ac{CNCF}
 \citep{CNCF2022}. A pesar de su adopción generalizada, la seguridad sigue siendo uno
 de los principales retos operacionales: el informe \textit{State of Kubernetes Security}
 de Red Hat 2024 \citep{RedHat2024} revela que el 89\,\% de las organizaciones sufrió
@@ -49,9 +49,9 @@ modeliza como nodos de escape en el grafo del clúster.
 Los trabajos de BishopFox \citep{BishopFox2021} demostraron empíricamente que un
 único pod con configuración \textit{everything-allowed} puede comprometer el nodo
 anfitrión en segundos y pivotar lateralmente a través del clúster. La plataforma
-educativa \textit{Kubernetes Goat} \citep{KubernetesGoat} sistematiza 14 escenarios
-de vulnerabilidad con los que se pueden reproducir rutas de explotación completas en
-un entorno controlado. Ambas fuentes son la base de las etiquetas de cadena de ataque
+educativa \textit{Kubernetes Goat} \citep{KubernetesGoat} sistematiza más de
+veinte escenarios de vulnerabilidad con los que se pueden reproducir rutas de
+explotación completas en un entorno controlado. Ambas fuentes son la base de las etiquetas de cadena de ataque
 del presente trabajo.
 
 El marco taxonómico de referencia para los ataques en entornos de contenedores y
@@ -60,45 +60,46 @@ El marco taxonómico de referencia para los ataques en entornos de contenedores 
 ATT\&CK. Este marco describe las tácticas y técnicas empleadas por adversarios
 a nivel de orquestador (\textit{Kubernetes}) y a nivel de contenedor (\textit{Docker}),
 incluyendo las que este trabajo detecta directamente: escape de contenedor hacia el
-nodo anfitrión (T1611), movimiento lateral mediante abuso de cuentas de servicio
-con permisos excesivos (T1078.004, \textit{Valid Accounts: Cloud Accounts}),
-y escalada de privilegios mediante permisos \acs{RBAC} de escalada (T1548,
-\textit{Abuse Elevation Control Mechanism}). La alineación
+nodo anfitrión (T1611, \textit{Escape to Host}), movimiento lateral mediante el uso
+de \textit{tokens} de cuentas de servicio (T1550.001, \textit{Use Alternate
+Authentication Material: Application Access Token}) y abuso de cuentas válidas
+(T1078, \textit{Valid Accounts}). La alineación
 entre las \textit{escape flags} del presente sistema y las técnicas ATT\&CK valida que
 el espacio de detección cubre los vectores de ataque documentados y más explotados en
 la industria.
 
 % -----------------------------------------------------------
-\section{Análisis estático de \ac{IaC}}
+\section{Análisis estático de \acs{IaC}}
 % -----------------------------------------------------------
 
 El análisis estático de manifiestos \ac{IaC} cuenta con una larga trayectoria en la
-literatura. Rahman et~al.\ \citep{Rahman2022} construyeron el primer conjunto de datos
-de referencia para manifiestos \textit{Kubernetes} extraídos de repositorios públicos
-de GitHub y GitLab, etiquetados mediante análisis estático multi-herramienta. Su
-conjunto de datos —la base del presente trabajo— contiene más de 1.900 manifiestos
-con 57 columnas de características binarias que codifican la presencia o ausencia de
-patrones de misconfiguration.
+literatura. Rahman et~al.\ \citep{Rahman2022} construyeron un conjunto de datos
+de referencia para manifiestos \textit{Kubernetes} extraídos de repositorios
+públicos, con 2.039 manifiestos de 92 repositorios etiquetados en 11 categorías de
+\textit{misconfiguration} mediante su propia herramienta de análisis estático. De
+ese trabajo, el presente sistema recupera y codifica 1.906 manifiestos de GitHub y
+GitLab como vectores de características binarias que indican la presencia o ausencia
+de cada patrón.
 
 Las herramientas industriales actuales más utilizadas son \textit{Checkov}
-\citep{Checkov2021}, que verifica más de 400 políticas de seguridad predefinidas, y
+\citep{Checkov2021}, que verifica más de mil políticas de seguridad predefinidas, y
 \textit{kube-linter} \citep{KubeLinter2021}, especializado en buenas prácticas de
 \textit{Kubernetes}. Ambas operan al nivel de manifiesto individual y no detectan
 patrones distribuidos entre varios recursos del clúster. También destaca
 \textit{Kubescape} \citep{Kubescape2021}, una plataforma de seguridad de código
-abierto integrada en la \textit{Cloud Native Computing Foundation} que combina
+abierto integrada en la \ac{CNCF} que combina
 análisis estático con validación de cumplimiento contra los marcos \ac{NSA}, MITRE ATT\&CK
 y \acs{CIS} \textit{Benchmarks}. Al igual que Checkov y kube-linter, sin embargo, Kubescape
 evalúa recursos de forma independiente y no construye ningún modelo del clúster como
 estructura relacional.
 
 La noción de \textit{Unified Misconfiguration Index} (\acs{UMI}), propuesta por
-\citeauthor{Backes2024} \citeyear{Backes2024} en \textit{GenKubeSec}, agrega las
-señales de múltiples herramientas en un único índice de riesgo, conceptualmente
-equivalente al \textit{risk\_score} generado por la Capa~1 del presente sistema.
-Su propuesta de combinar \textit{Checkov}, \textit{kube-linter} y un modelo de
-lenguaje de gran escala (\acs{LLM}) es complementaria a la del presente trabajo, aunque
-opera en el mismo nivel de manifiesto individual.
+\citeauthor{Malul2024} \citeyear{Malul2024} en \textit{GenKubeSec}, normaliza y
+unifica las etiquetas de múltiples herramientas de análisis basadas en reglas para
+poder compararlas, un problema afín al de generar un \textit{risk\_score} unificado
+como el de la Capa~1 del presente sistema. Su propuesta, que incorpora un modelo de
+lenguaje de gran escala (\acs{LLM}) para la clasificación, es complementaria a la de
+este trabajo, aunque opera en el mismo nivel de manifiesto individual.
 
 Una limitación estructural de todas las herramientas anteriores es que operan sobre
 manifiestos en aislamiento: saben que un pod tiene \texttt{privileged: true}, pero
@@ -126,9 +127,11 @@ combinación que maximiza la métrica objetivo sobre los pliegues de validación
 
 En el dominio de la detección de intrusiones en red, el conjunto de datos UNSW-NB15
 \citep{Moustafa2015} se ha convertido en un referente de evaluación para clasificadores
-supervisados, con una distribución de clases (77\,\% tráfico benigno vs.\ 23\,\%
-ataques) análoga a la del conjunto de manifiestos de este trabajo (77,7\,\% seguros
-vs.\ 22,3\,\% misconfigured). El desequilibrio de clases es un problema generalizado
+supervisados. El conjunto de manifiestos de este trabajo presenta un desequilibrio
+de clases moderado (56,3\,\% seguros vs.\ 43,7\,\% \textit{misconfigured}); el
+desafío de desequilibrio más severo se concentra en las \textit{flags} de escape
+individuales, algunas presentes en menos del 1\,\% de los manifiestos reales.
+El desequilibrio de clases es un problema generalizado
 en los datasets de seguridad: las misconfiguraciones críticas son rarísimas en
 repositorios reales, lo que obliga a adoptar estrategias explícitas de compensación.
 La alternativa más común es asignar pesos de clase inversamente proporcionales a su
@@ -140,7 +143,7 @@ entre muestras binarias puede generar vectores fuera del espacio semántico vál
 
 Trabajos más recientes han explorado el uso de modelos de lenguaje de gran escala
 (\ac{LLM}s) para la detección y remediación de misconfiguraciones en \textit{Kubernetes}
-\citep{Backes2024}. Si bien los \ac{LLM}s ofrecen capacidades de razonamiento semántico
+\citep{Malul2024}. Si bien los \ac{LLM}s ofrecen capacidades de razonamiento semántico
 superiores, requieren recursos computacionales sustancialmente mayores, producen
 salidas no deterministas y son más opacos que los clasificadores clásicos, lo que
 dificulta su interpretación en auditorías de seguridad donde la trazabilidad de las
@@ -155,6 +158,7 @@ clasificación de manifiestos \ac{IaC} responde a tres criterios documentados en
 literatura de aprendizaje automático aplicado a la seguridad:
 
 \begin{enumerate}
+\raggedright
   \item \textbf{Robustez ante datos binarios y escasos.} Las características del
     presente trabajo son en su mayoría binarias (presencia/ausencia de una
     misconfiguration), con alta proporción de ceros. Los \textit{Random Forests}
@@ -177,11 +181,14 @@ literatura de aprendizaje automático aplicado a la seguridad:
     presencia de desequilibrio de clases.
 \end{enumerate}
 
+La Tabla~\ref{tab:ml_comparison} resume esta comparativa entre algoritmos
+candidatos para la Capa~1.
+
 \begin{table}[htbp]
 \centering\small
 \caption{Comparativa de algoritmos de \acs{ML} para clasificación de manifiestos \ac{IaC}}
 \label{tab:ml_comparison}
-\begin{tabular}{@{}lcccl@{}}
+\begin{tabular}{@{}p{2.7cm}cp{2.1cm}p{2cm}p{4.1cm}@{}}
 \toprule
 Algoritmo & Binario & Desequilibrio & Prob.\ calibrada & Observación \\
 \midrule
@@ -192,6 +199,7 @@ Red Neuronal (\acs{MLP}) & \checkmark & Con pesos & Variable & Requiere normaliz
 \textit{k}-NN & \checkmark & No & Estimada & Costoso en inferencia \\
 \bottomrule
 \end{tabular}
+\fuentepropia
 \end{table}
 
 Trabajos como \citeauthor{Wist2021} \citeyear{Wist2021}, que aplican técnicas de \ac{ML} a
@@ -221,6 +229,7 @@ representación del nodo \(v\) se actualiza como:
   \right)
   \label{eq:gnn_update}
 \end{equation}
+\addequationtoindex{Actualización de la representación de un nodo en una capa GNN}
 
 donde \(\mathcal{N}(v)\) es el conjunto de vecinos de \(v\), \(\mathbf{W}^{(l)}\) y
 \(\mathbf{b}^{(l)}\) son parámetros entrenables de la capa \(l\), y \(\sigma\) es una
@@ -255,6 +264,7 @@ de nodos \((v, u)\) el coeficiente de atención es:
   }
   \label{eq:gat_attn}
 \end{equation}
+\addequationtoindex{Coeficiente de atención en Graph Attention Networks}
 
 donde \(\mathbf{a}\) es un vector de parámetros de atención y \(\|\) denota
 concatenación. Este diseño es especialmente apropiado para grafos de clúster
@@ -262,23 +272,26 @@ concatenación. Este diseño es especialmente apropiado para grafos de clúster
 debe pesar más que una arista de proximidad de directorio (\textit{dir\_proximity}).
 El modelo \textit{How Powerful are \ac{GNN}s?} de \citeauthor{Xu2019} \citeyear{Xu2019}
 establece que la capacidad discriminativa de las \ac{GNN}s está acotada por el test de
-isomorfismo de Weisfeiler-Lehman, y que la suma de vecinos maximiza el poder expresivo.
+isomorfismo de Weisfeiler-Lehman, y que la suma de vecinos maximiza el poder
+expresivo frente a la media o el máximo. En este trabajo se adopta un
+\textit{pooling} combinado de media y máximo por su robustez ante grafos de tamaño
+muy variable, aceptando explícitamente ese compromiso de expresividad.
 Esta intuición motiva el uso de \textit{pooling} combinado de media y máximo en la
 Capa~2.
 
 % -----------------------------------------------------------
-\section{\ac{GNN}s aplicadas a ciberseguridad}
+\section{\acs{GNN}s aplicadas a ciberseguridad}
 % -----------------------------------------------------------
 
 La aplicación de \ac{GNN}s a la detección de amenazas es un campo emergente con rápido
-crecimiento. \citeauthor{Bilot2023} \citeyear{Bilot2023} proporcionan la primera
-revisión exhaustiva de los enfoques basados en \ac{GNN} para la detección de intrusiones en
-red (IEEE Access, vol.~11, pp.~49114--49139), identificando tres paradigmas: detección
+crecimiento. \citeauthor{Bilot2023} \citeyear{Bilot2023} proporcionan una
+revisión exhaustiva de los enfoques basados en \ac{GNN} para la detección de
+intrusiones en red, identificando tres paradigmas: detección
 de anomalías en grafos de flujo, clasificación de nodos en grafos de comunicación, y
 clasificación de grafos de comportamiento por muestra. Una segunda revisión publicada
 en \textit{Computers and Security} en 2024 \citep{GNNSurvey2024} amplía esta
-taxonomía e identifica que las publicaciones sobre detección de anomalías con \ac{GNN}s
-crecieron de 11 en 2022 a 39 en 2024, evidenciando el interés creciente del área.
+taxonomía y documenta un crecimiento sostenido de la investigación en el área en
+los últimos años.
 
 \textit{E-GraphSAGE} \citep{Lo2022} propone representar flujos de red como grafos de
 transacción para clasificación de intrusiones en \acs{IoT}, alcanzando tasas de detección
@@ -289,8 +302,8 @@ grafo de amenaza. Una diferencia clave es que \textit{E-GraphSAGE} modela flujos
 tráfico en tiempo real, mientras que este trabajo modela configuraciones declarativas
 estáticas, lo que permite operar antes del despliegue.
 
-\citeauthor{Cai2023} \citeyear{Cai2023} construyen grafos de conocimiento de técnicas
-de ataque a partir de informes de inteligencia de amenazas (\acs{CTI}), demostrando que el
+\citeauthor{Li2022} \citeyear{Li2022} construyen grafos de conocimiento de técnicas
+de ataque a partir de informes de inteligencia de amenazas (\acs{CTI}) y demuestran que el
 razonamiento estructural sobre relaciones entre técnicas mejora la predicción de
 campañas de ataque. Este enfoque comparte con el presente trabajo la intuición central
 de que el grafo de relaciones entre recursos es más informativo que la suma de sus
@@ -304,8 +317,8 @@ grafos etiquetados de alta calidad para ciberseguridad. Tanto \citeauthor{Bilot2
 \citeyear{Bilot2023} como \citeauthor{GNNSurvey2024} \citeyear{GNNSurvey2024}
 identifican la construcción de benchmarks estandarizados como el principal obstáculo
 para el avance del área, lo que refuerza la contribución del presente trabajo al
-generar un conjunto de datos original de 96 grafos de clúster con etiquetas de cadena
-de ataque.
+generar un conjunto de datos original de 599 grafos de clúster (1.154 tras
+aumentación de datos) con etiquetas de cadena de ataque.
 
 % -----------------------------------------------------------
 \section{Detección de cadenas de ataque y grafos de ataque en Kubernetes}
@@ -329,20 +342,21 @@ detección de rutas de ataque en \textit{Kubernetes} mediante grafos:
 de la consulta directa al servidor \ac{API} de \textit{Kubernetes}, almacena el resultado
 en JanusGraph y permite explorar las rutas de ataque más cortas mediante el lenguaje
 de consulta Gremlin. El proyecto fue motivado por la misma intuición que subyace al
-presente trabajo, formulada por John Lambert: \textit{«los defensores piensan en
-listas, los atacantes piensan en grafos»} \citep{KubeHound2023}. KubeHound cubre un
+presente trabajo, formulada por John Lambert y citada en su documentación:
+\textit{«los defensores piensan en listas, los atacantes piensan en grafos»}
+\citep{KubeHound2023}. KubeHound cubre un
 amplio conjunto de ataques y ha sido adoptado por equipos de seguridad en producción.
 
-\textbf{IceKube} (WithSecure/ReversecLabs, 2023) sigue un enfoque análogo, basado
-en Neo4j, y permite definir rutas de ataque mediante consultas Cypher. Implementa
-actualmente 25 técnicas de ataque como relaciones en el grafo y puede encontrar
+\textbf{IceKube} \citep{IceKube2023} sigue un enfoque análogo, basado
+en Neo4j, y permite definir rutas de ataque mediante consultas Cypher. Modela un
+amplio conjunto de técnicas de ataque como relaciones en el grafo y puede encontrar
 rutas desde cualquier identidad de bajo privilegio hasta \textit{cluster-admin}.
 
 La diferencia fundamental entre estas herramientas y \textit{kubescan} es de
 paradigma: KubeHound e IceKube operan sobre un \textbf{clúster activo}, requiriendo
 acceso con privilegios elevados a \texttt{kubectl}. \textit{kubescan}, en cambio,
 opera sobre \textbf{manifiestos \ac{YAML} estáticos} antes del despliegue, integrándose
-en el pipeline CI/CD como un control de seguridad \textit{shift-left}. Además, ambas
+en el pipeline \acs{CICD} como un control de seguridad \textit{shift-left}. Además, ambas
 herramientas utilizan búsqueda de rutas mediante consultas ad-hoc en bases de datos
 de grafos, sin componente de aprendizaje automático supervisado; \textit{kubescan}
 es el primer sistema, según la revisión bibliográfica realizada en este trabajo (Sección~\ref{sec:sintesis}), que combina análisis estático
@@ -365,18 +379,18 @@ de clúster: el propio análisis del dataset de Rahman et~al.\ confirma que
 \texttt{TRUE\_HOST\_PID} —la flag de escape más peligrosa— aparece en sólo el
 0,3\,\% de los manifiestos reales. En tercer lugar, las herramientas de grafo de
 ataque más avanzadas (KubeHound, IceKube) requieren un clúster activo, lo que impide
-su uso como control preventivo en el pipeline CI/CD.
+su uso como control preventivo en el pipeline \acs{CICD}.
 
 La Tabla~\ref{tab:comparativa} resume el posicionamiento de \textit{kubescan} frente
 a las principales herramientas del estado del arte.
 
 \begin{table}[htbp]
-\centering
+\centering\small
 \caption{Comparativa de herramientas de seguridad para Kubernetes}
 \label{tab:comparativa}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
-Herramienta & Análisis estático & Requiere clúster & Grafos & \ac{ML} supervisado \\
+Herramienta & \shortstack{Análisis\\estático} & \shortstack{Requiere\\clúster} & Grafos & \shortstack{\ac{ML}\\supervisado} \\
 \midrule
 Checkov \citep{Checkov2021} & \checkmark & No & No & No \\
 kube-linter \citep{KubeLinter2021} & \checkmark & No & No & No \\
@@ -387,15 +401,16 @@ IceKube \citep{IceKube2023} & No & Sí & \checkmark & No \\
 \textbf{kubescan} & \checkmark & \textbf{No} & \checkmark & \checkmark \\
 \bottomrule
 \end{tabular}
+\fuentepropia
 \end{table}
 
 El sistema \textit{kubescan} presentado en este trabajo responde a las tres carencias
 identificadas: adopta una arquitectura de grafo heterogéneo con tipos de arista
 semánticamente significativos para el dominio \textit{Kubernetes}, combina el análisis
 estático (Capa~1) con el razonamiento estructural (Capa~2) en un \textit{ensemble}
-optimizado (Capa~3), y contribuye un conjunto de datos de 96~grafos de clúster con
-etiquetas de cadena de ataque derivadas de reglas de seguridad explícitas y
-auditables. Al operar sobre manifiestos \ac{YAML} sin requerir acceso al clúster,
-\textit{kubescan} se posiciona como un control preventivo integrable en pipelines
-CI/CD, complementario a —y no sustituto de— las herramientas de análisis de clúster
-activo como KubeHound.
+optimizado (Capa~3), y contribuye un conjunto de datos de 599~grafos de clúster
+originales con etiquetas de cadena de ataque derivadas de reglas de seguridad
+explícitas y auditables. Al operar sobre manifiestos \ac{YAML} sin requerir acceso
+al clúster, \textit{kubescan} se posiciona como un control preventivo integrable en
+pipelines \acs{CICD}, complementario a —y no sustituto de— las herramientas de
+análisis de clúster activo como KubeHound.

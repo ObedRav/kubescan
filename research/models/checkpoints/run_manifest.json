@@ -1,117 +1,168 @@
 {
-  "created_utc": "2026-06-11T12:51:50.809883+00:00",
+  "created_utc": "2026-07-14T22:32:50.185643+00:00",
   "platform": "Darwin arm64",
-  "git_commit": null,
+  "git_commit": "14c95e4c9f5e593ddb135e676a6c94c3eca821af",
   "versions": {
     "python": "3.10.17",
-    "torch": "2.11.0",
-    "torch_geometric": "2.7.0",
+    "torch": "2.12.0",
+    "torch_geometric": "2.8.0",
     "sklearn": "1.7.2",
     "numpy": "2.2.6",
     "networkx": "3.4.2",
     "skops": "0.14.0"
   },
   "data_checksums": {
-    "rf_dataset.csv": "cff671744e2fa42a219acc398f7cea76da06a7436a6b0b6ac5b887d809853bce",
-    "graph_manifest.csv": "41a8f65199dddf08df71dadc7ef6c20ab7f34209b73ae0a47dafeab4f2bf56f3",
-    "graphs_cache.npz": "364fe9a204d4508fdee20e97f05e7b2ed81d261fdd111326661fc2c7bc65639d",
-    "splits_config.json": "9439b6a981393ee88df237511bc58401554aa534e4351443b918c4b6998ce547",
-    "fold_0_train.txt": "97cf23531d0061a5e02169daa78bb27f37714b0630631e38c154a28ba5e4b112",
-    "fold_0_val.txt": "32fdee67b3e7cfd33e8c8ba6bb56591824a3c5d35db95ae2a0d84afac16184e1",
-    "fold_1_train.txt": "0e30928d93eb7ad9d1e6c6607bac11c298d482830fe8596a35dabd3756c1fdb2",
-    "fold_1_val.txt": "b2839e00b74864d1816ebf420c578a65c405bacf90ce664d848f3f78961d34f6",
-    "fold_2_train.txt": "8a8db669089ccf7c5e47da06c1ea8844d3131c30a066cd1057824c6ca3cbc674",
-    "fold_2_val.txt": "0c9dc89d706855888422f13d4f8517aefd6c0c279b8d3e7f6accf353de383e7a",
-    "fold_3_train.txt": "aae84da3fe6d3b1c4132e2e6461c71f1e95a88f6dbef6e552366576fb9d59540",
-    "fold_3_val.txt": "239eb08b7f8d0821d52923dbc08045d1012fda91232081582bffd2ca03215b75",
-    "fold_4_train.txt": "4ce204c32c5fcb94e7b2135a0065d6787bf6c25b42e3e3c7177b821f6ddbbbfc",
-    "fold_4_val.txt": "47504ab8719312bb14876118068525148170cf517e3e7909080b61cde651b599",
-    "test.txt": "872b02efaee2b4b5d21ee5aeecdf43308bbf3741ffe50f70dc66e0131d340db7",
-    "train.txt": "bf43fe4d7f4b655d087aed55e2b1be029def0bbbd7ba670e16e658442ad5cb92",
-    "val.txt": "a705926948daa2a8cf42d8f95c3ed5b9f553b27bcdeac0dbd23f91e7d354d271"
+    "rf_dataset.csv": "74cc0c0e87cec26f33a61c887b4fe3b1370b24c705389c078d713cb8c42764ac",
+    "graph_manifest.csv": "3cc2b50c6c7a9d6029be6680cec7df298ee7ba288b75520da647b65d14bf5d84",
+    "graphs_cache.npz": "a45164788ae283a7060c06bddb62c019b721d45983598ada6d637740631e03ab",
+    "splits_config.json": "ecba1f24934223fd5c978c8472fdb84fb0131b9c68e724b6f3f0fe3d3f6a1136",
+    "fold_0_train.txt": "b9d2815e898e02d00bec44c6e7da925f69c1b6b056952ce75bef5d56ad0dbfff",
+    "fold_0_val.txt": "2c26023fcdeb00ad7231e1172f91632fdf65bdc72f20978939203a3533c7642a",
+    "fold_1_train.txt": "8b737e01f027d1d3cb7768fd3453a10e43d8c7485b64ab187529cbac6e6948e2",
+    "fold_1_val.txt": "21415429ba8df5eb5212025c194c67f57ad706fb946b19c70076cb5a4e7ba850",
+    "fold_2_train.txt": "263816a23ae7f7456f4a1e801a10c2b7dfe1a698898aab201b658de37578cefd",
+    "fold_2_val.txt": "3b194206352e4a3ed76cfe19aaddc47d5566b68692d7b015a6adab05b3d11d72",
+    "fold_3_train.txt": "eade8db0fb91a9c0460b812ff7522b66e1907617eaab635c247e4a2ca48070c1",
+    "fold_3_val.txt": "3bd0f0ea587962e876294c1e759b928d85b08e5f8befa5367631da87c125166c",
+    "fold_4_train.txt": "0e58a9082c684b71f552e39ecacf2c46aac4fc5839b7187dd740d0df981cf89f",
+    "fold_4_val.txt": "35e983fd4016e8e3e80570daddd024b30ca28063859a3cd1148acdb53bbb112f",
+    "test.txt": "0a3a497d07a675beec8cb9dc4c3e37a30dd9e01638ea862c7de50e3bac9545ae",
+    "train.txt": "7664299939c1de4c1d1d88b320be1cb596ef9b5a735a4c648a993813cab4f099",
+    "val.txt": "8ba6026647dc0873286b0643bea7245932d139c4d594e32f55d839bb85a5460b"
   },
   "checkpoint_checksums": {
-    "cv_results.json": "d82156f99d3fd815635ac27ee98c9047f3e3328dfb78dc23fb0f8effeb501031",
-    "ga_results.json": "8634a53f007b5d67a624f2be836b26f96e65e4da5b082f04d9f0e408db273d3f",
-    "ga_weights.json": "8b30d11f1e35c014ea0536eb83e6252b6b52ebc86f32f86088cf658080143830",
+    "cv_results.json": "56c5d8544ac154eaa610a16b7367b11729cb65a703c28d4aeaca7dbb8b6aee5f",
+    "ga_results.json": "235a1bbfe05ab9f78570938fbaeb44ab1ce9ef93e73c0a50ac8104980f977510",
+    "ga_weights.json": "203fd757e5c077c7103cadb472d03681359e061bd25cc5e7c87f7c727a635490",
     "gnn_best.pt": "faa4498d1b7a4e7f53e65e64928fe0de3751b8e803668baf1dcea1974b3c6447",
-    "gnn_fold_0.pt": "f5893b292921a564be9eb6a4b49de99c832354d77b043fa71cc8ca05ab818e14",
-    "gnn_fold_1.pt": "d52429aa4296e355ce0565dd13eaf2a8554a8bed6dcafe24b232de85f76327c8",
-    "gnn_fold_2.pt": "b7f84019504ab5b93b34994d63d3359e75f280d7a72f7289df520826f5b9098d",
-    "gnn_fold_3.pt": "9a270a913bf55b32c4e25336d638a4f7a3bbe28e5e87db4fb0f5b022aa8b4dab",
-    "gnn_fold_4.pt": "67b13f33710e6b2963adb3c8e3bb0dbae02c26baae4163f80ea09deacd3dd334",
-    "rf_model.skops": "5cc21bc53c0b4bdd092c4edad613117ca9e303f8298b9b60662a5656da5c3156",
-    "rf_results.json": "19c692caafe20be5c8d80ab5aaad44c2f02541753ca048d6bcaef087334d8495",
-    "test_results.json": "bfe4c76d8e4c04757e2ef0c171c4210bf318bd4ae2272a52adb209116fa5a095"
+    "gnn_config.json": "a6356f76a25c6bebfaa94c4764e5027f6081cc5c00caa36388ad98b54aea5473",
+    "gnn_fold_0.pt": "d84dc904132de4d70296c0782661fbdab2449ca617f8d1b3483154d868486647",
+    "gnn_fold_1.pt": "e3bb8f762a733c28c246a69fc2aa3c476d12ae42faa5a7dcc88273a4ba8b25d4",
+    "gnn_fold_2.pt": "03c124998e85c0313e2021768b5c6e0fce60314d4b99b1c11dedd8350fadaf35",
+    "gnn_fold_3.pt": "6da75b8397fb3e09c2d4a8fb857fc8f57bac012c7c2d0b6ba57098069db559df",
+    "gnn_fold_4.pt": "bb98c900eb7bafa9fa8d3e28faf7fefb153c9348919dc6b2df6bb3f9bfdc024a",
+    "rf_model.skops": "6df2cda30a8e5e13b171a960c6b3b6eb51196baeccd8e54862833eef67911209",
+    "rf_results.json": "d9929f77e91bde43c281cb4b33333eb091d03be6cb1a89264d1aea20a2837c68",
+    "rf_severity.skops": "2307f8a174b08fb0ad422fb6080f448f19544986b3bd4a0a333fdccecafdbd6b",
+    "test_results.json": "0ebf6c8247465b78cc6fd547f025d7a17a6c75d770af3dd34733339586229ba0"
   },
   "headline_metrics": {
     "gnn_cv": {
       "num_folds": 5,
       "binary": false,
-      "macro_f1_mean": 0.8695430495430495,
-      "macro_f1_std": 0.0753839348628551,
-      "precision_at_5_mean": 0.72,
-      "precision_at_5_std": 0.09797958971132716,
+      "macro_f1_mean": 0.8029125915336138,
+      "macro_f1_std": 0.13653389060342613,
+      "precision_at_5_mean": 0.7200000000000001,
+      "precision_at_5_std": 0.16,
       "precision_at_5_target": 0.7,
-      "accuracy_mean": 0.8633333333333333,
-      "accuracy_std": 0.07607562027351471,
+      "accuracy_mean": 0.9493458401744546,
+      "accuracy_std": 0.034854843823212786,
       "fold_f1s": [
-        0.8424242424242424,
-        0.8857142857142858,
-        0.9407407407407407,
-        0.9407407407407407,
-        0.7380952380952381
+        1.0,
+        0.5799635701275045,
+        0.8628822158233923,
+        0.8013468013468014,
+        0.7703703703703705
       ],
       "fold_p5s": [
+        1.0,
         0.6,
-        0.8,
-        0.8,
-        0.8,
-        0.6
+        0.6,
+        0.6,
+        0.8
       ],
       "model_config": {
+        "conv": "gat",
         "hidden": 64,
         "heads": 4,
         "layers": 3,
         "dropout": 0.3,
         "lr": 0.0005,
-        "epochs": 300
+        "epochs": 300,
+        "focal_loss": false,
+        "focal_gamma": null,
+        "select_by": "p5"
+      },
+      "_provenance": {
+        "created_utc": "2026-07-14T22:23:08.337540+00:00",
+        "git_commit": "14c95e4c9f5e593ddb135e676a6c94c3eca821af",
+        "git_dirty": true,
+        "platform": "Linux x86_64",
+        "versions": {
+          "python": "3.12.13",
+          "torch": "2.11.0+cu128",
+          "torch_geometric": "2.8.0",
+          "sklearn": "1.6.1",
+          "numpy": "2.0.2",
+          "networkx": "3.6.1",
+          "skops": "0.14.0"
+        },
+        "seed": 42,
+        "conv": "gat",
+        "layers": 3
       }
     },
     "ga": {
-      "w_rf": 0.33742524431364523,
-      "w_gnn": 0.3278789386574905,
-      "w_escape": 0.33469581702886425,
+      "w_rf": 0.5168437819447826,
+      "w_gnn": 0.11549761749148135,
+      "w_escape": 0.367658600563736,
       "p_at_k": 0.6,
       "fpr_clean": 0.0,
       "objective": 0.72,
       "k": 5,
       "alpha": 0.7,
       "beta": 0.3,
+      "min_weight": 0.1,
+      "reg_lambda": 2.0,
+      "mrr_weight": 0.0,
+      "chain_mrr": 0.07331371570225433,
+      "floor_penalty": 0.0,
+      "select_method": "ga",
       "p_at_k_ceiling": 1.0,
       "mode": "oof",
-      "oof_n_graphs": 81,
-      "oof_n_chains": 21,
+      "oof_n_graphs": 513,
+      "oof_n_chains": 32,
       "grid_best": {
-        "w_rf": 0.0,
-        "w_gnn": 0.0,
-        "w_escape": 1.0,
-        "p_at_k": 0.8
+        "w_rf": 0.8,
+        "w_gnn": 0.1,
+        "w_escape": 0.1,
+        "p_at_k": 0.6
       },
-      "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES = [0,1,2,3,4,5,7,24] in 26-dim node feature vector."
+      "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) that discourages degenerate zero-weight solutions , and a chain-MRR tie-breaker (mrr_weight * mean reciprocal rank of true chains) that orders solutions within a P@k plateau.",
+      "_provenance": {
+        "created_utc": "2026-07-14T22:23:33.604247+00:00",
+        "git_commit": "14c95e4c9f5e593ddb135e676a6c94c3eca821af",
+        "git_dirty": true,
+        "platform": "Linux x86_64",
+        "versions": {
+          "python": "3.12.13",
+          "torch": "2.11.0+cu128",
+          "torch_geometric": "2.8.0",
+          "sklearn": "1.6.1",
+          "numpy": "2.0.2",
+          "networkx": "3.6.1",
+          "skops": "0.14.0"
+        },
+        "seed": 42,
+        "mode": "oof",
+        "select_method": "ga",
+        "generations": 150,
+        "pop_size": 60
+      }
     },
     "test": {
       "precision_at_1": 1.0,
-      "precision_at_3": 0.6666666666666666,
-      "precision_at_5": 0.6,
-      "precision_at_5_ceiling": 0.8,
+      "precision_at_3": 1.0,
+      "precision_at_5": 0.8,
+      "precision_at_5_ceiling": 1.0,
       "hits_ceiling": false,
-      "fpr_clean": 0.0
+      "fpr_clean": 0.0,
+      "structural_gate": true
     },
     "test_cis": {
       "n_bootstrap": 10000,
       "p_at_k_ci95": [
-        0.0,
+        0.6,
         1.0
       ],
       "fpr_clean_ci95": [
@@ -119,8 +170,8 @@
         0.4
       ],
       "macro_f1_ci95": [
-        0.4222222222222222,
-        0.9327731092436974
+        0.660377358490566,
+        1.0
       ]
     }
   }

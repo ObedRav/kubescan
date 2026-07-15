@@ -301,26 +301,44 @@ def _add_proximity_edges(
         _add_undirected_edges(G, members, EdgeType.DIR_PROXIMITY)
 
 
+def _idx_to_namespace(ns_groups: dict[str, list[int]]) -> dict[int, str]:
+    """Invert ns_groups (namespace -> member indices) to idx -> namespace."""
+    return {idx: ns for ns, members in ns_groups.items() for idx in members}
+
+
 def _add_privilege_edges(
     G:            nx.DiGraph,
     escape_nodes: list[int],
-    n:            int,
+    ns_groups:    dict[str, list[int]],
 ) -> None:
-    # PRIV_REACH always overwrites lower-priority edge types (e.g. DIR_PROXIMITY)
-    # so that escape-capable nodes are never silently downgraded to mere neighbours.
+    """Escape-capable node -> every other node in the SAME namespace.
+
+    Reachability is scoped to namespace, not the whole cluster: a compromised
+    pod's blast radius is bounded by what it can actually reach (shared
+    network/RBAC scope), not by "was ingested as part of the same manifest
+    set." Without this, a CNI/ingress installer manifest bundled in
+    kube-system alongside an unrelated app in the default namespace would
+    wrongly look reachable from the installer's privileged DaemonSet.
+    PRIV_REACH always overwrites lower-priority edge types (e.g.
+    DIR_PROXIMITY) so that escape-capable nodes are never silently
+    downgraded to mere neighbours.
+    """
+    idx_to_ns = _idx_to_namespace(ns_groups)
     for src in escape_nodes:
-        for dst in range(n):
+        for dst in ns_groups.get(idx_to_ns.get(src, DEFAULT_NAMESPACE), []):
             if dst != src:
                 G.add_edge(src, dst, edge_type=EdgeType.PRIV_REACH)
 
 
 def _add_lateral_edges(
-    G:        nx.DiGraph,
-    sa_nodes: list[int],
-    n:        int,
+    G:         nx.DiGraph,
+    sa_nodes:  list[int],
+    ns_groups: dict[str, list[int]],
 ) -> None:
+    """Lateral-movement-capable node -> every other node in the SAME namespace."""
+    idx_to_ns = _idx_to_namespace(ns_groups)
     for src in sa_nodes:
-        for dst in range(n):
+        for dst in ns_groups.get(idx_to_ns.get(src, DEFAULT_NAMESPACE), []):
             if dst != src and not G.has_edge(src, dst):
                 G.add_edge(src, dst, edge_type=EdgeType.SA_LATERAL)
 
@@ -343,13 +361,17 @@ def _add_rbac_edges(
     G:            nx.DiGraph,
     pod_sa:       dict[int, str],
     elevated_sas: set[str],
-    n:            int,
+    ns_groups:    dict[str, list[int]],
 ) -> None:
+    """Pod bound to a privileged ServiceAccount -> every other node in the
+    SAME namespace (RoleBindings, which is what elevated_sas is derived
+    from, are themselves namespace-scoped)."""
     if not elevated_sas:
         return
+    idx_to_ns = _idx_to_namespace(ns_groups)
     rbac_nodes = [idx for idx, sa in pod_sa.items() if sa in elevated_sas]
     for src in rbac_nodes:
-        for dst in range(n):
+        for dst in ns_groups.get(idx_to_ns.get(src, DEFAULT_NAMESPACE), []):
             if dst != src and not G.has_edge(src, dst):
                 G.add_edge(src, dst, edge_type=EdgeType.RBAC_PRIV)
 
@@ -376,8 +398,6 @@ def build_cluster_graph(
     -------
     GraphResult dict with keys: graph, node_data, escape_nodes, sa_nodes
     """
-    n = len(feats_list)
-
     G, node_data = _build_nodes(feats_list, risk_scores, yaml_paths)
     ns_groups, pod_sa, elevated_sas = _enrich_with_yaml_semantics(G, node_data, yaml_paths)
 
@@ -385,10 +405,10 @@ def build_cluster_graph(
     sa_nodes     = [i for i, nd in enumerate(node_data) if any(nd.get(f, 0) for f in LATERAL_FLAGS)]
 
     _add_proximity_edges(G, node_data)
-    _add_privilege_edges(G, escape_nodes, n)
-    _add_lateral_edges(G, sa_nodes, n)
+    _add_privilege_edges(G, escape_nodes, ns_groups)
+    _add_lateral_edges(G, sa_nodes, ns_groups)
     _add_semantic_edges(G, ns_groups)
-    _add_rbac_edges(G, pod_sa, elevated_sas, n)
+    _add_rbac_edges(G, pod_sa, elevated_sas, ns_groups)
 
     logger.debug(
         "Built cluster graph: %d nodes, %d edges, %d escape nodes",

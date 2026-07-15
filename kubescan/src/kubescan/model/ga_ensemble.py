@@ -20,11 +20,14 @@ __all__ = [
     "ESCAPE_FLAG_INDICES",
     "LABEL_NAMES",
     "LATERAL_FLAG_INDICES",
+    "MIN_CHAIN_NODES",
     "SCORE_HIGH_THRESHOLD",
     "SCORE_MODERATE_THRESHOLD",
     "EnsembleScorer",
+    "chain_rank_key",
     "compute_escape_fraction",
     "compute_escape_signal",
+    "is_chain_feasible",
     "run_gnn_ensemble",
 ]
 
@@ -66,6 +69,30 @@ LABEL_NAMES: Final[dict[int, str]] = {
 # Fixed decision thresholds on the ensemble score (thesis §4: not re-optimised by the GA)
 SCORE_HIGH_THRESHOLD:     Final[float] = 0.60
 SCORE_MODERATE_THRESHOLD: Final[float] = 0.30
+
+#: Structural feasibility gate: a multi-hop attack chain requires reachability
+#: between at least two manifests, so a cluster graph with fewer nodes cannot
+#: host one by definition. Corpus-verified: every attack_chain graph has
+#: >= 2 nodes and >= 1 edge, while 499/537 isolated graphs are single-node —
+#: exactly the population that produced the top-ranked false positives in the
+#: 2026-07-14 test evaluation.
+MIN_CHAIN_NODES: Final[int] = 2
+
+
+def is_chain_feasible(n_nodes: int) -> bool:
+    """Whether a cluster graph can structurally host a multi-hop attack chain."""
+    return n_nodes >= MIN_CHAIN_NODES
+
+
+def chain_rank_key(ensemble_score: float, n_nodes: int) -> tuple[bool, float]:
+    """Sort key for ranking clusters by attack-chain risk (descending).
+
+    Structural feasibility is the primary key: no single-manifest cluster,
+    however misconfigured, can outrank a cluster that can actually contain a
+    chain. The ensemble score orders clusters within each feasibility group,
+    so infeasible clusters keep their relative order for reporting.
+    """
+    return (is_chain_feasible(n_nodes), ensemble_score)
 
 
 class EnsembleScorer:
@@ -131,18 +158,25 @@ class EnsembleScorer:
             + self.w_escape * escape_signal
         )
 
-    def predict_label(self, ensemble_score: float) -> int:
+    def predict_label(self, ensemble_score: float, n_nodes: int | None = None) -> int:
         """
         Cluster verdict from the ensemble score (fixed thresholds, thesis §4):
           2 (ATTACK_CHAIN)       if ensemble_score >= 0.60
           1 (ISOLATED_MISCONFIG) if ensemble_score >= 0.30
           0 (CLEAN)              otherwise
 
+        When `n_nodes` is provided, the ATTACK_CHAIN verdict is additionally
+        gated on structural feasibility (see MIN_CHAIN_NODES): a cluster that
+        cannot host a multi-hop chain is capped at ISOLATED_MISCONFIG no matter
+        how high its score.
+
         Note: with a non-zero w_escape, any escape-capable manifest already
         contributes w_escape to the score via the binary escape signal, so
         escape-bearing clusters land at ISOLATED or above by construction.
         """
         if ensemble_score >= SCORE_HIGH_THRESHOLD:
+            if n_nodes is not None and not is_chain_feasible(n_nodes):
+                return 1
             return 2
         if ensemble_score >= SCORE_MODERATE_THRESHOLD:
             return 1

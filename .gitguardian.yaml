@@ -1,0 +1,15 @@
+# GitGuardian / ggshield configuration
+# Docs: https://docs.gitguardian.com/ggshield-docs/reference/scan/config
+version: 2
+
+secret:
+  # research/data/ holds machine-generated dataset artifacts derived from
+  # PUBLIC security-test corpora (Checkov example fixtures, BishopFox BadPods,
+  # Kubernetes Goat, the Rahman et al. manifest dataset). These files contain
+  # no credentials by construction; the "Generic High Entropy Secret" detector
+  # trips on long, mixed-charset fixture identifiers such as
+  # "checkov_example__KubeControllerManagerServiceAccountPrivateKeyFile_...".
+  # Ignore secret scanning on these derived data artifacts only — all code,
+  # configuration, and notebooks remain fully scanned.
+  ignored-paths:
+    - 'research/data/**'
