@@ -92,8 +92,10 @@ def github_blob_to_raw(url: str) -> str | None:
     Input:  https://github.com/owner/repo/blob/<sha>/path/to/file.yaml
     Output: https://raw.githubusercontent.com/owner/repo/<sha>/path/to/file.yaml
     """
-    # Handle already-raw URLs
-    if "raw.githubusercontent.com" in url:
+    # Handle already-raw URLs — compare the parsed hostname exactly, not a
+    # substring (a substring check would also pass for hosts like
+    # raw.githubusercontent.com.attacker.com or evil.com/raw.githubusercontent.com).
+    if urlparse(url).hostname == "raw.githubusercontent.com":
         return url
     m = re.match(
         r"https://github\.com/([^/]+/[^/]+)/blob/([0-9a-f]+)/(.+)",
