@@ -335,7 +335,18 @@ diseñada para regímenes con miles de ejemplos por clase \citep{Lin2017}, adem�
 anula por completo la clasificación de la clase \textit{attack\_chain} en el
 conjunto de test (F1 de clase 0,0 frente a 0,667 con entropía cruzada). La
 configuración desplegada es, en consecuencia, entropía cruzada ponderada con
-selección por Precisión@5.
+selección por Precisión@5.selección por Precisión@5.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig_loss_ablation}
+  \caption{Ablación 2\(\times\)2 de función de pérdida \(\times\) criterio de
+           selección de \textit{checkpoints} (Precisión@5 de validación cruzada,
+           \(\pm\)\(\sigma\)). Solo la configuración desplegada —entropía cruzada
+           ponderada con selección por Precisión@5— supera el objetivo de diseño.}
+  \label{fig:loss_ablation}
+  \fuentepropia
+\end{figure}
 
 \subsection{Robustez frente a la semilla de entrenamiento}
 \label{sec:multisemilla}
@@ -373,7 +384,18 @@ cuatro pliegues puntúan de forma idéntica con las tres semillas. Segunda: las
 métricas de test a nivel de despliegue son estables —P@1\,=\,1,00 y
 P@3\,=\,1,00 con las tres semillas, y P@5 entre 0,80 y 1,00—, de modo que la
 sensibilidad a la semilla afecta a la estimación de validación cruzada, no al
-comportamiento observable del sistema sobre repositorios reales no vistos.
+comportamiento observable del sistema sobre repositorios reales no vistos.comportamiento observable del sistema sobre repositorios reales no vistos.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{fig_multiseed_folds}
+  \caption{Precisión@5 por pliegue con tres semillas de entrenamiento
+           (particionado fijo). Cuatro de los cinco pliegues puntúan de forma
+           idéntica; la varianza entre semillas se concentra íntegramente en el
+           pliegue de la familia \texttt{badpods\_*}.}
+  \label{fig:multiseed_folds}
+  \fuentepropia
+\end{figure}
 
 % -----------------------------------------------------------
 \section{Resultados de la Capa 3: Ensemble}
@@ -452,7 +474,18 @@ albergar una cadena. \ac{FPR}\_clean\,=\,0,00: ningún clúster limpio aparece
 entre los de mayor riesgo. La F1~macro por clasificación \textit{argmax} del
 ensemble de pliegues sobre el conjunto de test es 0,883 (F1 por clase:
 \textit{clean} 1,0; \textit{isolated} 0,981; \textit{attack\_chain} 0,667,
-con 3 de las 5~cadenas correctamente clasificadas).
+con 3 de las 5~cadenas correctamente clasificadas).con 3 de las 5~cadenas correctamente clasificadas).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig_structural_gate}
+  \caption{Efecto de la restricción de viabilidad estructural sobre las métricas
+           de ranking del conjunto de test. Descartar los clústeres de un solo
+           nodo del \textit{ranking} eleva P@1 de 0,00 a 1,00 y P@5 de 0,60 a
+           0,80.}
+  \label{fig:structural_gate}
+  \fuentepropia
+\end{figure}
 
 Dado el tamaño del conjunto de test, estas estimaciones llevan asociados
 intervalos de confianza amplios (bootstrap de 10\,000 remuestreos, 95\,\%):
@@ -518,7 +551,21 @@ los cinco pliegues de validación cruzada. En el conjunto de test, la matriz de
 confusión del ensemble de pliegues (Sección~\ref{sec:layer3}) muestra el mismo
 patrón de error que los pliegues de validación: los dos falsos negativos de
 cadena se clasifican como \textit{isolated}, nunca como \textit{clean} — el
+sistema degrada hacia la clase intermedia, no hacia la omisión total.En el conjunto de test, la matriz de
+confusión del ensemble de pliegues (Figura~\ref{fig:gnn_confusion}) muestra el
+mismo patrón de error que los pliegues de validación: los dos falsos negativos de
+cadena se clasifican como \textit{isolated}, nunca como \textit{clean} — el
 sistema degrada hacia la clase intermedia, no hacia la omisión total.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.55\textwidth]{fig_gnn_confusion}
+  \caption{Matriz de confusión del ensemble de pliegues sobre el conjunto de
+           test (clasificación \textit{argmax}). Los errores caen en la frontera
+           cadena/aislado; ningún manifiesto crítico se degrada a limpio.}
+  \label{fig:gnn_confusion}
+  \fuentepropia
+\end{figure}
 
 El único fallo de ranking del conjunto de test ilustra el error sistemático del
 modelo: \textit{minik8s-ctf} (posición~6, tras el clúster \textit{isolated}
