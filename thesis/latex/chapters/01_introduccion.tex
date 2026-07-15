@@ -9,10 +9,10 @@ La adopción masiva de \textit{Kubernetes} como plataforma de orquestación de
 contenedores ha transformado la manera en que las organizaciones despliegan y gestionan
 sus aplicaciones. La \ac{CNCF} reporta que el 96\,\%
 de las organizaciones utilizan o evalúan \textit{Kubernetes} \citep{CNCF2022}, y
-los informes sectoriales de seguridad documentan que la mayoría de las
-organizaciones ha sufrido al menos un incidente de seguridad en sus entornos de
-contenedores durante el último año \citep{RedHat2024}. Sin embargo, esta proliferación ha ampliado considerablemente la
-superficie de ataque: una sola misconfiguration en un manifiesto \acs{YAML} puede habilitar
+el informe sectorial \textit{State of Kubernetes Security} de Red Hat documenta que
+la mayoría de las organizaciones ha sufrido al menos un incidente de seguridad en sus
+entornos de contenedores durante el último año \citep{RedHat2024}. Sin embargo, esta proliferación ha ampliado considerablemente la
+superficie de ataque: una sola configuración insegura en un manifiesto \acs{YAML} puede habilitar
 la escalada de privilegios desde un contenedor comprometido hasta el nodo anfitrión
 del clúster o, en casos extremos, hasta la infraestructura subyacente completa
 \citep{NSA2022}.
@@ -30,8 +30,9 @@ en el marco MITRE ATT\&CK for Containers \citep{MITRE2021Containers}.
 
 Herramientas más recientes como \textit{KubeHound} \citep{KubeHound2023} e
 \textit{IceKube} \citep{IceKube2023} abordan este problema construyendo grafos de
-ataque sobre clústeres activos. Sin embargo, requieren acceso con privilegios al
-servidor \acs{API} de \textit{Kubernetes}, lo que limita su aplicabilidad como control
+ataque sobre clústeres activos. Sin embargo, requieren recolectar el estado de un
+clúster activo mediante acceso de lectura amplio a su servidor \acs{API} de
+\textit{Kubernetes}, lo que limita su aplicabilidad como control
 preventivo en el pipeline de \ac{CICD} —un principio
 conocido como \textit{shift-left security}: adelantar los controles de seguridad a
 las etapas más tempranas del desarrollo.
@@ -47,17 +48,20 @@ Formalmente, dado un conjunto de manifiestos \ac{YAML} que describen un clúster
 \textit{Kubernetes}, el problema consiste en:
 
 \begin{enumerate}
-  \item Clasificar cada manifiesto individual como seguro o misconfigured (Capa~1).
+  \item Clasificar cada manifiesto individual como seguro o mal configurado (Capa~1).
   \item Modelar el clúster como un grafo heterogéneo y clasificarlo en una de tres
         categorías: \textit{clean} (sin misconfiguraciones relevantes),
         \textit{isolated} (misconfiguraciones sin cadena viable) o \textit{attack\_chain}
         (existe una ruta de escalada de privilegios hasta movimiento lateral) (Capa~2).
-  \item Combinar las señales de ambas capas mediante una función de puntuación
-        optimizada para maximizar la Precisión@5 —la fracción de clústeres de cadena
-        de ataque en el top-5 del ranking— minimizando falsos positivos (Capa~3).
+  \item Combinar las señales de ambas capas, junto con una señal binaria de escape
+        derivada de las características de nodo, mediante una función de puntuación con
+        pesos optimizados por Algoritmo Genético para maximizar la Precisión@5 —la
+        fracción de clústeres de cadena de ataque en el top-5 del ranking— minimizando
+        falsos positivos, y aplicar una restricción de viabilidad estructural sobre el
+        ranking final (Capa~3).
 \end{enumerate}
 
-La restricción de operar sobre manifiestos \ac{YAML} estáticos —sin requerir acceso al
+La capacidad de operar sobre manifiestos \ac{YAML} estáticos —sin requerir acceso al
 clúster activo— es un requisito de diseño explícito que diferencia el presente trabajo
 de las soluciones de grafo de ataque existentes y lo posiciona como un control de
 seguridad integrable en pipelines \acs{CICD}.

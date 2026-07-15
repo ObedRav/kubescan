@@ -17,7 +17,7 @@ alcanza una F1 macro de 0,9946 en la clasificación de manifiestos individuales,
 y aumentación de grafos, logra F1~macro\,=\,0,803\,\(\pm\)\,0,137 y
 Precisión@5\,=\,0,720\,\(\pm\)\,0,160 en validación cruzada de 5~pliegues con un
 protocolo de particionado consciente de grupos y de familias de plantilla (sin fuga
-entre variantes casi duplicadas y sus grafos base), superando el objetivo de diseño
+entre variantes casi duplicadas y sus grafos base), alcanzando el objetivo de diseño
 de P@5\,>\,0,70; a través de tres semillas de entrenamiento la media es de
 0,68\,\(\pm\)\,0,03, con el objetivo dentro de una desviación típica. En el conjunto
 de test —86~grafos con 5~cadenas de ataque de repositorios reales, excluido de la
@@ -26,7 +26,10 @@ capas, combinado con una restricción de viabilidad estructural (un clúster de 
 solo manifiesto no puede albergar una cadena multi-salto), alcanza
 Precisión@1\,=\,1,00 y Precisión@3\,=\,1,00, recupera 4 de las 5~cadenas en las
 primeras 5~posiciones (Precisión@5\,=\,0,80) y no produce falsos positivos de
-clústeres limpios (\acs{FPR}\_clean\,=\,0\,\%). El trabajo aporta además una
+clústeres limpios (\acs{FPR}\_clean\,=\,0\,\%). Una evaluación de usabilidad y
+aplicabilidad con tres usuarios expertos otorga a la herramienta una puntuación
+\acs{SUS} media de 88,3 (valoración «excelente»), si bien el tamaño muestral limita la
+generalización de este resultado. El trabajo aporta además una
 contribución metodológica: la detección y corrección de una fuga de información por
 familias de plantilla que inflaba evaluaciones anteriores, y la ablación que explica
 y revierte la aparente regresión asociada.
@@ -52,7 +55,7 @@ and zero false negatives on the test set. Layer~2, a 3-layer \ac{GAT} with 4 att
 heads, edge-type embeddings and graph augmentation, achieves
 macro-F1\,=\,0.803\,\(\pm\)\,0.137 and Precision@5\,=\,0.720\,\(\pm\)\,0.160 under a
 5-fold cross-validation protocol that is group- and template-family-aware (no
-leakage between near-duplicate variants and their base clusters), exceeding the
+leakage between near-duplicate variants and their base clusters), meeting the
 P@5\,>\,0.70 design target; across three training seeds the mean is
 0.68\,\(\pm\)\,0.03, with the target within one standard deviation. On the test
 set — 86~graphs containing 5~attack chains from real-world repositories, held out
@@ -60,7 +63,10 @@ from cross-validation and ensemble tuning — the full three-layer system, combi
 with a structural feasibility constraint (a single-manifest cluster cannot host a
 multi-hop chain), achieves Precision@1\,=\,1.00 and Precision@3\,=\,1.00, recovers
 4 of the 5~attack chains within the top-5 ranking (Precision@5\,=\,0.80), and
-produces no false positives on clean clusters (FPR\_clean\,=\,0). Results, reported
+produces no false positives on clean clusters (FPR\_clean\,=\,0). A usability and
+applicability evaluation with three expert users yields a mean \ac{SUS} score of 88.3
+(``excellent'' rating), although the small sample size limits the
+generalisability of this result. Results, reported
 with confidence intervals appropriate to the corpus size, additionally include a
 methodological contribution: the detection and correction of template-family
 information leakage that inflated earlier evaluations, together with the loss and

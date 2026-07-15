@@ -134,12 +134,12 @@ Repositorios de seguridad adicionales & 779 & CTFs, \textit{fixtures} de herrami
 La incorporación de BadPods fue esencial para mitigar la escasez de ejemplos de
 misconfiguraciones críticas en los repositorios reales: antes de añadir esta fuente,
 \texttt{TRUE\_HOST\_PID} aparecía en sólo el 0,3\,\% de las filas; tras la incorporación,
-la cobertura ascendió al 3,8\,\%. En cuanto a los conjuntos de datos de referencia
+la cobertura ascendió al 3,78\,\%. En cuanto a los conjuntos de datos de referencia
 existentes para intrusión en red, como UNSW-NB15 \citep{Moustafa2015}, se estudió su
 metodología de construcción como guía para el diseño del proceso de etiquetado y la
-estrategia de balanceo de clases, dado que presentan un desequilibrio de clases del
-mismo orden de magnitud que el de este trabajo (56,3\,\% seguros vs.\ 43,7\,\%
-misconfigured). El conjunto \textit{GenKubeSec}
+estrategia de balanceo de clases, dado que sus particiones curadas de entrenamiento y
+evaluación presentan un desequilibrio de clases del mismo orden de magnitud que el de
+este trabajo (56,3\,\% seguros vs.\ 43,7\,\% mal configurados). El conjunto \textit{GenKubeSec}
 \citep{Malul2024}, publicado en 2024, no estaba disponible durante el desarrollo de
 este trabajo; en su lugar se empleó \textit{Checkov} \citep{Checkov2021} directamente
 sobre los ficheros \ac{YAML} descargados como fuente de validación multi-herramienta
@@ -250,8 +250,8 @@ como constantes inmutables (\texttt{frozenset}). Un nodo se clasifica como de
 incorporado durante el desarrollo al detectar que \textit{badpods\_hostpath} —que monta
 el sistema de ficheros del anfitrión— era incorrectamente etiquetado como
 \textit{isolated} al no tener ninguna otra flag de escape activa. Con la corrección,
-el número de clústeres de cadena de ataque del corpus preliminar de 471~grafos
-ascendió de 13 a 15 (37 en el corpus final de 599).\par}
+el número de clústeres de cadena de ataque del corpus preliminar de 307~grafos
+ascendió de 13 a 15 (25 en el corpus extendido de 471; 37 en el corpus final de 599).\par}
 
 Un nodo se clasifica como de \textbf{movimiento lateral} si tiene activa al menos una
 de las siguientes 4~flags: \texttt{SA\_AUTOMOUNT\_TOKEN} (token de cuenta de servicio
@@ -280,7 +280,7 @@ nodos del clúster.
 
 \subsection{Modelo binario}
 
-Se entrena un \textit{RandomForestClassifier} de \textit{scikit-learn}
+Se entrena un \textit{RandomForestClassifier} \citep{Breiman2001} de \textit{scikit-learn}
 \citep{Pedregosa2011} con los hiperparámetros siguientes:
 
 \begin{itemize}
@@ -379,8 +379,8 @@ siguiente fórmula implementada en \texttt{train\_gnn.py}:
 
 donde \(n_i\) es el número de grafos de entrenamiento de la clase \(i\) y \(K=3\)
 es el número de clases. Esta fórmula normaliza los pesos para que su media sea~1,0,
-equivalente al comportamiento de \texttt{class\_weight=balanced} de
-\textit{scikit-learn}. Un detalle importante es que los pesos se calculan
+proporcionalmente equivalente al comportamiento de \texttt{class\_weight=balanced} de
+\textit{scikit-learn} (misma ponderación relativa entre clases). Un detalle importante es que los pesos se calculan
 \textbf{después} de la aumentación de datos: como la aumentación genera 15~variantes
 por grafo de cadena de ataque, la clase \textit{attack\_chain} pasa de ser la
 minoría a ser la mayoría en el conjunto de entrenamiento (aproximadamente 380~grafos
@@ -398,10 +398,11 @@ grafos de entrenamiento: \textit{edge dropout} (eliminación aleatoria de entre 
 10\,\% y el 35\,\% de aristas de los tipos~0 y~3, los menos críticos para la señal
 de ataque, con tasa muestreada uniformemente por variante);
 \textit{feature masking} (puesta a cero, con probabilidad por nodo entre el 10\,\%
-y el 25\,\%, restringida a seis características de baja importancia — nunca las
-flags de escape, \texttt{HOSTPATH\_MOUNT} ni el \textit{risk\_score}); y
+y el 25\,\%, restringida a seis características ajenas a la regla de etiquetado de
+cadena — nunca las flags de escape, \texttt{HOSTPATH\_MOUNT} ni el \textit{risk\_score}); y
 \textit{subgraph sampling} (extracción de un subgrafo inducido por entre el 40\,\%
-y el 70\,\% de nodos, aplicada solo a grafos de más de 50~nodos, con \textit{BFS}
+y el 70\,\% de nodos, aplicada a las últimas cinco de las 15~variantes y solo a
+grafos de más de 50~nodos, con \textit{BFS}
 sembrada en el nodo de mayor \textit{risk\_score}; cada subgrafo
 se valida contra la regla de etiquetado de cadena y, si deja de cumplirla, se
 descarta en favor de una variante sobre el grafo completo, evitando introducir
@@ -465,10 +466,13 @@ conjunto de test. La penalización hace que ignorar una señal por completo est�
 estrictamente dominado salvo que la ganancia observada supere \(\lambda\) veces el
 déficit.
 
-La selección se realiza mediante torneo de tamaño~3; el cruce es aritmético (media
-de los dos padres); la mutación aplica perturbación gaussiana con \(\sigma\,=\,0{,}08\)
-y tasa de mutación del 15\,\%, seguida de re-proyección al dominio válido
-(\(w_{\text{rf}} \geq 0\)); y el criterio de parada es 150~generaciones.
+La selección se realiza mediante torneo de tamaño~3, con elitismo del 10\,\%; el cruce
+es aritmético (media de los dos padres) con probabilidad 0,7; la mutación combina
+perturbación gaussiana (\(\sigma\,=\,0{,}08\), tasa del 15\,\%) con una mutación de
+frontera (tasa del 5\,\%) que salta a los vértices del símplex, seguida de
+re-proyección al dominio válido (\(w_{\text{rf}} \geq 0\)); la población inicial se
+siembra con los vértices y puntos medios del símplex y con muestreo de Dirichlet, y el
+criterio de parada es 150~generaciones.
 Como \textit{baseline} determinístico, se ejecuta previamente una búsqueda en rejilla
 2D con paso \(1/20\) (231~evaluaciones); la comparación de su óptimo con el resultado
 del \ac{GA} se discute en la Sección~\ref{sec:layer3}.
@@ -497,7 +501,8 @@ Permiten al operador interpretar directamente la puntuación: cualquier clúster
 Una cadena de ataque multi-salto requiere, por definición, alcanzabilidad entre al
 menos dos manifiestos; un grafo de clúster con un único nodo no puede albergarla.
 Esta propiedad, verificada sobre el corpus completo (los 592~grafos de cadena
-tienen \(\geq\)2 nodos y \(\geq\)1 arista, mientras que 499 de los 537 grafos
+—37 originales y 555 variantes aumentadas— tienen \(\geq\)2 nodos y \(\geq\)1 arista,
+mientras que 499 de los 537 grafos
 \textit{isolated} son de un solo nodo), se incorpora como restricción de
 inferencia en \texttt{ga\_ensemble.py} (\texttt{MIN\_CHAIN\_NODES},
 \texttt{is\_chain\_feasible}, \texttt{chain\_rank\_key}): en el

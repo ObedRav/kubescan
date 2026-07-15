@@ -7,7 +7,7 @@ Este capítulo define los objetivos del trabajo y describe la metodología segui
 para alcanzarlos. En primer lugar se formula el objetivo general y los objetivos
 específicos; los de naturaleza cuantificable incorporan criterios de éxito
 medibles. A continuación se
-describen las cinco fases del proceso de desarrollo, la estrategia de partición y
+describen las seis fases del proceso de desarrollo, la estrategia de partición y
 validación de datos, y la justificación de las métricas de evaluación adoptadas.
 
 % -----------------------------------------------------------
@@ -37,19 +37,21 @@ clúster (OE6).
 
   \item[OE2.] Desarrollar una Capa~1 de clasificación de manifiestos individuales
     basada en \textit{Random Forest} con F1 macro superior a 0,85, que produzca
-    \textit{risk scores} calibrados para usar como características de nodo en la
-    Capa~2.
+    \textit{risk scores} continuos en el rango [0,1] para usar como características
+    de nodo en la Capa~2.
 
   \item[OE3.] Diseñar un esquema de grafo de clúster con tipos de arista
     semánticamente significativos para el dominio \textit{Kubernetes}:
     proximidad de directorio, alcance de privilegio, movimiento lateral mediante
     cuenta de servicio, co-namespacio semántico y escalada \ac{RBAC}; su
-    contribución se valida mediante ablación frente a una \ac{GCN} sin tipos
-    de arista bajo idéntico protocolo de evaluación.
+    contribución se considera validada si la \ac{GAT} con tipos de arista iguala o
+    supera a una \ac{GCN} sin ellos en F1 macro y Precisión@5 bajo idéntico
+    protocolo de evaluación.
 
   \item[OE4.] Desarrollar una Capa~2 de clasificación de clústeres basada en \ac{GAT}
     que alcance Precisión@5 superior a 0,70 (media de validación cruzada de 5~pliegues)
-    en la detección de cadenas de ataque.
+    en la detección de cadenas de ataque, evaluada sobre el modelo desplegado con
+    semilla fija documentada y verificada mediante análisis de robustez multi-semilla.
 
   \item[OE5.] Implementar una Capa~3 que optimice mediante Algoritmo Genético una
     función objetivo combinada de Precisión@5 y falsos positivos de clústeres
@@ -69,7 +71,7 @@ clúster (OE6).
 \section{Metodología}
 % -----------------------------------------------------------
 
-El trabajo sigue un proceso iterativo de cinco fases que combina el paradigma de
+El trabajo sigue un proceso iterativo de seis fases que combina el paradigma de
 desarrollo de \textit{software} (requisitos, diseño, implementación, prueba) con el
 proceso de ciencia de datos (adquisición, preparación, modelado, evaluación):
 
@@ -116,6 +118,13 @@ cruzada de la Capa~2, aplicación de una restricción de viabilidad estructural 
 ataque multi-salto), y evaluación final sobre el conjunto de test reservado desde
 el inicio y no utilizado en ninguna fase de entrenamiento ni selección de
 hiperparámetros.
+
+\textbf{Fase~6 — Empaquetado y evaluación funcional y de usabilidad.} Empaquetado del
+sistema como herramienta de línea de comandos instalable (\textit{kubescan}),
+evaluación funcional de rendimiento e integración (latencia, formatos de salida,
+resolución de \textit{checkpoints}) y estudio de usabilidad y aplicabilidad con
+usuarios expertos mediante el cuestionario \ac{SUS} y un conjunto de tareas guiadas;
+los protocolos y resultados de esta fase se detallan en el Capítulo~\ref{cap:resultados}.
 
 % -----------------------------------------------------------
 \section{Estrategia de partición y validación de datos}
