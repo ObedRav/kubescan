@@ -520,7 +520,7 @@ _diag_arrow(ax, 8.4, y_branch - 0.46, fx + 0.62, fy + 0.5, color=RED, label='w_e
 _hexagon(ax, fx, fy, 0.95, 'EnsembleScorer', '.score()', DARK)
 _varrow(ax, fx, fy - 0.95, 0.75)
 
-_gauge(ax, 2.2, -0.05, 5.6, 0.5, score=0.904)
+_gauge(ax, 2.2, -0.05, 5.6, 0.5, score=0.947)
 _varrow(ax, fx, -0.15, -0.95)
 
 _box(ax, 3.3, -1.45, 3.4, 0.9, 'ATTACK_CHAIN', 'informe text / JSON', RED, fs=9.5)
@@ -529,5 +529,112 @@ plt.tight_layout()
 plt.savefig(os.path.join(OUT, 'fig_cli_pipeline.pdf'), bbox_inches='tight')
 plt.close()
 print("fig_cli_pipeline.pdf OK")
+
+# ── FIG 5.x  Loss x selection ablation ───────────────────────────────────────
+# Datos: Tabla tab:loss_ablation (corpus completo, particionado por familias,
+# semilla 42). Solo el brazo desplegado ce_p5 (0.72) esta en
+# checkpoints/cv_results.json; los otros tres brazos proceden de la ablacion
+# factorial 2x2 (no desplegados).
+_la_labels = ['Focal (gamma=2)', 'Entropia cruzada\nponderada']
+_la_p5_f1  = [0.480, 0.600]   # seleccion de checkpoint por F1 macro
+_la_p5_p5  = [0.680, 0.720]   # seleccion de checkpoint por P@5
+_la_err_f1 = [0.271, 0.283]
+_la_err_p5 = [0.204, 0.160]
+x = np.arange(len(_la_labels)); w = 0.36
+fig, ax = plt.subplots(figsize=(6.2, 3.7))
+b1 = ax.bar(x - w/2, _la_p5_f1, w, yerr=_la_err_f1, capsize=4, color='#95a5a6',
+            edgecolor='white', label='Seleccion por F1 macro')
+b2 = ax.bar(x + w/2, _la_p5_p5, w, yerr=_la_err_p5, capsize=4, color='#2980b9',
+            edgecolor='white', label='Seleccion por P@5')
+ax.axhline(0.70, color='#e74c3c', linestyle='--', linewidth=1.3,
+           label='Objetivo P@5 = 0.70')
+for bars, vals in ((b1, _la_p5_f1), (b2, _la_p5_p5)):
+    for bar, v in zip(bars, vals):
+        ax.text(bar.get_x() + bar.get_width()/2, v + 0.015, f'{v:.2f}',
+                ha='center', va='bottom', fontsize=8.5)
+ax.set_xticks(x); ax.set_xticklabels(_la_labels, fontsize=9)
+ax.set_ylabel('Precision@5 (validacion cruzada)'); ax.set_ylim(0, 1.05)
+ax.legend(fontsize=8, loc='upper left')
+ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
+plt.tight_layout()
+plt.savefig(os.path.join(OUT, 'fig_loss_ablation.pdf'), bbox_inches='tight')
+plt.close()
+print("fig_loss_ablation.pdf OK")
+
+# ── FIG 5.x  Structural feasibility gate: before / after (test set) ───────────
+_t = json.load(open(os.path.join(CHECKPOINTS, 'test_results.json')))
+_g = _t['ranking_metrics']; _u = _t['ranking_metrics_ungated']
+_metrics = ['P@1', 'P@3', 'P@5']
+_ungated = [_u['precision_at_1'], _u['precision_at_3'], _u['precision_at_5']]
+_gated   = [_g['precision_at_1'], _g['precision_at_3'], _g['precision_at_5']]
+x = np.arange(len(_metrics)); w = 0.36
+fig, ax = plt.subplots(figsize=(6.2, 3.7))
+b1 = ax.bar(x - w/2, _ungated, w, color='#95a5a6', edgecolor='white',
+            label='Sin restriccion estructural')
+b2 = ax.bar(x + w/2, _gated, w, color='#27ae60', edgecolor='white',
+            label='Con restriccion estructural')
+ax.axhline(0.70, color='#e74c3c', linestyle='--', linewidth=1.2, alpha=0.7,
+           label='Objetivo P@5 = 0.70')
+for bars, vals in ((b1, _ungated), (b2, _gated)):
+    for bar, v in zip(bars, vals):
+        ax.text(bar.get_x() + bar.get_width()/2, v + 0.015, f'{v:.2f}',
+                ha='center', va='bottom', fontsize=8.5)
+ax.set_xticks(x); ax.set_xticklabels(_metrics); ax.set_ylim(0, 1.12)
+ax.set_ylabel('Precision (conjunto de test)')
+ax.legend(fontsize=8, loc='upper left')
+ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
+plt.tight_layout()
+plt.savefig(os.path.join(OUT, 'fig_structural_gate.pdf'), bbox_inches='tight')
+plt.close()
+print("fig_structural_gate.pdf OK")
+
+# ── FIG 5.x  Multi-seed per-fold P@5 (robustness) ────────────────────────────
+def _fold_p5(*parts):
+    return json.load(open(os.path.join(CHECKPOINTS, *parts)))['fold_p5s']
+_seed_folds = {
+    42:  _fold_p5('cv_results.json'),
+    7:   _fold_p5('..', 'checkpoints_seeds', 'seed_7', 'cv_results.json'),
+    123: _fold_p5('..', 'checkpoints_seeds', 'seed_123', 'cv_results.json'),
+}
+_folds = np.arange(5)
+_mk = {42: 'o', 7: 's', 123: '^'}
+_col = {42: '#2980b9', 7: '#e74c3c', 123: '#f39c12'}
+fig, ax = plt.subplots(figsize=(6.6, 3.7))
+for s in (42, 7, 123):
+    ax.plot(_folds, _seed_folds[s], marker=_mk[s], color=_col[s], linewidth=1.6,
+            markersize=7, alpha=0.85, label=f'Semilla {s}')
+ax.axhline(0.70, color='#7f8c8d', linestyle=':', linewidth=1.0,
+           label='Objetivo P@5 = 0.70')
+ax.annotate('unico pliegue con varianza\nentre semillas',
+            xy=(1, 0.4), xytext=(1.35, 0.17), fontsize=8, color='#555',
+            arrowprops=dict(arrowstyle='->', color='#888', lw=1))
+ax.set_xticks(_folds)
+ax.set_xticklabels([f'Pliegue {i}' for i in range(5)], fontsize=8.5)
+ax.set_ylabel('Precision@5'); ax.set_ylim(0, 1.1)
+ax.legend(fontsize=8, ncol=2, loc='lower right')
+ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
+plt.tight_layout()
+plt.savefig(os.path.join(OUT, 'fig_multiseed_folds.pdf'), bbox_inches='tight')
+plt.close()
+print("fig_multiseed_folds.pdf OK")
+
+# ── FIG 5.x  Ensemble test confusion matrix (replaces stale orphan) ──────────
+_cm = np.array(_t['classification_metrics']['confusion_matrix'])
+_cls = ['Limpio', 'Aislado', 'Cadena']
+fig, ax = plt.subplots(figsize=(4.7, 4.0))
+im = ax.imshow(_cm, cmap='Blues', vmin=0)
+fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+ax.set_xticks(range(3)); ax.set_yticks(range(3))
+ax.set_xticklabels(_cls, fontsize=9); ax.set_yticklabels(_cls, fontsize=9)
+ax.set_xlabel('Prediccion', fontsize=9); ax.set_ylabel('Etiqueta real', fontsize=9)
+_thr = _cm.max() / 2.0
+for i in range(3):
+    for j in range(3):
+        ax.text(j, i, str(_cm[i, j]), ha='center', va='center', fontsize=13,
+                color='white' if _cm[i, j] > _thr else 'black', fontweight='bold')
+plt.tight_layout()
+plt.savefig(os.path.join(OUT, 'fig_gnn_confusion.pdf'), bbox_inches='tight')
+plt.close()
+print("fig_gnn_confusion.pdf OK")
 
 print(f"\nTodas las figuras generadas en: {OUT}")
