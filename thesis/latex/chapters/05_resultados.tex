@@ -688,6 +688,117 @@ permite al operador de seguridad comprender y auditar las razones concretas de l
 clasificación de riesgo producida por el modelo.
 
 % -----------------------------------------------------------
+\section{Evaluación de usabilidad y aplicabilidad con usuarios expertos}
+\label{sec:usabilidad}
+% -----------------------------------------------------------
+
+Además de la evaluación cuantitativa del modelo, se realizó una evaluación de
+usabilidad y aplicabilidad de la herramienta con \textbf{usuarios expertos},
+siguiendo el protocolo descrito en el repositorio (Anexo~\ref{ap:repositorio}).
+Participaron \textbf{tres profesionales} con experiencia en \textit{Kubernetes} y
+CI/CD, a los que se entregó una guía de tareas con órdenes listas para ejecutar y
+un cuestionario en línea, en formato autoservicio asíncrono (\(\approx\)10~minutos
+por participante). El instrumento se generó de forma reproducible mediante un
+\textit{script} versionado (véase Anexo~\ref{ap:repositorio}) y el protocolo se
+validó previamente con una prueba piloto. La muestra reducida (\(n=3\)) se asume
+explícitamente como amenaza a la validez (Sección~\ref{sec:usab_amenazas}); aun
+así, tres participantes cubren una fracción sustancial de los problemas de
+usabilidad en pruebas formativas \citep{Nielsen2000}.
+
+\subsection{Perfil de los participantes}
+
+\begin{table}[htbp]
+\centering
+\caption{Perfil de los participantes expertos}
+\label{tab:usab_perfil}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Participante & Rol & Años \textit{K8s} & CI/CD & Seguridad \\
+\midrule
+P1 & Desarrollo/IA & 3--5 & Habitual & Alta \\
+P2 & DevOps/SRE    & 1--3 & Habitual & Alta \\
+P3 & Desarrollo/IA & 3--5 & Habitual & Media \\
+\bottomrule
+\end{tabular}
+\fuentepropia
+\end{table}
+
+\subsection{Éxito por tarea}
+
+Cada participante ejecutó cinco tareas: instalar la herramienta (T1), realizar un
+escaneo básico e identificar el veredicto (T2), interpretar el informe con
+\texttt{-{}-show-nodes} (T3), producir la salida \ac{JSON} (T4) y, opcionalmente,
+escanear un caso propio (T5). La Tabla~\ref{tab:usab_tareas} recoge la tasa de
+éxito (logrado = 1; logrado con ayuda = 0,5; no logrado = 0).
+
+\begin{table}[htbp]
+\centering
+\caption{Tasa de éxito por tarea (3 participantes)}
+\label{tab:usab_tareas}
+\begin{tabular}{@{}lccccc c@{}}
+\toprule
+Tarea & T1 & T2 & T3 & T4 & T5 & Global \\
+\midrule
+Éxito & 100\,\% & 100\,\% & 100\,\% & 83\,\% & 67\,\% & 90\,\% \\
+\bottomrule
+\end{tabular}
+\fuentepropia
+\end{table}
+
+El núcleo del flujo de trabajo —instalación, escaneo e interpretación del
+informe— se completó sin ayuda por los tres participantes. Las únicas fricciones
+fueron puntuales: un participante necesitó ayuda para extraer campos de la salida
+\ac{JSON} (T4) y la tarea opcional sobre un caso propio (T5) se completó con
+ayuda en dos casos.
+
+\subsection{Usabilidad percibida (SUS)}
+
+La usabilidad se midió con la escala \textbf{SUS} (\textit{System Usability
+Scale}) de diez ítems \citep{Brooke1996}, que produce una puntuación en el rango
+0--100. La media obtenida fue de \textbf{88,3\,\(\pm\)\,10,4} (puntuaciones
+individuales de 100, 80 y 85), muy por encima de la media de referencia del
+sector (68) y dentro de la banda de valoración cualitativa «excelente» (A) según
+la escala de adjetivos de \citet{Bangor2009}. Debe interpretarse como indicativo
+dado el tamaño de la muestra.
+
+\subsection{Aplicabilidad y análisis cualitativo}
+
+Los participantes valoraron cuatro afirmaciones de aplicabilidad (escala 1--5):
+integración en CI/CD o auditoría (A1), ajuste de la priorización de riesgo a su
+forma de auditar (A2), accionabilidad del informe (A3) y confianza en el
+veredicto (A4). Las medias fueron A1\,=\,4,3, A2\,=\,4,3, A4\,=\,4,3 y, como
+punto más bajo, A3\,=\,3,7.
+
+El análisis cualitativo de las respuestas abiertas es coherente con estas cifras.
+Como fortaleza, un participante destacó exactamente la contribución central del
+trabajo: la herramienta «no solo te dice qué está mal en un manifiesto, sino que
+conecta varios problemas pequeños para mostrarte» una cadena de ataque, en lugar
+de fallos aislados; otros valoraron la interpretabilidad del informe y la
+rapidez del análisis. La debilidad, señalada de forma independiente por dos
+participantes y consistente con el valor más bajo de A3, es la
+\textbf{accionabilidad}: el informe comunica el riesgo pero no las acciones
+concretas de remediación ni las reglas subyacentes al veredicto. Un participante
+lo expresó como que el \ac{JSON} «muestra el estado actual pero no las acciones
+que debería tomar», y otro como la dificultad de «confiar en un puntaje sin
+conocer bien qué reglas concretas hay detrás». Esta limitación se recoge como
+línea de trabajo futuro (explicabilidad de reglas y recomendaciones de
+remediación) en el Capítulo~\ref{cap:conclusiones}. Los casos de uso propuestos
+—\textit{gate} en el \textit{pipeline} de CI/CD antes de desplegar a producción y
+auditoría de clústeres— coinciden con el paradigma \textit{shift-left} que motiva
+el trabajo.
+
+\subsection{Amenazas a la validez de la evaluación}
+\label{sec:usab_amenazas}
+
+El tamaño de la muestra (\(n=3\)) limita la precisión de las estimaciones
+puntuales, especialmente de la media SUS, por lo que los resultados se reportan
+como indicativos y no concluyentes. Los perfiles cubren desarrollo/IA y
+DevOps/SRE pero no un rol de \ac{QA} de \ac{IaC} puro, lo que acota la
+generalización. Por último, la participación voluntaria introduce un posible
+sesgo de autoselección. Ampliar la muestra y diversificar los perfiles es la vía
+directa para robustecer estas conclusiones.
+
+% -----------------------------------------------------------
 \section{Comparación con el estado del arte}
 \label{sec:comparacion}
 % -----------------------------------------------------------
