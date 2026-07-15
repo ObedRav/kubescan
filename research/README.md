@@ -68,21 +68,22 @@ python models/evaluate_test_set.py --show-rankings
 Steps 4–6 must be re-run together: the splits are derived from the augmented
 manifest, and the cache must be rebuilt whenever graphs change.
 
-## Trained model metrics (final, 2026-06-11 — group-aware leak-free protocol)
+## Trained model metrics (final, 2026-07-14 — group- and family-aware leak-free protocol)
 
 | Layer | Model | Metric | Value | Target |
 |-------|-------|--------|-------|--------|
-| L1 | Random Forest | Binary F1 (test) | **0.9935** | > 0.85 ✓ |
-| L1 | Random Forest | 5-fold CV F1 | **0.9908 ± 0.006** | — |
-| L2 | GAT-emb (5-fold, group-aware) | P@5 | **0.720 ± 0.098** | > 0.70 ✓ |
-| L2 | GAT-emb (5-fold, group-aware) | Macro-F1 | **0.870 ± 0.075** | — |
-| L3 | Ensemble (held-out test) | P@1 | **1.00** | — |
-| L3 | Ensemble (held-out test) | P@5 | **0.60** (ceiling 0.80) | — |
+| L1 | Random Forest | Binary F1 (test) | **0.9946** | > 0.85 ✓ |
+| L1 | Random Forest | 5-fold CV F1 | **0.9917 ± 0.005** | — |
+| L2 | GAT-emb (5-fold, family-aware) | P@5 | **0.720 ± 0.160** | > 0.70 ✓ |
+| L2 | GAT-emb (5-fold, family-aware) | Macro-F1 | **0.803 ± 0.137** | — |
+| L3 | Ensemble (held-out test) | P@1 / P@3 | **1.00 / 1.00** | — |
+| L3 | Ensemble (held-out test) | P@5 | **0.80** (gated; 0.60 ungated, ceiling 1.00) | — |
 | L3 | Ensemble (held-out test) | FPR_clean | **0.00** | < 0.10 ✓ |
 
-Architecture ablation (same protocol): GAT-3L P@5 0.72 > GAT-2L 0.68 > GCN-3L 0.64.
-Test set: 15 graphs, 4 chains — 3 of 4 chains ranked in top-5 (4th at rank 8);
-the test clusters are excluded from CV folds, GA tuning and augmentation.
+Architecture ablation (same protocol): GAT-3L P@5 0.72 ≈ GAT-2L 0.72 > GCN-3L 0.68
+(macro-F1 0.803 / 0.800 / 0.711). Test set: 86 graphs, 5 chains — with the structural
+feasibility gate, 4 of 5 chains rank in the top-5 (5th at rank 6); the test clusters
+are excluded from CV folds, GA tuning and augmentation.
 95% bootstrap CIs in `models/checkpoints/test_results.json`; full provenance in
 `models/checkpoints/run_manifest.json`. Earlier (pre-2026-06) numbers used a
 protocol with augmentation leakage and are not comparable.
