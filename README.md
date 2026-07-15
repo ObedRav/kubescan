@@ -1,6 +1,6 @@
 # kubescan
 
-Kubernetes attack-chain risk scanner — Master's thesis project (UNIR, 2026).
+Kubernetes attack-chain risk scanner.
 
 Predicts whether a Kubernetes cluster's YAML manifests form an exploitable
 multi-hop attack chain (pod-escape → lateral movement → impact) using a
