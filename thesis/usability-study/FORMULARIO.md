@@ -1,51 +1,55 @@
-# Formulario de evaluación — cómo crearlo
+# Construcción y despliegue del formulario de evaluación
 
-## Opción rápida (recomendada): Apps Script — lo genera automáticamente
-Usa `crear_formulario.gs`: abre https://script.google.com, pega el archivo,
-ejecuta `crearFormulario` una vez y autoriza. Crea el formulario completo
-(perfil, tareas, SUS, aplicabilidad, abiertas) y registra la URL para responder.
-No requiere CLI ni credenciales locales. Los títulos ya vienen prefijados
-(`SUS1`, `A1`, `T1`…) para que la exportación a CSV encaje con
-`compute_results.py`.
+El cuestionario de la evaluación (perfil, resultado de tareas, SUS, aplicabilidad
+y preguntas abiertas) se implementó como un **Google Form**. Para que el
+instrumento fuera **reproducible y quedara bajo control de versiones**, no se
+construyó a mano: se generó de forma programática mediante un script de
+**Google Apps Script** (`crear_formulario.gs`), que crea todas las secciones y
+preguntas en una única ejecución.
 
-> ¿Hay un CLI? La Google Forms API permite crearlo por código, pero exige un
-> proyecto de Google Cloud + OAuth; para un formulario único, Apps Script es más
-> rápido de poner en marcha.
+## Método de generación
 
-## Opción manual: guion para construirlo a mano
+El script se ejecutó una vez en Google Apps Script (https://script.google.com),
+bajo la cuenta del autor, invocando la función `crearFormulario`. El script:
 
-Crear una sola vez (≈10 min) y reutilizar el enlace con los 3 participantes.
-Todas las preguntas **obligatorias**. Al final, «Respuestas → Exportar a CSV»,
-renombrar las columnas al formato de `plantilla_resultados.csv` y ejecutar
-`python3 compute_results.py plantilla_resultados.csv`.
+- crea el formulario con título y descripción (respuestas anónimas, uso
+  exclusivamente académico);
+- añade las cinco secciones descritas abajo, con los tipos de pregunta y las
+  escalas correspondientes;
+- **prefija los títulos** de los ítems (`SUS1`, `A1`, `T1`…) de modo que la
+  exportación a CSV se corresponde directamente con las columnas de
+  `plantilla_resultados.csv`;
+- registra en el log la URL pública del formulario, que fue la distribuida a los
+  participantes.
 
----
+Al ser un script versionado, cualquier tercero puede regenerar el instrumento
+íntegro sin reconstruirlo manualmente, lo que refuerza la reproducibilidad de la
+evaluación.
 
-**Título del formulario:** Evaluación de usabilidad — kubescan
-**Descripción:** Evaluamos la herramienta, no a la persona. ~4 minutos. Respuestas anónimas, uso académico (TFE).
+## Estructura del formulario
 
-## Sección 1 — Perfil
-1. Rol *(opción única)*: DevOps/SRE · Platform engineer · Seguridad/AppSec · Desarrollo/IA · Otro
-2. Años con Kubernetes *(opción única)*: <1 · 1–3 · 3–5 · >5
-3. Familiaridad con seguridad de contenedores *(única)*: Baja · Media · Alta
-4. Uso de CI/CD *(única)*: Nunca · Ocasional · Habitual
+| Sección | Contenido | Tipo de ítem |
+|---------|-----------|--------------|
+| 1. Perfil | rol, años con Kubernetes, familiaridad con seguridad, uso de CI/CD | opción única |
+| 2. Tareas | T1–T5 | opción única (Logrado / con ayuda / No logrado) |
+| 3. SUS | 10 enunciados estándar | escala lineal 1–5 |
+| 4. Aplicabilidad | A1–A4 | escala lineal 1–5 |
+| 5. Comentarios | más útil / fricción / caso de uso / otros | respuesta larga |
 
-## Sección 2 — Resultado de las tareas *(opción única por tarea: Logrado / Logrado con ayuda / No logrado)*
-- T1 Instalación · T2 Escaneo básico · T3 Interpretación · T4 Salida JSON · T5 Caso propio (o «No aplica»)
+Los enunciados exactos de SUS y aplicabilidad son los de `GUIA_PARTICIPANTE.md`.
 
-## Sección 3 — SUS *(escala lineal 1–5; 1 = totalmente en desacuerdo, 5 = totalmente de acuerdo)*
-Usar exactamente los 10 enunciados de `GUIA_PARTICIPANTE.md` (SUS 1–10), en ese orden.
+## Distribución
 
-## Sección 4 — Aplicabilidad *(escala lineal 1–5)*
-A1, A2, A3, A4 (enunciados en `GUIA_PARTICIPANTE.md`).
+El enlace público del formulario se distribuyó a los participantes expertos junto
+con la guía de tareas (`GUIA_PARTICIPANTE.md`), en **formato autoservicio
+asíncrono** (~10 minutos por participante, sin sesión agendada), para minimizar
+la carga sobre profesionales con disponibilidad limitada.
 
-## Sección 5 — Abiertas *(respuesta larga)*
-- ¿Lo más útil?  · ¿Qué cambiarías / mayor fricción?  · ¿Un caso de uso real?  · Comentarios.
+## Tratamiento de datos
 
----
-
-### Correspondencia de columnas para `plantilla_resultados.csv`
-`participant, role, years_k8s, cicd, sec_familiarity, T1_success..T5_success (1 / 0.5 / 0),
-SUS1..SUS10 (1–5), A1..A4 (1–5)`.
-El *scoring* SUS (impares valor−1, pares 5−valor, ×2,5) lo calcula
-`compute_results.py`; no hay que hacerlo a mano.
+Las respuestas se exportan de Google Forms a CSV; los valores se vuelcan en
+`plantilla_resultados.csv` (una fila por participante) y se procesan con
+`compute_results.py`, que calcula la puntuación **SUS** (ítems impares:
+`valor − 1`; pares: `5 − valor`; suma × 2,5), la **tasa de éxito por tarea** y
+las **medias de aplicabilidad**. El *scoring* es, por tanto, determinista y
+auditable a partir de los datos crudos.
