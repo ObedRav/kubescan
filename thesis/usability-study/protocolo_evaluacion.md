@@ -13,13 +13,25 @@ Evaluar, con usuarios expertos, (a) la **usabilidad** de la herramienta
 y (b) su **aplicabilidad** al flujo de trabajo real de auditoría de seguridad de
 clústeres *Kubernetes* / integración en *pipelines* CI/CD.
 
-## 2. Participantes
+## 2. Participantes y formato
 
-- **Tamaño de muestra: 5–6 usuarios expertos** (mínimo defendible 5; 3 solo si
-  la captación resulta imposible, documentándolo como amenaza a la validez).
-  Justificación: Nielsen (2000) — ~5 usuarios detectan ~85 % de los problemas de
-  usabilidad en pruebas formativas; con menos, el sesgo por participante domina
-  la media SUS.
+- **Tamaño de muestra: 3 usuarios expertos.** Es el mínimo con el que la media
+  SUS y las tasas de éxito son interpretables; se elige por la disponibilidad
+  limitada de perfiles expertos y **se declara explícitamente como amenaza a la
+  validez de conclusión** (muestra reducida; §7 y capítulo de conclusiones).
+  Referencia: Nielsen (2000) — ~5 usuarios detectan ~85 % de los problemas en
+  pruebas formativas, por lo que con 3 se cubre una fracción sustancial pero no
+  exhaustiva; los resultados se reportan como indicativos, no concluyentes.
+- **Formato autoservicio asíncrono** (para minimizar la carga de los
+  participantes): cada experto recibe la `GUIA_PARTICIPANTE.md` (tareas con
+  comandos listos para copiar y pegar) y el formulario en línea
+  (`FORMULARIO.md`). Tiempo estimado por participante: **~10 minutos**, sin
+  necesidad de agendar sesión. El *think-aloud* es opcional en este formato; las
+  incidencias se recogen en las preguntas abiertas del formulario.
+- Antes del estudio se realizó una **prueba piloto del protocolo** (simulación
+  del recorrido con tres perfiles) que validó la claridad de las tareas y
+  detectó incidencias corregidas; no constituye datos de participantes reales
+  (véase `pilot_simulado.md`).
 - **Perfil de «experto»** (debe cumplir al menos uno):
   - Ingeniero/a DevOps, SRE o *platform engineer* con experiencia operando
     *Kubernetes*.
@@ -59,9 +71,9 @@ clústeres *Kubernetes* / integración en *pipelines* CI/CD.
 
 | # | Tarea | Éxito = | RNF/objetivo relacionado |
 |---|-------|---------|--------------------------|
-| T1 | **Instalar** kubescan (`pip install -e kubescan/`) y comprobar que el comando `kubescan` responde | comando disponible | RNF-3 Instalabilidad |
+| T1 | **Instalar** kubescan desde cero (`pip install -e kubescan/` en un entorno virtual limpio) y comprobar que el comando `kubescan` responde | instalación correcta y comando disponible | RNF-3 Instalabilidad |
 | T2 | **Escanear** `muestras/03_cadena/` e indicar el **veredicto** y la puntuación *ensemble* | identifica ATTACK_CHAIN y la puntuación | Uso básico |
-| T3 | **Interpretar**: en `muestras/02_misconfig/`, con `--show-nodes`, indicar el manifiesto de mayor riesgo y **qué flag de escape** lo explica | identifica el manifiesto y la flag | Interpretabilidad del informe |
+| T3 | **Interpretar**: en `muestras/02_misconfig/` (dos manifiestos), con `--show-nodes`, indicar el manifiesto de mayor riesgo y **la(s) flag(s) que explican su riesgo** (de configuración o de movimiento lateral) | identifica el manifiesto de mayor riesgo y sus flags principales | Interpretabilidad del informe |
 | T4 | **Salida JSON**: ejecutar con `--format json` sobre `muestras/03_cadena/` y extraer `ensemble_score` y `n_escape_capable` | extrae ambos campos | Integración CI/CD (RNF-4) |
 | T5 | *(opcional, aplicabilidad)* escanear un directorio de manifiestos **propio/real** y valorar el resultado | ejecuta y comenta | Validez externa |
 

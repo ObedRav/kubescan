@@ -13,9 +13,12 @@ from __future__ import annotations
 
 import csv
 import statistics as st
+import sys
 from pathlib import Path
 
-CSV = Path(__file__).parent / "plantilla_resultados.csv"
+# Default to the real-study template; pass a path to score another file
+# (e.g. the simulated-pilot data).
+CSV = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).parent / "plantilla_resultados.csv"
 ODD = [1, 3, 5, 7, 9]   # positively worded SUS items
 TASKS = ["T1", "T2", "T3", "T4", "T5"]
 APP = ["A1", "A2", "A3", "A4"]
