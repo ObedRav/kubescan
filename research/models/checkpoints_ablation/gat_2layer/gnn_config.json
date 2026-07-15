@@ -1,0 +1,12 @@
+{
+  "in_channels": 26,
+  "hidden_dim": 64,
+  "num_heads": 4,
+  "num_layers": 2,
+  "num_classes": 3,
+  "dropout": 0.3,
+  "num_edge_types": 5,
+  "edge_emb_dim": 8,
+  "_best_epoch": 8,
+  "_best_val_f1": 1.0
+}

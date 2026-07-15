@@ -1,0 +1,55 @@
+{
+  "num_folds": 5,
+  "binary": false,
+  "macro_f1_mean": 0.7996989204654626,
+  "macro_f1_std": 0.17088874437412965,
+  "precision_at_5_mean": 0.7200000000000001,
+  "precision_at_5_std": 0.16,
+  "precision_at_5_target": 0.7,
+  "accuracy_mean": 0.9481037431057237,
+  "accuracy_std": 0.04158789807641539,
+  "fold_f1s": [
+    1.0,
+    0.5557211458850803,
+    0.8226950354609929,
+    0.6589986971896521,
+    0.9610797237915882
+  ],
+  "fold_p5s": [
+    1.0,
+    0.6,
+    0.6,
+    0.6,
+    0.8
+  ],
+  "model_config": {
+    "conv": "gat",
+    "hidden": 64,
+    "heads": 4,
+    "layers": 2,
+    "dropout": 0.3,
+    "lr": 0.0005,
+    "epochs": 300,
+    "focal_loss": false,
+    "focal_gamma": null,
+    "select_by": "p5"
+  },
+  "_provenance": {
+    "created_utc": "2026-07-15T01:14:26.478104+00:00",
+    "git_commit": "14c95e4c9f5e593ddb135e676a6c94c3eca821af",
+    "git_dirty": true,
+    "platform": "Linux x86_64",
+    "versions": {
+      "python": "3.12.13",
+      "torch": "2.11.0+cu128",
+      "torch_geometric": "2.8.0",
+      "sklearn": "1.6.1",
+      "numpy": "2.0.2",
+      "networkx": "3.6.1",
+      "skops": "0.14.0"
+    },
+    "seed": 42,
+    "conv": "gat",
+    "layers": 2
+  }
+}
