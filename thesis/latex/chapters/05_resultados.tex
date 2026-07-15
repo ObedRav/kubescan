@@ -136,9 +136,11 @@ como \textit{low-medium}; ningún manifiesto crítico es clasificado como \texti
 Esta ausencia de fugas hacia la clase \textit{clean} es la propiedad más relevante desde
 el punto de vista de seguridad operacional: en el peor caso, un manifiesto crítico es
 subestimado a \textit{low-medium}, nunca descartado como seguro. El resto de errores del
-modelo ocurre en la frontera entre \textit{clean} y \textit{low-medium} (3~casos), donde
-algunos manifiestos con pocas flags de baja severidad pueden ser sobreclasificados como
-\textit{low-medium} (falsos positivos benignos desde el punto de vista del operador).
+modelo se concentra en la frontera entre \textit{clean} y \textit{low-medium} (3~casos), donde
+algunos manifiestos con pocas flags de baja severidad se sobreclasifican como
+\textit{low-medium} (falsos positivos benignos desde el punto de vista del operador); un
+único manifiesto \textit{low-medium} se sobreclasifica como \textit{high-critical}, un error
+igualmente conservador.
 
 El modelo de severidad se utiliza en el informe de salida de \textit{kubescan} para
 proporcionar al operador una descripción cualitativa del nivel de riesgo de cada
@@ -156,11 +158,11 @@ a lo largo de las seis fases del desarrollo experimental. La
 Figura~\ref{fig:gnn_evolution} traza la trayectoria de las cuatro
 primeras fases y muestra cómo la aumentación de datos y la corrección del vector
 de escape \texttt{HOSTPATH\_MOUNT} contribuyeron de forma independiente y
-complementaria. La quinta fase corrige el protocolo de particionado: las fases
-anteriores incluían en el entrenamiento variantes aumentadas derivadas de los
+complementaria. La quinta fase corrige el protocolo de particionado: las fases~1--4
+incluían en el entrenamiento variantes aumentadas derivadas de los
 clústeres de validación y test (fuga de datos por casi-duplicados), por lo que sus
 métricas están infladas de forma optimista. Esa quinta fase aplica el protocolo
-\textit{group-aware} descrito en la Sección de diseño (las variantes acompañan a su
+\textit{group-aware} descrito en el Capítulo~\ref{cap:diseno} (las variantes acompañan a su
 clúster base y los clústeres de test quedan fuera de los pliegues) e incorpora el
 \textit{embedding} de tipos de arista; sus métricas son metodológicamente válidas
 pero corresponden todavía al corpus preliminar de 471~grafos. La sexta y última
@@ -168,7 +170,7 @@ fase incorpora el corpus completo de Rahman et~al.\ (599~grafos originales,
 37~cadenas; Sección~\ref{sec:construccion_dataset}) y extiende el protocolo de
 particionado a las \textbf{familias de plantilla} (Capítulo~\ref{cap:diseno}):
 durante esta fase se detectó que los casi duplicados de una misma plantilla
-(siete \texttt{badpods\_*}, nueve \texttt{datadog\_*}, ocho
+(ocho \texttt{badpods\_*}, nueve \texttt{datadog\_*}, ocho
 \texttt{simulator\_*}, doce \texttt{kubernetes\_goat\_*}) quedaban repartidos
 entre particiones, una fuga de información adicional a la de las variantes
 aumentadas que inflaba las métricas de las fases 1--5. Con las familias atómicas,
@@ -239,16 +241,20 @@ El objetivo de diseño es P@5\,>\,0,70 (OE4). En el resultado final de este trab
 (599~grafos originales, 37~cadenas; fase~6 de la Tabla~\ref{tab:gnn_evolution})—
 los pliegues de validación cruzada particionan los 513~grafos originales no
 reservados para test (32~cadenas). El modelo obtiene
-P@5\,=\,0,720\,\(\pm\)\,0,160, \textbf{superando el objetivo} con la semilla de
+P@5\,=\,0,720\,\(\pm\)\,0,160, alcanzando el objetivo con la semilla de
 entrenamiento desplegada (42); a través de tres semillas (7, 42, 123) la media es
-de 0,68\,\(\pm\)\,0,03, con el objetivo dentro de una desviación típica de la
+de 0,68\,\(\pm\)\,0,03\footnote{Las desviaciones típicas de las métricas del modelo
+se reportan como desviación poblacional (\(\text{ddof}=0\)), consistente con la
+instrumentación de \textit{NumPy} empleada en la validación cruzada; la del \ac{SUS}
+(Sección~\ref{sec:usabilidad}) sigue la convención muestral (\(n-1\)) habitual en su
+literatura.}, con el objetivo dentro de una desviación típica de la
 media (Sección~\ref{sec:multisemilla}).
 
 Alcanzar esta cifra exigió diagnosticar una regresión aparente: la primera
 configuración entrenada sobre el corpus completo con familias atómicas empleaba
 \textit{focal loss} y selección de \textit{checkpoints} por F1 macro, y obtuvo
 P@5\,=\,0,480\,\(\pm\)\,0,271, muy por debajo tanto del objetivo como de la
-fase~5. La ablación factorial de la Sección~\ref{sec:ablacion_perdida} demostró
+fase~5. La ablación factorial de la Sección~\ref{sec:ablacion_perdida} mostró
 que la caída se debía a las elecciones de función de pérdida y de criterio de
 selección —no al corpus ni al protocolo de particionado—, y que revertir a
 entropía cruzada ponderada y seleccionar por Precisión@5 recupera el objetivo
@@ -285,9 +291,10 @@ Pliegue & F1 macro & P@5 \\
 La dispersión entre pliegues es consecuencia directa del particionado por
 familias: al mantener cada familia de plantilla como unidad atómica, las cadenas
 de validación de cada pliegue quedan concentradas en pocas familias
-independientes. El pliegue~0 valida sobre las ocho variantes \texttt{datadog\_*}
-(grafos de 2--3 nodos casi idénticos entre sí) y alcanza F1\,=\,1,0 y
-P@5\,=\,1,0; el pliegue~1 valida sobre las siete variantes \texttt{badpods\_*} y
+independientes. El pliegue~0 valida sobre las nueve variantes \texttt{datadog\_*}
+(ocho de ellas cadenas; grafos de 2--3 nodos casi idénticos entre sí) y alcanza
+F1\,=\,1,0 y P@5\,=\,1,0; el pliegue~1 valida sobre las ocho variantes
+\texttt{badpods\_*} (siete de ellas cadenas) y
 es sistemáticamente el más difícil (P@5\,=\,0,60 con la semilla desplegada;
 0,2--0,6 según la semilla, Sección~\ref{sec:multisemilla}); los pliegues 2--4
 combinan familias \texttt{simulator\_*} y \texttt{kubernetes\_goat\_*} con
@@ -308,7 +315,9 @@ atribuir el efecto se completó la matriz factorial 2\(\times\)2 —función de
 pérdida (entropía cruzada ponderada vs.\ \textit{focal loss},
 \(\gamma\)\,=\,2) por criterio de selección de \textit{checkpoints} (F1 macro
 vs.\ Precisión@5)— con particionado, semilla y arquitectura idénticos
-(Tabla~\ref{tab:loss_ablation}).
+(Tabla~\ref{tab:loss_ablation}).\footnote{Las cuatro configuraciones son reproducibles
+mediante \texttt{make reproduce GNN\_FOCAL=\{0,1\} GNN\_SELECT\_BY=\{p5,f1\}}; solo se
+conserva el \textit{checkpoint} de la configuración finalmente desplegada.}
 
 \begin{table}[htbp]
 \centering
@@ -338,7 +347,7 @@ diseñada para regímenes con miles de ejemplos por clase \citep{Lin2017}, adem�
 anula por completo la clasificación de la clase \textit{attack\_chain} en el
 conjunto de test (F1 de clase 0,0 frente a 0,667 con entropía cruzada). La
 configuración desplegada es, en consecuencia, entropía cruzada ponderada con
-selección por Precisión@5.selección por Precisión@5.
+selección por Precisión@5 (Figura~\ref{fig:loss_ablation}).
 
 \begin{figure}[htbp]
   \centering
@@ -356,7 +365,8 @@ selección por Precisión@5.selección por Precisión@5.
 \label{sec:multisemilla}
 
 Para descartar que el resultado dependa de la semilla de entrenamiento, la
-configuración final se reentrenó con tres semillas (7, 42, 123) manteniendo fijo
+configuración final se reentrenó con tres semillas (7, 42, 123; Tabla~\ref{tab:multiseed}
+y Figura~\ref{fig:multiseed_folds}) manteniendo fijo
 el particionado (semilla~42): re-sortear también las particiones confundiría la
 varianza del modelo con la asignación de familias a pliegues, que la
 Sección~\ref{sec:layer2} muestra dominante.
@@ -373,7 +383,7 @@ Semilla & P@5 (\ac{CV}) & F1 macro (\ac{CV}) & Test P@1/P@3/P@5 \\
 \midrule
 42 (desplegada) & 0,720 \(\pm\) 0,160 & 0,803 & 1,00 / 1,00 / 0,80 \\
 7   & 0,640 \(\pm\) 0,265 & 0,853 & 1,00 / 1,00 / 0,80 \\
-123 & 0,680 \(\pm\) 0,200 & 0,857 & 1,00 / 1,00 / 1,00 \\
+123 & 0,680 \(\pm\) 0,204 & 0,857 & 1,00 / 1,00 / 1,00 \\
 \midrule
 \textbf{Media entre semillas} & \textbf{0,680 \(\pm\) 0,033} & 0,838 & — \\
 \bottomrule
@@ -388,7 +398,7 @@ cuatro pliegues puntúan de forma idéntica con las tres semillas. Segunda: las
 métricas de test a nivel de despliegue son estables —P@1\,=\,1,00 y
 P@3\,=\,1,00 con las tres semillas, y P@5 entre 0,80 y 1,00—, de modo que la
 sensibilidad a la semilla afecta a la estimación de validación cruzada, no al
-comportamiento observable del sistema sobre repositorios reales no vistos.comportamiento observable del sistema sobre repositorios reales no vistos.
+comportamiento observable del sistema sobre repositorios reales no vistos.
 
 \begin{figure}[htbp]
   \centering
@@ -472,14 +482,14 @@ restricción de viabilidad estructural aplicada al \textit{ranking}
 (Sección~\ref{sec:gate_estructural}), el ensemble alcanza P@1\,=\,1,00,
 P@3\,=\,1,00 y P@5\,=\,0,80: las cadenas ocupan las posiciones 1--4 y 6, y solo
 \textit{minik8s-ctf} queda fuera del top-5. Sin la restricción, las métricas
-caen a P@1\,=\,0,00, P@3\,=\,0,33 y P@5\,=\,0,60 — la regla es decisiva porque
+caen a P@1\,=\,0,00, P@3\,=\,0,33 y P@5\,=\,0,60 (Figura~\ref{fig:structural_gate}) — la regla es decisiva porque
 74 de los 86~grafos de test son de un solo nodo, y dos de ellos, con todas sus
 flags de escape activas, encabezarían el \textit{ranking} pese a no poder
 albergar una cadena. \ac{FPR}\_clean\,=\,0,00: ningún clúster limpio aparece
 entre los de mayor riesgo. La F1~macro por clasificación \textit{argmax} del
 ensemble de pliegues sobre el conjunto de test es 0,883 (F1 por clase:
 \textit{clean} 1,0; \textit{isolated} 0,981; \textit{attack\_chain} 0,667,
-con 3 de las 5~cadenas correctamente clasificadas).con 3 de las 5~cadenas correctamente clasificadas).
+con 3 de las 5~cadenas correctamente clasificadas).
 
 \begin{figure}[htbp]
   \centering
@@ -555,10 +565,6 @@ Solo señal de escape                    & 0,00 & 0,67 & 0,80 & 0,00 \\
 
 La Tabla~\ref{tab:gnn_folds} reporta las métricas agregadas (F1 macro y P@5) para
 los cinco pliegues de validación cruzada. En el conjunto de test, la matriz de
-confusión del ensemble de pliegues (Sección~\ref{sec:layer3}) muestra el mismo
-patrón de error que los pliegues de validación: los dos falsos negativos de
-cadena se clasifican como \textit{isolated}, nunca como \textit{clean} — el
-sistema degrada hacia la clase intermedia, no hacia la omisión total.En el conjunto de test, la matriz de
 confusión del ensemble de pliegues (Figura~\ref{fig:gnn_confusion}) muestra el
 mismo patrón de error que los pliegues de validación: los dos falsos negativos de
 cadena se clasifican como \textit{isolated}, nunca como \textit{clean} — el
@@ -568,7 +574,7 @@ sistema degrada hacia la clase intermedia, no hacia la omisión total.
   \centering
   \caption{Matriz de confusión del ensemble de pliegues sobre el conjunto de
            test (clasificación \textit{argmax}). Los errores caen en la frontera
-           cadena/aislado; ningún manifiesto crítico se degrada a limpio.}
+           cadena/aislado; ninguna cadena se degrada a limpio.}
   \label{fig:gnn_confusion}
   \includegraphics[width=0.55\textwidth]{fig_gnn_confusion}
   
@@ -579,12 +585,14 @@ El único fallo de ranking del conjunto de test ilustra el error sistemático de
 modelo: \textit{minik8s-ctf} (posición~6, tras el clúster \textit{isolated}
 multi-nodo \textit{kubernetes-extras}) es una cadena de 4~nodos cuya
 probabilidad \ac{GNN} es prácticamente nula (0,0003) y cuyo \textit{risk score}
-\ac{RF} medio es 0,0; su única señal es la fracción de escape (0,5). Cuando la
+\ac{RF} medio es 0,0; su única señal activa es la bandera binaria de escape (la mitad
+de sus nodos tienen capacidad de escape). Cuando la
 señal estructural que el \ac{GNN} aprende no reconoce el patrón de la cadena y
 la señal por manifiesto tampoco lo captura, la bandera de escape binaria por sí
 sola no basta para entrar en el top-5. Las cuatro cadenas recuperadas, en
 cambio, combinan probabilidad \ac{GNN} alta (0,47--0,63) con fracciones de
-escape muy variables (0,02--0,94), lo que confirma que el canal estructural es
+escape por nodo muy variables (0,02--0,94; magnitud descriptiva, no la señal
+binaria del ensemble), lo que confirma que el canal estructural es
 el que ordena los repositorios reales. Esta observación motiva el trabajo futuro
 TF3 (análisis semántico de \ac{RBAC} completo).
 
@@ -604,7 +612,7 @@ Esta hipótesis se cuantifica empíricamente mediante un experimento de ablació
 controlado sobre el corpus completo, con particionado, semilla, función de
 pérdida y criterio de selección idénticos a los de la configuración final
 (fase~6 de la Tabla~\ref{tab:gnn_evolution}), de modo que las tres filas son
-directamente comparables entre sí y con el resultado final:
+directamente comparables entre sí y con el resultado final (Tabla~\ref{tab:arch_ablation}):
 
 \begin{table}[htbp]
 \centering
@@ -706,6 +714,10 @@ así, tres participantes cubren una fracción sustancial de los problemas de
 usabilidad en pruebas formativas \citep{Nielsen2000}.
 
 \subsection{Perfil de los participantes}
+
+La Tabla~\ref{tab:usab_perfil} resume el perfil de los tres participantes expertos,
+seleccionados por su experiencia operando \textit{Kubernetes} y en seguridad de
+contenedores.
 
 \begin{table}[htbp]
 \centering

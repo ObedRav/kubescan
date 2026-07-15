@@ -18,7 +18,7 @@ trabajo respecto a ellos.
 
 \textit{Kubernetes} es la plataforma de orquestación de contenedores dominante en
 entornos de producción empresariales, con un 96\,\% de organizaciones que la utilizan
-o evalúan según la encuesta anual de la \ac{CNCF}
+o evalúan según la encuesta anual de 2021 de la \ac{CNCF}
 \citep{CNCF2022}. A pesar de su adopción generalizada, la seguridad sigue siendo uno
 de los principales retos operacionales: el informe \textit{State of Kubernetes Security}
 de Red Hat 2024 \citep{RedHat2024} revela que el 89\,\% de las organizaciones sufrió
@@ -76,7 +76,8 @@ El análisis estático de manifiestos \ac{IaC} cuenta con una larga trayectoria 
 literatura. Rahman et~al.\ \citep{Rahman2022} construyeron un conjunto de datos
 de referencia para manifiestos \textit{Kubernetes} extraídos de repositorios
 públicos, con 2.039 manifiestos de 92 repositorios etiquetados en 11 categorías de
-\textit{misconfiguration} mediante su propia herramienta de análisis estático. De
+\textit{misconfiguration} identificadas mediante análisis cualitativo y cuantificadas
+con su herramienta de análisis estático (SLI-KUBE). De
 ese trabajo, el presente sistema recupera y codifica 1.906 manifiestos de GitHub y
 GitLab como vectores de características binarias que indican la presencia o ausencia
 de cada patrón.
@@ -84,8 +85,12 @@ de cada patrón.
 Las herramientas industriales actuales más utilizadas son \textit{Checkov}
 \citep{Checkov2021}, que verifica más de mil políticas de seguridad predefinidas, y
 \textit{kube-linter} \citep{KubeLinter2021}, especializado en buenas prácticas de
-\textit{Kubernetes}. Ambas operan al nivel de manifiesto individual y no detectan
-patrones distribuidos entre varios recursos del clúster. También destaca
+\textit{Kubernetes}. \textit{kube-linter} opera al nivel de manifiesto individual,
+mientras que \textit{Checkov} incorpora además comprobaciones basadas en grafos sobre
+las dependencias entre recursos (por ejemplo, escalada de privilegios a través de un
+\textit{RoleBinding}); no obstante, se trata de reglas declarativas escritas manualmente,
+sin un modelo aprendido de la estructura del clúster ni predicción supervisada de
+cadenas de ataque. También destaca
 \textit{Kubescape} \citep{Kubescape2021}, una plataforma de seguridad de código
 abierto integrada en la \ac{CNCF} que combina
 análisis estático con validación de cumplimiento contra los marcos \ac{NSA}, MITRE ATT\&CK
@@ -101,11 +106,13 @@ como el de la Capa~1 del presente sistema. Su propuesta, que incorpora un modelo
 lenguaje de gran escala (\acs{LLM}) para la clasificación, es complementaria a la de
 este trabajo, aunque opera en el mismo nivel de manifiesto individual.
 
-Una limitación estructural de todas las herramientas anteriores es que operan sobre
-manifiestos en aislamiento: saben que un pod tiene \texttt{privileged: true}, pero
-no saben si ese pod tiene acceso de red a los recursos críticos del clúster. La
-detección de cadenas de ataque requiere, inevitablemente, razonar sobre la estructura
-del clúster como un todo.
+La limitación estructural común a estas herramientas es que ninguna aprende ni predice
+cadenas de ataque a partir de la estructura del clúster: incluso las comprobaciones de
+grafo de \textit{Checkov} son reglas fijas sobre dependencias conocidas, no un modelo
+entrenado. Saben que un pod tiene \texttt{privileged: true}, pero no infieren si ese
+pod encadena con el acceso de red a los recursos críticos del clúster para formar una
+ruta de ataque completa. La detección de cadenas de ataque requiere, inevitablemente,
+razonar sobre la estructura del clúster como un todo.
 
 % -----------------------------------------------------------
 \section{Aprendizaje automático para detección de vulnerabilidades}
@@ -113,22 +120,21 @@ del clúster como un todo.
 
 El aprendizaje automático se ha aplicado a la detección de vulnerabilidades en
 código fuente y configuraciones desde hace más de una década. Los clasificadores
-basados en \textit{Random Forest} \citep{Breiman2001} han demostrado resultados
-robustos en escenarios de alta dimensionalidad y clases desbalanceadas —características
-típicas de los conjuntos de datos de seguridad— gracias a su capacidad de combinar
-árboles de decisión con ponderación de clases y selección aleatoria de características
-(\textit{max\_features=sqrt}). El proceso de selección de hiperparámetros para
-\textit{Random Forest} en tareas de seguridad sigue generalmente la estrategia de
-búsqueda en rejilla (\textit{grid search}) con validación cruzada estratificada,
-explorando el espacio de \texttt{n\_estimators} (100–1.000), \texttt{max\_depth}
-(sin límite vs.\ 10–20) y \texttt{min\_samples\_leaf} (1–5), y seleccionando la
-combinación que maximiza la métrica objetivo sobre los pliegues de validación
-\citep{Pedregosa2011}.
+basados en \textit{Random Forest} \citep{Breiman2001} —que combinan múltiples árboles
+de decisión mediante \textit{bagging} y selección aleatoria de características— han
+demostrado resultados robustos en escenarios de alta dimensionalidad y clases
+desbalanceadas, características típicas de los conjuntos de datos de seguridad; el
+desequilibrio se aborda además mediante la ponderación de clases que ofrece su
+implementación en \textit{scikit-learn} \citep{Pedregosa2011}. El ajuste de
+hiperparámetros suele realizarse mediante búsqueda en rejilla (\textit{grid search})
+con validación cruzada estratificada sobre parámetros como \texttt{n\_estimators},
+\texttt{max\_depth} y \texttt{min\_samples\_leaf}; los valores concretos explorados en
+este trabajo se detallan en el Capítulo~\ref{cap:diseno}.
 
 En el dominio de la detección de intrusiones en red, el conjunto de datos UNSW-NB15
 \citep{Moustafa2015} se ha convertido en un referente de evaluación para clasificadores
 supervisados. El conjunto de manifiestos de este trabajo presenta un desequilibrio
-de clases moderado (56,3\,\% seguros vs.\ 43,7\,\% \textit{misconfigured}); el
+de clases moderado (56,3\,\% seguros vs.\ 43,7\,\% mal configurados); el
 desafío de desequilibrio más severo se concentra en las \textit{flags} de escape
 individuales, algunas presentes en menos del 1\,\% de los manifiestos reales.
 El desequilibrio de clases es un problema generalizado
@@ -163,8 +169,8 @@ literatura de aprendizaje automático aplicado a la seguridad:
     presente trabajo son en su mayoría binarias (presencia/ausencia de una
     misconfiguration), con alta proporción de ceros. Los \textit{Random Forests}
     manejan este tipo de datos de forma nativa sin requerir normalización, a diferencia
-    de las Máquinas de Vectores Soporte (\acs{SVM}) o las Redes Neuronales que son sensibles
-    a la escala de las características \citep{Breiman2001}.
+    de las Máquinas de Vectores Soporte (\acs{SVM}) o las Redes Neuronales, sensibles
+    a la escala de las características.
 
   \item \textbf{Gestión intrínseca del desequilibrio de clases.} El parámetro
     \texttt{class\_weight=balanced} de \textit{scikit-learn} implementa una estrategia
@@ -202,13 +208,15 @@ Red Neuronal (\acs{MLP}) & \checkmark & Con pesos & Variable & Requiere normaliz
 \fuentepropia
 \end{table}
 
-Trabajos como \citeauthor{Wist2021} \citeyear{Wist2021}, que aplican técnicas de \ac{ML} a
-la predicción de vulnerabilidades en código fuente, confirman que los \textit{Random
-Forests} ofrecen sistemáticamente mejor rendimiento que los Árboles de Decisión
-individuales y comparable al de las Redes Neuronales superficiales en espacios de
-características binarias de alta dimensión. Esta evidencia, combinada con las
-ventajas de interpretabilidad para auditorías de seguridad, motivó la adopción del
-\textit{Random Forest} como componente de Capa~1 de \textit{kubescan}.
+La aplicación de técnicas de \ac{ML} a la predicción de vulnerabilidades en software
+es un enfoque consolidado que supera de forma consistente a los modelos estadísticos
+clásicos \citep{Jabeen2022}. Dentro de este espacio, el \textit{Random Forest} resulta
+especialmente adecuado para el problema de la Capa~1 por sus propiedades sobre
+características binarias de alta dimensión con clases desbalanceadas —manejo nativo de
+datos dispersos, gestión intrínseca del desequilibrio y salidas probabilísticas
+utilizables como \textit{risk\_score}— que se detallan a continuación. Estas
+propiedades, combinadas con sus ventajas de interpretabilidad para auditorías de
+seguridad, motivaron su adopción como componente de Capa~1 de \textit{kubescan}.
 
 % -----------------------------------------------------------
 \section{Redes neuronales de grafos}
@@ -240,8 +248,8 @@ Las arquitecturas más relevantes para este trabajo son:
 
 \textbf{Graph Convolutional Networks (\acs{GCN})} \citep{Kipf2017}: implementan AGGREGATE
 como la media ponderada de los estados de los vecinos normalizada por sus grados.
-Son eficientes pero asignan pesos uniformes a todos los vecinos, sin distinción entre
-tipos de arista.
+Son eficientes, pero los pesos quedan fijados por la estructura del grafo (los grados
+de los nodos) y no se aprenden, sin distinción entre tipos de arista.
 
 \textbf{GraphSAGE} \citep{Hamilton2017}: extensión inductiva que permite aplicar el
 modelo a grafos no vistos durante el entrenamiento, relevante en escenarios donde
@@ -276,8 +284,6 @@ isomorfismo de Weisfeiler-Lehman, y que la suma de vecinos maximiza el poder
 expresivo frente a la media o el máximo. En este trabajo se adopta un
 \textit{pooling} combinado de media y máximo por su robustez ante grafos de tamaño
 muy variable, aceptando explícitamente ese compromiso de expresividad.
-Esta intuición motiva el uso de \textit{pooling} combinado de media y máximo en la
-Capa~2.
 
 % -----------------------------------------------------------
 \section{\acs{GNN}s aplicadas a ciberseguridad}
@@ -286,9 +292,8 @@ Capa~2.
 La aplicación de \ac{GNN}s a la detección de amenazas es un campo emergente con rápido
 crecimiento. \citeauthor{Bilot2023} \citeyear{Bilot2023} proporcionan una
 revisión exhaustiva de los enfoques basados en \ac{GNN} para la detección de
-intrusiones en red, identificando tres paradigmas: detección
-de anomalías en grafos de flujo, clasificación de nodos en grafos de comunicación, y
-clasificación de grafos de comportamiento por muestra. Una segunda revisión publicada
+intrusiones en red, organizada en torno a enfoques basados en red (grafos de flujo) y
+basados en host (grafos de procedencia). Una segunda revisión publicada
 en \textit{Computers and Security} en 2024 \citep{GNNSurvey2024} amplía esta
 taxonomía y documenta un crecimiento sostenido de la investigación en el área en
 los últimos años.
@@ -315,8 +320,8 @@ del presente sistema.
 Una limitación reconocida en la literatura es la escasez de conjuntos de datos de
 grafos etiquetados de alta calidad para ciberseguridad. Tanto \citeauthor{Bilot2023}
 \citeyear{Bilot2023} como \citeauthor{GNNSurvey2024} \citeyear{GNNSurvey2024}
-identifican la construcción de benchmarks estandarizados como el principal obstáculo
-para el avance del área, lo que refuerza la contribución del presente trabajo al
+señalan la escasez de conjuntos de datos etiquetados y de benchmarks estandarizados
+entre los principales obstáculos para el avance del área, lo que refuerza la contribución del presente trabajo al
 generar un conjunto de datos original de 599 grafos de clúster (1.154 tras
 aumentación de datos) con etiquetas de cadena de ataque.
 
@@ -370,14 +375,16 @@ clasificación supervisada.
 
 El análisis de la literatura permite identificar tres carencias fundamentales que
 motivan el presente trabajo. En primer lugar, las herramientas de análisis estático
-existentes (Checkov, kube-linter, Kubescape) operan a nivel de manifiesto individual
-y no modelan las relaciones estructurales entre recursos del clúster que habilitan
-las cadenas de ataque. En segundo lugar, los conjuntos de datos de referencia para
+existentes (Checkov, kube-linter, Kubescape) no aprenden ni predicen cadenas de ataque
+a partir de la estructura del clúster; aunque Checkov incorpora comprobaciones de grafo
+basadas en reglas declarativas sobre dependencias entre recursos, ninguna emplea un
+modelo supervisado que razone sobre las relaciones que habilitan dichas cadenas. En segundo lugar, los conjuntos de datos de referencia para
 seguridad de \textit{Kubernetes} son escasos, de pequeño tamaño y desequilibrados
 hacia las clases de riesgo bajo, lo que dificulta el entrenamiento de clasificadores
-de clúster: el propio análisis del dataset de Rahman et~al.\ confirma que
-\texttt{TRUE\_HOST\_PID} —la flag de escape más peligrosa— aparece en sólo el
-0,3\,\% de los manifiestos reales. En tercer lugar, las herramientas de grafo de
+de clúster: el análisis del corpus de manifiestos reales recopilado en este trabajo
+(Capítulo~\ref{cap:diseno}) confirma que \texttt{TRUE\_HOST\_PID} —la flag de escape
+más peligrosa— aparece en sólo el 0,3\,\% de las filas antes de incorporar fuentes
+especializadas. En tercer lugar, las herramientas de grafo de
 ataque más avanzadas (KubeHound, IceKube) requieren un clúster activo, lo que impide
 su uso como control preventivo en el pipeline \acs{CICD}.
 
@@ -392,7 +399,7 @@ a las principales herramientas del estado del arte.
 \toprule
 Herramienta & \shortstack{Análisis\\estático} & \shortstack{Requiere\\clúster} & Grafos & \shortstack{\ac{ML}\\supervisado} \\
 \midrule
-Checkov \citep{Checkov2021} & \checkmark & No & No & No \\
+Checkov \citep{Checkov2021} & \checkmark & No & Parcial & No \\
 kube-linter \citep{KubeLinter2021} & \checkmark & No & No & No \\
 Kubescape \citep{Kubescape2021} & \checkmark & Opcional & No & No \\
 KubeHound \citep{KubeHound2023} & No & Sí & \checkmark & No \\

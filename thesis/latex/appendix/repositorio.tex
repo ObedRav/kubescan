@@ -23,7 +23,8 @@ El repositorio incluye los siguientes componentes:
     Forest (\texttt{train\_rf.py}), de la GAT (\texttt{train\_gnn.py}), y del
     Algoritmo Genético (\texttt{run\_ga\_ensemble.py}).
   \item \textbf{\texttt{research/data/}}: los grafos de clúster en formato
-    \texttt{.npz} (NumPy, con campos \texttt{x}/\texttt{edge\_index}/\texttt{y}/\texttt{cluster\_id})
+    \texttt{.npz} (NumPy, con campos \texttt{x}, \texttt{edge\_index},
+    \texttt{edge\_attr}, \texttt{y}, \texttt{node\_labels} y \texttt{risk\_scores})
     y el dataset tabular en formato \texttt{.csv}.
   \item \textbf{\texttt{research/models/checkpoints/}}: \textit{checkpoints}
     de los 5~modelos GAT entrenados en validación cruzada y el modelo RF
@@ -31,6 +32,15 @@ El repositorio incluye los siguientes componentes:
     \texttt{kubescan/checkpoints/trained/}).
   \item \textbf{\texttt{thesis/}}: fuentes LaTeX de esta memoria.
 \end{itemize}
+
+Para garantizar la reproducibilidad, los resultados finales de esta memoria se
+entrenaron y evaluaron sobre una GPU NVIDIA~T4 (CUDA) con Python~3.12, PyTorch~2.11
+(CUDA~12.8), PyTorch Geometric~2.8, scikit-learn~1.6 y NumPy~2.0. Las versiones
+exactas de todas las dependencias, junto con las semillas, las particiones y las sumas
+de verificación (\textit{checksums}) de los datos y los \textit{checkpoints}, se
+registran en \texttt{research/models/checkpoints/run\_manifest.json}; el flujo completo
+se reproduce mediante los objetivos del \texttt{Makefile} (\texttt{make data},
+\texttt{make reproduce}).
 
 El estudiante es el único autor de todos los \textit{commits} del repositorio.
 Los datos públicos utilizados provienen de las fuentes citadas en la

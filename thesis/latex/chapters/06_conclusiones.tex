@@ -5,12 +5,13 @@
 
 \section{Conclusiones}
 
-Este trabajo ha demostrado la viabilidad de un enfoque híbrido de tres capas para la
+Este trabajo ha mostrado la viabilidad de un enfoque híbrido de tres capas para la
 detección automática de cadenas de ataque en infraestructuras \textit{Kubernetes}. Las
 conclusiones C1, C2, C4, C5, C6 y C7 responden, respectivamente, a los objetivos OE2,
-OE4, OE1, OE5, OE3 y OE6 definidos en la Sección~\ref{cap:objetivos}; C3 no cierra un
+OE4, OE1, OE5, OE3 y OE6 definidos en el Capítulo~\ref{cap:objetivos}; C3 no cierra un
 objetivo propio, sino que aporta evidencia complementaria sobre el impacto operacional
-del resultado de C2. Las conclusiones principales son:
+del resultado de C2. En conjunto, estas conclusiones cierran el objetivo general
+planteado en el Capítulo~\ref{cap:objetivos}. Las conclusiones principales son:
 
 \textbf{C1 — La Capa~1 supera ampliamente el objetivo de diseño (OE2).} El clasificador
 \textit{Random Forest} alcanza F1 macro\,=\,0,9946 y \ac{AUC}\,=\,0,9986 en test, superando
@@ -49,8 +50,8 @@ conjunto de test.} Sobre los 86~grafos de test (5~cadenas de repositorios reales
 sistema completo de tres capas alcanza P@1\,=\,1,00, P@3\,=\,1,00 y
 P@5\,=\,0,80, recuperando 4~de las 5~cadenas en las primeras 5~posiciones del
 ranking sin ningún falso positivo de clúster limpio
-(\ac{FPR}\_clean\,=\,0,00), y con estas métricas de test estables a través de
-las tres semillas de entrenamiento evaluadas. Parte esencial del resultado es la
+(\ac{FPR}\_clean\,=\,0,00); P@1 y P@3 se mantienen idénticos (1,00) a través de
+las tres semillas de entrenamiento evaluadas, con P@5 entre 0,80 y 1,00. Parte esencial del resultado es la
 restricción de viabilidad estructural (un clúster de un solo manifiesto no puede
 albergar una cadena multi-salto, Sección~\ref{sec:gate_estructural}): sin ella
 las métricas de ranking caen a P@1\,=\,0,00 y P@5\,=\,0,60, porque 74 de los
@@ -72,11 +73,11 @@ resultado final) — enseña dos lecciones metodológicas. Primera: la aumentaci
 de datos exige particionado consciente de grupos, pues parte de la mejora
 aparente de la cuarta fase procedía de fuga entre variantes aumentadas y sus
 grafos base de evaluación. Segunda, y descubierta en la fase final: los casi
-duplicados de plantilla (siete \texttt{badpods\_*}, nueve \texttt{datadog\_*})
+duplicados de plantilla (ocho \texttt{badpods\_*}, nueve \texttt{datadog\_*})
 constituyen una segunda vía de fuga cuando se reparten entre particiones; su
 corrección hace que las cifras finales midan generalización entre familias no
-vistas, una vara de medir más exigente y más honesta que la de las fases
-anteriores, cuyas métricas estaban infladas por esta contaminación.
+vistas, una vara de medir más exigente y más honesta que la de las fases~1--4,
+cuyas métricas estaban infladas por esta contaminación.
 
 \textbf{C5 — El ensemble cumple los criterios de OE5, con una salvedad
 documentada sobre el valor añadido de los pesos optimizados.} La ablación sobre
@@ -105,16 +106,19 @@ grafos de entrenamiento como en el componente de producción de \textit{kubescan
 sin embargo, la ablación de arquitectura (Tabla~\ref{tab:arch_ablation}) compara
 \ac{GAT} frente a \ac{GCN} y no aísla la contribución específica del tipo de arista
 \ac{RBAC} frente a los otros cuatro, por lo que su aporte incremental al ranking de
-cadenas de ataque queda como trabajo futuro.
+cadenas de ataque queda como trabajo futuro (TF6).
 
 \textbf{C7 — kubescan es una herramienta distribuible, instalable y operacionalmente
 viable (OE6).} La evaluación funcional de la Sección~\ref{sec:evaluacion_funcional}
 confirma que el sistema se instala sin compiladores externos (\textit{pip install -e
 kubescan/}), analiza clústeres de hasta 312~manifiestos en menos de 8~segundos en
 hardware de gama media, produce salida en dos formatos (texto y \ac{JSON}) adecuados para
-integración en pipelines \acs{CICD}, y garantiza reproducibilidad de la inferencia
-mediante la resolución determinista de \textit{checkpoints} (sujeto a la variación
-entre \textit{backends} de cómputo documentada en L6). El prototipo implementado
+integración en pipelines \acs{CICD}, e incorpora además un modo opcional de consulta
+directa a un clúster activo (\texttt{kubescan live}) para auditorías en caliente, sin
+que ello altere la vía principal de análisis sobre manifiestos estáticos. La inferencia
+es reproducible sobre un mismo \textit{backend} de cómputo mediante la resolución
+determinista de \textit{checkpoints} (sujeto a la variación entre \textit{backends}
+documentada en L6). El prototipo implementado
 en este
 trabajo demuestra que el paradigma \textit{shift-left} —detectar cadenas de ataque
 antes del despliegue, sin requerir acceso al clúster activo— es técnicamente factible
@@ -123,8 +127,10 @@ aplicabilidad con usuarios expertos (Sección~\ref{sec:usabilidad}) respalda est
 objetivo desde la perspectiva del usuario: la herramienta obtiene una puntuación
 \textbf{SUS de 88,3} (valoración «excelente») y una aplicabilidad alta —integración
 en CI/CD, priorización de riesgo y confianza en el veredicto (medias de 4,3 sobre
-5)—, con una tasa de éxito del 100\,\% en las tareas de instalación, escaneo e
-interpretación. El principal punto de mejora señalado por los participantes es la
+5)—, con una tasa de éxito del 100\,\% en las tareas nucleares de instalación,
+escaneo e interpretación (90\,\% global sobre las cinco tareas, incluidas la
+extracción \ac{JSON} y la tarea opcional). El principal punto de mejora señalado por
+los participantes es la
 \textbf{accionabilidad} del informe (A3\,=\,3,7): la herramienta comunica el
 riesgo pero no las acciones de remediación ni las reglas concretas tras el
 veredicto, lo que se recoge como trabajo futuro (TF8). Estos resultados deben
@@ -178,8 +184,8 @@ reentrenando únicamente con las 21 restantes de alta cobertura podría cuantifi
 el impacto de esta limitación sobre la F1 macro de la Capa~1.
 
 \textbf{L3 — Sesgo de muestreo en el dataset tabular.} Los 10 repositorios más
-representados suponen el 60,8\,\% del dataset, y \textit{gitcontroller} por sí solo
-aporta el 13,7\,\%. Un esquema de validación cruzada por repositorio ofrecería
+representados suponen el 47,6\,\% del dataset, y \textit{gitcontroller} por sí solo
+aporta el 9,9\,\%. Un esquema de validación cruzada por repositorio ofrecería
 estimaciones más conservadoras de la generalización del modelo.
 
 \textbf{L4 — Evaluación en clústeres de producción reales.} Toda la evaluación
@@ -190,7 +196,7 @@ externa del sistema.
 \textbf{L5 — Etiquetado derivado de reglas sobre el mismo espacio de
 características.} Las etiquetas de grafo (clean / isolated / attack\_chain) se
 generan mediante una regla determinista definida sobre las mismas \textit{flags} y
-aristas que observan los modelos (Sección de diseño). El sistema aprende, por
+aristas que observan los modelos (Sección~\ref{sec:construccion_grafo}). El sistema aprende, por
 tanto, una aproximación robusta de dicha regla bajo ruido, enmascaramiento y
 observabilidad parcial — no una noción de cadena de ataque independiente de la
 regla. Esta circularidad es común en la literatura de detección de
@@ -263,10 +269,9 @@ externa empleada en los \textit{ACM SIGSOFT Empirical Standards}, las
 limitaciones L1--L7 se organizan del siguiente modo:
 
 \textbf{Validez de constructo} (¿miden las métricas lo que se pretende medir?):
-L6 cuestiona si el conjunto de métricas reportado en esta memoria (\textit{backend}
-MPS/CPU) mide el mismo constructo que mediría un \textit{backend} CUDA de
-producción, dado el no determinismo documentado en las operaciones de
-\textit{scatter}. L5 cuestiona si la etiqueta de grafo (derivada de reglas sobre
+L6 cuestiona si las métricas reportadas en esta memoria (\textit{backend} CUDA/T4)
+coinciden con las que obtendría una réplica en un \textit{backend} CPU/MPS, dado el
+no determinismo documentado en las operaciones de \textit{scatter}. L5 cuestiona si la etiqueta de grafo (derivada de reglas sobre
 el mismo espacio de características que observan los modelos) constituye un
 constructo de «cadena de ataque» independiente de la regla de etiquetado, o una
 aproximación circular a ella.
@@ -316,8 +321,9 @@ volumen— es la línea de mayor impacto esperado de este trabajo.
 
 \textbf{TF2 — Implementar P@5 global como métrica alternativa.} En lugar de P@5 por
 pliegue, evaluar el ranking del modelo sobre el conjunto completo de grafos en un único
-ranking global eliminaría el efecto de techo por pliegue y permitiría comparar con el
-objetivo original de diseño sin restricciones estructurales.
+ranking global aumentaría el número de candidatos ordenados por evaluación y reduciría
+la granularidad escalonada (en pasos de 0,2) de la P@5 por pliegue, que amplifica la
+varianza entre pliegues señalada en L1.
 
 \textbf{TF3 — Incorporar análisis semántico de \ac{RBAC} completo.} El parser de \ac{YAML}
 actual identifica roles privilegiados por nombre y por verbos de escalada. Una extensión
@@ -342,7 +348,10 @@ extender ese mismo protocolo controlado (mismos pliegues, mismas semillas) a la
 elección de \textit{mean+max pooling} frente a \textit{mean-only}, así como a un
 barrido más amplio de hiperparámetros del optimizador (número de cabezas de
 atención, \textit{learning rate}, anchura oculta) que en este trabajo se fijaron
-a priori sin búsqueda sistemática (Sección~\ref{sec:capa2_diseno}).
+a priori sin búsqueda sistemática (Sección~\ref{sec:capa2_diseno}). Este mismo
+protocolo debería extenderse a una ablación por tipo de arista que aísle la
+contribución incremental de la arista \ac{RBAC} frente a los otros cuatro tipos,
+cerrando la cuestión planteada en C6.
 
 \textbf{TF7 — Ajuste del \textit{ensemble} robusto al desplazamiento de
 distribución.} Los pesos del \ac{GA} se ajustan sobre un \textit{pool
