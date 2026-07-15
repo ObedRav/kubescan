@@ -65,8 +65,9 @@ un directorio de manifiestos \ac{YAML} en una puntuación de riesgo de cadena de
 (Figura~\ref{fig:arquitectura}):
 
 \begin{enumerate}
-  \item \textbf{Capa~1 (Random Forest):} extrae 25 características binarias por
-    manifiesto y produce un \textit{risk\_score} \(\in [0,1]\).
+  \item \textbf{Capa~1 (Random Forest):} extrae 28 características por manifiesto
+    (25 indicadores binarios y 3 agregados derivados) y produce un
+    \textit{risk\_score} \(\in [0,1]\).
   \item \textbf{Capa~2 (\ac{GAT}):} modela el clúster como un grafo donde los nodos
     son manifiestos y las aristas representan relaciones de seguridad; produce una
     probabilidad de cadena de ataque \(\in [0,1]\).
@@ -83,7 +84,8 @@ un directorio de manifiestos \ac{YAML} en una puntuación de riesgo de cadena de
 \addequationtoindex{Función de puntuación del ensemble (Capa 3)}
 
 donde los pesos \(w_{\text{rf}}, w_{\text{gnn}}, w_{\text{esc}}\) son optimizados
-mediante Algoritmo Genético para maximizar la Precisión@5 en el conjunto de validación.
+mediante Algoritmo Genético sobre las predicciones \textit{out-of-fold} de la
+validación cruzada (Sección~\ref{sec:capa3_diseno}).
 
 \begin{figure}[htbp]
   \centering
@@ -102,8 +104,9 @@ mediante Algoritmo Genético para maximizar la Precisión@5 en el conjunto de va
 % -----------------------------------------------------------
 
 \subsection{Fuentes de datos}
+\label{sec:fuentes_datos}
 
-El conjunto de datos tabular final contiene 2.479~filas y 58~columnas, combinando
+El conjunto de datos tabular final contiene 2.827~filas y 58~columnas, combinando
 cinco fuentes (agrupadas en cuatro categorías, dado que Rahman et~al.\ aporta dos
 plataformas distintas con características de distribución diferentes; ver Tabla~\ref{tab:dataset}):
 
@@ -119,9 +122,9 @@ Rahman et~al.\ \citep{Rahman2022} — GitHub & 1.510 & Manifiestos reales, etiqu
 Rahman et~al.\ \citep{Rahman2022} — GitLab & 396 & Ídem, plataforma distinta \\
 BishopFox BadPods \citep{BishopFox2021} & 128 & Pods vulnerables intencionales \\
 Kubernetes Goat \citep{KubernetesGoat} & 14 & Escenarios de vulnerabilidad \\
-Repositorios de seguridad adicionales & 431 & CTFs, \textit{fixtures} de herramientas, labs \\
+Repositorios de seguridad adicionales & 779 & CTFs, \textit{fixtures} de herramientas, labs \\
 \midrule
-\textbf{Total} & \textbf{2.479} & \\
+\textbf{Total} & \textbf{2.827} & \\
 \bottomrule
 \end{tabular}
 \fuentepropia
@@ -130,13 +133,13 @@ Repositorios de seguridad adicionales & 431 & CTFs, \textit{fixtures} de herrami
 La incorporación de BadPods fue esencial para mitigar la escasez de ejemplos de
 misconfiguraciones críticas en los repositorios reales: antes de añadir esta fuente,
 \texttt{TRUE\_HOST\_PID} aparecía en sólo el 0,3\,\% de las filas; tras la incorporación,
-la cobertura ascendió al 2,8\,\%. En cuanto a los conjuntos de datos de referencia
+la cobertura ascendió al 3,8\,\%. En cuanto a los conjuntos de datos de referencia
 existentes para intrusión en red, como UNSW-NB15 \citep{Moustafa2015}, se estudió su
 metodología de construcción como guía para el diseño del proceso de etiquetado y la
 estrategia de balanceo de clases, dado que presentan un desequilibrio de clases del
-mismo orden de magnitud que el de este trabajo (64,2\,\% seguros vs.\ 35,8\,\%
+mismo orden de magnitud que el de este trabajo (56,3\,\% seguros vs.\ 43,7\,\%
 misconfigured). El conjunto \textit{GenKubeSec}
-\citep{Backes2024}, publicado en 2024, no estaba disponible durante el desarrollo de
+\citep{Malul2024}, publicado en 2024, no estaba disponible durante el desarrollo de
 este trabajo; en su lugar se empleó \textit{Checkov} \citep{Checkov2021} directamente
 sobre los ficheros \ac{YAML} descargados como fuente de validación multi-herramienta
 equivalente.
@@ -168,8 +171,8 @@ Sección~\ref{sec:features_table}.
 
 Tres features presentan varianza casi nula pero se mantienen en el entrenamiento (con
 importancia residual o nula, Sección~\ref{sec:rf_importance}):
-\texttt{SECCOMP\_UNCONFINED} (15/2.479 activa), \texttt{VALID\_TAINT\_SECRET}
-(0/2.479 activa) y \texttt{NO\_NETWORK\_POLICY} (2.478/2.479 activa, sin poder
+\texttt{SECCOMP\_UNCONFINED} (15/2.827 activa), \texttt{VALID\_TAINT\_SECRET}
+(0/2.827 activa) y \texttt{NO\_NETWORK\_POLICY} (2.818/2.827 activa, sin poder
 discriminativo).
 
 % -----------------------------------------------------------
@@ -177,7 +180,8 @@ discriminativo).
 \label{sec:construccion_grafo}
 % -----------------------------------------------------------
 
-Cada directorio de manifiestos se representa como un grafo dirigido
+Cada directorio de manifiestos se representa, mediante \textit{NetworkX}
+\citep{Hagberg2008}, como un grafo dirigido
 \(G=(V, E)\) donde \(|V|\) es el número de manifiestos del clúster y
 \(E\) contiene aristas de cinco tipos semánticamente distintos
 (Tabla~\ref{tab:edge_types}). La Figura~\ref{fig:grafo_cluster} ilustra un ejemplo
@@ -223,12 +227,14 @@ movimiento lateral y emite aristas de tipo~2 (\textit{sa\_lateral}). La arista d
 tipo~4 (\ac{RBAC}) representa la vinculación de un \textit{ServiceAccount} a un rol
 privilegiado.
 
-El dataset de grafos final comprende 96~grafos originales (25~clean, 46~isolated,
-25~attack\_chain) y 471~grafos totales tras la aumentación de datos aplicada
-exclusivamente en el conjunto de entrenamiento. Los 14 nuevos clústeres de cadena de
-ataque provienen de 24 repositorios de seguridad adicionales (CTFs, laboratorios y
-\textit{fixtures} de herramientas de análisis estático) incorporados tras la fase
-inicial de adquisición de datos.
+El dataset de grafos final comprende 599~grafos originales (25~clean, 537~isolated,
+37~attack\_chain) y 1.154~grafos totales tras la aumentación de datos aplicada
+exclusivamente en el conjunto de entrenamiento. Esta cifra incorpora el corpus
+completo de Rahman et~al.\ \citep{Rahman2022}, cuyos \textit{namespaces} cruzados
+se resolvieron mediante descarga autenticada desde GitHub, lo que amplió
+sustancialmente el número de clústeres \textit{isolated} respecto a las fases
+experimentales preliminares descritas en la Sección~\ref{sec:layer2} del
+Capítulo~\ref{cap:resultados}.
 
 \subsection{Detección de escape y movimiento lateral}
 
@@ -242,7 +248,8 @@ como constantes inmutables (\texttt{frozenset}). Un nodo se clasifica como de
 incorporado durante el desarrollo al detectar que \textit{badpods\_hostpath} —que monta
 el sistema de ficheros del anfitrión— era incorrectamente etiquetado como
 \textit{isolated} al no tener ninguna otra flag de escape activa. Con la corrección,
-el número de clústeres de cadena de ataque ascendió de 13 a 15.\par}
+el número de clústeres de cadena de ataque del corpus preliminar de 471~grafos
+ascendió de 13 a 15 (37 en el corpus final de 599).\par}
 
 Un nodo se clasifica como de \textbf{movimiento lateral} si tiene activa al menos una
 de las siguientes 4~flags: \texttt{SA\_AUTOMOUNT\_TOKEN} (token de cuenta de servicio
@@ -278,11 +285,11 @@ Se entrena un \textit{RandomForestClassifier} de \textit{scikit-learn}
   \item \texttt{n\_estimators = 500}
   \item \texttt{max\_features = sqrt} (clasificación estándar)
   \item \texttt{min\_samples\_leaf = 2} (evita hojas de muestra única)
-  \item \texttt{class\_weight = balanced} (compensa ratio 1,79:1)
+  \item \texttt{class\_weight = balanced} (compensa ratio 1,29:1)
   \item \texttt{random\_state = 42}
 \end{itemize}
 
-El modelo se entrena sobre 1.983~muestras (80\,\% del total) y se evalúa en 496
+El modelo se entrena sobre 2.261~muestras (80\,\% del total) y se evalúa en 566
 muestras de test no vistas durante el entrenamiento. La probabilidad predicha para la
 clase misconfigured (clase~1) se usa como \textit{risk\_score} del nodo en el grafo.
 
@@ -325,7 +332,9 @@ con las dimensiones exactas verificadas en \texttt{gat\_encoder.py}:
         \texttt{GATConv(256, 64, heads=1)}; salida 64~dims
         (una sola cabeza de atención que produce directamente
         el embedding final del nodo, sin concatenación);
-        seguida de \texttt{LayerNorm}, \ac{ELU}, conexión residual y \texttt{Dropout(0.3)}.
+        seguida de \texttt{LayerNorm}, \ac{ELU} y \texttt{Dropout(0.3)}
+        (sin conexión residual: las dimensiones de entrada y salida difieren,
+        256 frente a 64).
   \item \textbf{Global pooling}: \texttt{global\_mean\_pool} y \texttt{global\_max\_pool}
         sobre los 64-dim embeddings de todos los nodos; concatenación
         \(\to\) 128~dims (\(64 + 64\)).
@@ -343,14 +352,19 @@ cadenas de ataque que pueden estar concentradas en un único nodo crítico.
 
 \subsection{Entrenamiento}
 
-El modelo se entrena con \textit{PyTorch Geometric} \citep{Fey2019} bajo los
-siguientes hiperparámetros: optimizador AdamW con tasa de aprendizaje
+El modelo se entrena con \textit{PyTorch Geometric} \citep{Fey2019}, construido
+sobre \textit{PyTorch} \citep{Paszke2019}, bajo los siguientes hiperparámetros: optimizador AdamW con tasa de aprendizaje
 \(5\times10^{-4}\) y \textit{weight\_decay}\,=\,\(10^{-4}\);
 \textit{scheduler} CosineAnnealingLR con T\_max\,=\,300 y
 \(\eta_{\min}\,=\,10^{-5}\); función de pérdida CrossEntropyLoss con pesos
 de clase calculados por frecuencia inversa;
 \textit{gradient clipping} con norma máxima 2,0; \textit{early stopping} con
-paciencia de 50 épocas; y validación cruzada estratificada de 5~pliegues.
+paciencia de 50 épocas; tamaño de lote 8; semilla global 42 (idéntica para el
+entrenamiento y para la generación de particiones); y validación cruzada
+estratificada de 5~pliegues. El \textit{checkpoint} de cada pliegue se selecciona
+por la mejor Precisión@5 de validación, con la F1 macro como criterio de
+desempate (\texttt{--select-by p5}), alineando la selección de modelos con la
+métrica primaria del sistema en lugar de con la métrica de clasificación.
 
 Los pesos de clase se calculan en cada pliegue de entrenamiento mediante la
 siguiente fórmula implementada en \texttt{train\_gnn.py}:
@@ -367,8 +381,8 @@ equivalente al comportamiento de \texttt{class\_weight=balanced} de
 \textit{scikit-learn}. Un detalle importante es que los pesos se calculan
 \textbf{después} de la aumentación de datos: como la aumentación genera 15~variantes
 por grafo de cadena de ataque, la clase \textit{attack\_chain} pasa de ser la
-minoría a ser la mayoría en el conjunto de entrenamiento (aproximadamente 250~grafos
-aumentados vs.\ 20~clean y 37~isolated en el conjunto de entrenamiento de cada
+minoría a ser la mayoría en el conjunto de entrenamiento (aproximadamente 380~grafos
+aumentados vs.\ 18~clean y 367~isolated en el conjunto de entrenamiento de cada
 pliegue, tras excluir las variantes de los clústeres de validación y test). La Ecuación~\ref{eq:class_weights} se auto-adapta a esta nueva distribución
 asignando mayor peso a \textit{clean} e \textit{isolated}, y menor peso a
 \textit{attack\_chain}, compensando el efecto de la sobre-representación creada por
@@ -376,31 +390,51 @@ la aumentación.
 
 \subsection{Aumentación de datos}
 
-Para mitigar la escasez de ejemplos de cadena de ataque (15 de 82 grafos en la
-primera fase), se aplican tres estrategias de aumentación exclusivamente sobre los
-grafos de entrenamiento: \textit{edge dropout} (eliminación aleatoria del 20\,\% de
-aristas de los tipos~0 y~3, los menos críticos para la señal de ataque);
-\textit{feature masking} (puesta a cero aleatoria del 15\,\% de valores en el vector
-de nodo); y \textit{subgraph sampling} (extracción de un subgrafo inducido por el
-70\,\% de nodos del grafo original, manteniendo los nodos de escape; cada subgrafo
+Para mitigar la escasez de ejemplos de cadena de ataque (37 de 599 grafos
+originales), se aplican tres estrategias de aumentación exclusivamente sobre los
+grafos de entrenamiento: \textit{edge dropout} (eliminación aleatoria de entre el
+10\,\% y el 35\,\% de aristas de los tipos~0 y~3, los menos críticos para la señal
+de ataque, con tasa muestreada uniformemente por variante);
+\textit{feature masking} (puesta a cero, con probabilidad por nodo entre el 10\,\%
+y el 25\,\%, restringida a seis características de baja importancia — nunca las
+flags de escape, \texttt{HOSTPATH\_MOUNT} ni el \textit{risk\_score}); y
+\textit{subgraph sampling} (extracción de un subgrafo inducido por entre el 40\,\%
+y el 70\,\% de nodos, aplicada solo a grafos de más de 50~nodos, con \textit{BFS}
+sembrada en el nodo de mayor \textit{risk\_score}; cada subgrafo
 se valida contra la regla de etiquetado de cadena y, si deja de cumplirla, se
 descarta en favor de una variante sobre el grafo completo, evitando introducir
 ruido de etiqueta). Cada grafo de
-cadena de ataque origina 15~variantes aumentadas, resultando en 375~grafos
-adicionales (25~originales \(\times\) 15~variantes), para un total de
-471~grafos con aumentación.
+cadena de ataque origina 15~variantes aumentadas, resultando en 555~grafos
+adicionales (37~originales \(\times\) 15~variantes) en el \textit{pool} de
+aumentación; de éstos, únicamente 390 (los correspondientes a los 26~grafos de
+cadena cuya base pertenece a la partición de entrenamiento) entran efectivamente
+en el entrenamiento, para un total de 1.154~grafos con aumentación.
 
 La asignación de variantes a particiones es \textbf{consciente de grupos}
 (\textit{group-aware}): una variante aumentada solo puede entrar en una partición
 de entrenamiento si su grafo base pertenece a esa misma partición. Las variantes
 derivadas de clústeres de validación o de test se excluyen del entrenamiento por
 completo, ya que entrenar con casi-duplicados de un grafo de evaluación
-constituiría fuga de datos. Adicionalmente, los 15~clústeres de test se mantienen
-fuera de los pliegues de validación cruzada: los pliegues particionan únicamente
-los 81~grafos originales restantes, de modo que ni los modelos de pliegue ni las
-predicciones \textit{out-of-fold} empleadas para ajustar los pesos del
-\textit{ensemble} (Capa~3) observan ningún clúster de test, directa ni
-indirectamente.
+constituiría fuga de datos.
+
+El particionado es además \textbf{consciente de familias de plantilla}: los
+clústeres originales que comparten una misma plantilla base (por ejemplo, las
+siete variantes \texttt{badpods\_*}, que difieren únicamente en qué flag de
+escape activan, o las nueve \texttt{datadog\_*}) son casi duplicados entre sí, no
+muestras independientes. Cuando una familia contiene etiquetas mixtas, sus
+miembros se asignan como una unidad atómica a una única partición — nunca se
+reparten entre entrenamiento, validación y test ni entre pliegues — y la
+asignación emplea un reparto voraz ponderado por el número de grafos de cada
+etiqueta, de modo que la proporción real de cada clase por partición siga las
+fracciones solicitadas. Sin esta regla, un modelo entrenado con cinco hermanos de
+una familia resuelve trivialmente al sexto en test, inflando las métricas. La
+partición resultante (semilla 42) es de 815~grafos de entrenamiento (con
+aumentación), 88 de validación y 86 de test. Adicionalmente, los 86~clústeres de
+test se mantienen fuera de los pliegues de validación cruzada: los pliegues
+particionan únicamente los 513~grafos originales restantes (32 de cadena), de
+modo que ni los modelos de pliegue ni las predicciones \textit{out-of-fold}
+empleadas para ajustar los pesos del \textit{ensemble} (Capa~3) observan ningún
+clúster de test, directa ni indirectamente.
 
 % -----------------------------------------------------------
 \section{Capa 3: Ensemble con Algoritmo Genético}
@@ -416,9 +450,18 @@ suma de los tres pesos sea siempre~1). La función objetivo es:
 
 \begin{equation}
   F = 0{,}7 \cdot P@5 + 0{,}3 \cdot (1 - \text{FPR\_clean})
+      - \lambda \sum_{i} \max(0,\ w_{\min} - w_i)
   \label{eq:ga_fitness}
 \end{equation}
 \addequationtoindex{Función objetivo (fitness) del Algoritmo Genético}
+
+El último término es una penalización de suelo con \(w_{\min}\,=\,0{,}1\) y
+\(\lambda\,=\,2{,}0\): sin ella, el optimizador es libre de anular cualquiera de
+los tres pesos cuando eso puntúa marginalmente mejor sobre la muestra
+\textit{out-of-fold}, lo que produce soluciones degeneradas que no generalizan al
+conjunto de test. La penalización hace que ignorar una señal por completo esté
+estrictamente dominado salvo que la ganancia observada supere \(\lambda\) veces el
+déficit.
 
 La selección se realiza mediante torneo de tamaño~3; el cruce es aritmético (media
 de los dos padres); la mutación aplica perturbación gaussiana con \(\sigma\,=\,0{,}08\)
@@ -445,6 +488,24 @@ Estos umbrales son fijos y no se reoptimizan durante el entrenamiento del \ac{GA
 que optimiza únicamente los pesos \(w_i\) de la Ecuación~\ref{eq:ensemble}.
 Permiten al operador interpretar directamente la puntuación: cualquier clúster con
 \textit{score}\,\(\geq\)\,0,60 requiere revisión inmediata.
+
+\subsection{Restricción de viabilidad estructural}
+\label{sec:gate_estructural}
+
+Una cadena de ataque multi-salto requiere, por definición, alcanzabilidad entre al
+menos dos manifiestos; un grafo de clúster con un único nodo no puede albergarla.
+Esta propiedad, verificada sobre el corpus completo (los 592~grafos de cadena
+tienen \(\geq\)2 nodos y \(\geq\)1 arista, mientras que 499 de los 537 grafos
+\textit{isolated} son de un solo nodo), se incorpora como restricción de
+inferencia en \texttt{ga\_ensemble.py} (\texttt{MIN\_CHAIN\_NODES},
+\texttt{is\_chain\_feasible}, \texttt{chain\_rank\_key}): en el
+\textit{ranking} por riesgo de cadena, ningún clúster de un solo manifiesto puede
+superar a un clúster estructuralmente viable, y el veredicto de un clúster
+inviable se limita a \texttt{ISOLATED\_MISCONFIG} aunque su puntuación supere el
+umbral de 0,60. La restricción se aplica únicamente en inferencia y evaluación;
+el ajuste de los pesos del \ac{GA} se realiza sobre el \textit{ranking} sin
+restricción, donde los pesos están mejor determinados (la Sección~\ref{sec:layer3}
+cuantifica el efecto de esta regla sobre las métricas de test).
 
 % -----------------------------------------------------------
 \section{Implementación de kubescan}
@@ -551,7 +612,7 @@ Las 7~características extendidas están imputadas mediante \textit{Checkov} par
 
 El desarrollo de \textit{kubescan} sigue prácticas de ingeniería de software
 orientadas a la producción. La calidad del código se garantiza mediante cuatro
-herramientas integradas en un \textit{pipeline} de pre-commit y CI/CD: (1)
+herramientas integradas en un \textit{pipeline} de pre-commit y \acs{CICD}: (1)
 \textit{ruff}, linter y formateador de código Python con reglas de estilo y
 seguridad; (2) \textit{mypy} en modo estricto, para comprobación estática de
 tipos en todos los módulos del paquete; (3) \textit{pytest}, para la suite de

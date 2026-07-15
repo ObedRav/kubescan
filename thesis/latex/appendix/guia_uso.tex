@@ -73,14 +73,14 @@ Scanning /tmp/manifests-ejemplo (5 GNN fold models loaded)...
 
   VERDICT - ATTACK_CHAIN          x  HIGH RISK - review immediately
 
-  Ensemble score    : 0.9037
-  Chain probability : 0.7104   (5-fold GNN ensemble)
-  Clean probability : 0.0130
-  Mean RF risk      : 0.9961
+  Ensemble score    : 0.9472
+  Chain probability : 0.5445   (5-fold GNN ensemble)
+  Clean probability : 0.0001
+  Mean RF risk      : 0.9997
   Escape fraction   : 0.5000   (1/2 manifests have escape flags)
   Lateral fraction  : 2/2 manifests have lateral flags
 
-  Weights: w_rf=0.337  w_gnn=0.328  w_escape=0.335
+  Weights: w_rf=0.517  w_gnn=0.115  w_escape=0.368
 
 ==================================================================
 \end{verbatim}}
@@ -96,15 +96,15 @@ $ kubescan scan /tmp/manifests-ejemplo --cluster-name produccion-web --format js
 {
   "cluster": "produccion-web",
   "verdict": "ATTACK_CHAIN",
-  "ensemble_score": 0.903702,
-  "chain_probability": 0.710363,
-  "mean_rf_risk": 0.99605,
+  "ensemble_score": 0.947236,
+  "chain_probability": 0.54445,
+  "mean_rf_risk": 0.999711,
   "n_manifests": 2,
   "n_escape_capable": 1,
   "manifests": [
     {
       "file": "pod-privilegiado.yaml",
-      "risk_score": 0.999914,
+      "risk_score": 1.0,
       "escape_capable": true,
       "flags": ["TRUE_HOST_PID", "TRUE_HOST_IPC", "..."]
     },
@@ -157,11 +157,19 @@ make reproduce  # data -> RF -> GAT (5-fold) -> ensemble GA -> eval en test
 {\raggedright
 El objetivo \texttt{reproduce} encadena, en orden, \texttt{train\_rf.py},
 \texttt{train\_gnn.py} (5-fold, 300 épocas, \texttt{hidden=64},
-\texttt{heads=4}, \texttt{layers=3}), \texttt{run\_ga\_ensemble.py} y
-\texttt{evaluate\_test\_set.py}, todos con semilla fija (\texttt{--seed 42} por
-defecto), y finaliza generando
+\texttt{heads=4}, \texttt{layers=3}, entropía cruzada ponderada y selección de
+\textit{checkpoint} por Precisión@5 mediante \texttt{--select-by p5}),
+\texttt{run\_ga\_ensemble.py} (ajuste sobre predicciones \textit{out-of-fold},
+\texttt{--oof}) y \texttt{evaluate\_test\_set.py} (evaluación con la
+restricción de viabilidad estructural de la Sección~\ref{sec:gate_estructural}),
+todos con semilla fija (\texttt{--seed 42} por defecto), y finaliza generando
 \texttt{research/models/checkpoints/run\_manifest.json} con la procedencia de
-la ejecución. El objetivo \texttt{reproduce-ablations} reentrena las variantes
-de arquitectura reportadas en la Tabla~\ref{tab:arch_ablation} (\ac{GAT} de
-2~capas y \ac{GCN} de 3~capas) bajo las mismas semillas e hiperparámetros de
-entrenamiento.\par}
+la ejecución. Las variables \texttt{GNN\_FOCAL} y \texttt{GNN\_SELECT\_BY} del
+\texttt{Makefile} permiten reproducir las ramas de la ablación de la
+Sección~\ref{sec:ablacion_perdida}, y el cuaderno parametrizado
+\texttt{research/notebooks/colab\_reproduce.ipynb} ofrece la misma cadena para
+entornos \textit{Google Colab} con GPU. El objetivo
+\texttt{reproduce-ablations} reentrena las variantes de arquitectura reportadas
+en la Tabla~\ref{tab:arch_ablation} (\ac{GAT} de 2~capas y \ac{GCN} de
+3~capas) con la misma configuración de pérdida y selección que el modelo
+desplegado.\par}

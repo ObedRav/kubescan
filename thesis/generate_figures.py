@@ -344,9 +344,12 @@ plt.close()
 print("fig_gnn_evolution.pdf OK")
 
 # ── FIG 5.3  Confusion matrix ────────────────────────────────────────────────
-# Datos reales: 3 FP, 0 FN. 496 test muestras, 22.3% misconfig -> ~111 misc
-# safe=385 -> TP_safe=382, FP=3 | misc=111 -> TP_misc=111, FN=0
-cm = np.array([[382, 3], [0, 111]])
+# Leída del artefacto desplegado (rf_results.json): [[316, 3], [0, 247]]
+import json as _json
+with open(os.path.join(os.path.dirname(__file__), '..', 'research', 'models',
+                       'checkpoints', 'rf_results.json')) as _f:
+    _rf = _json.load(_f)
+cm = np.array(_rf['binary']['test_metrics']['confusion_matrix'])
 labels = ['Seguro', 'Misconfigured']
 fig, ax = plt.subplots(figsize=(4.5, 3.8))
 im = ax.imshow(cm, cmap='Blues', vmin=0)
@@ -364,13 +367,14 @@ plt.close()
 print("fig_rf_confusion.pdf OK")
 
 # ── FIG 5.4  Ensemble P@k ────────────────────────────────────────────────────
-# Datos reales: P@1=1.00, P@3=0.67, P@5=0.80 (test set, 15 grafos, 4 cadenas)
+# Test desplegado 2026-07-14 (86 grafos, 5 cadenas, restricción estructural):
+# P@1=1.00, P@3=1.00, P@5=0.80 (test_results.json ranking_metrics)
 fig, ax = plt.subplots(figsize=(4.5, 3.2))
-bars = ax.bar(['P@1', 'P@3', 'P@5'], [1.00, 0.67, 0.80],
+bars = ax.bar(['P@1', 'P@3', 'P@5'], [1.00, 1.00, 0.80],
               color=['#27ae60','#f39c12','#2980b9'], edgecolor='white', width=0.5)
 ax.axhline(y=0.70, color='#e74c3c', linestyle='--', linewidth=1.5, label='Objetivo P@5 = 0.70')
 ax.set_ylim(0, 1.15); ax.set_ylabel('Precision@k')
-for bar, val in zip(bars, [1.00, 0.67, 0.80]):
+for bar, val in zip(bars, [1.00, 1.00, 0.80]):
     ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.02,
             f'{val:.2f}', ha='center', va='bottom', fontsize=11, fontweight='bold')
 ax.legend(fontsize=9)

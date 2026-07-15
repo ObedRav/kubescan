@@ -7,53 +7,96 @@
 
 Este trabajo ha demostrado la viabilidad de un enfoque híbrido de tres capas para la
 detección automática de cadenas de ataque en infraestructuras \textit{Kubernetes}. Las
-conclusiones C1--C6 responden, respectivamente, a los objetivos OE2, OE4, OE1, OE5,
-OE3 y OE6 definidos en la Sección~\ref{cap:objetivos}. Las conclusiones principales son:
+conclusiones C1, C2, C4, C5, C6 y C7 responden, respectivamente, a los objetivos OE2,
+OE4, OE1, OE5, OE3 y OE6 definidos en la Sección~\ref{cap:objetivos}; C3 no cierra un
+objetivo propio, sino que aporta evidencia complementaria sobre el impacto operacional
+del resultado de C2. Las conclusiones principales son:
 
 \textbf{C1 — La Capa~1 supera ampliamente el objetivo de diseño (OE2).} El clasificador
-\textit{Random Forest} alcanza F1 macro\,=\,0,9935 y \ac{AUC}\,=\,0,9980 en test, superando
-el umbral objetivo del 0,85 en 14,4 puntos porcentuales. El modelo de severidad de
-tres clases logra F1\,=\,0,9541 en la clase \textit{high-critical} (4~errores sobre
-56~muestras de test, incluyendo 1~manifiesto crítico clasificado como \textit{clean}),
-el resultado más débil de los tres clasificadores de severidad pero aun así por
-encima de 0,95.
+\textit{Random Forest} alcanza F1 macro\,=\,0,9946 y \ac{AUC}\,=\,0,9986 en test, superando
+el umbral objetivo del 0,85 en 14,5 puntos porcentuales. El modelo de severidad de
+tres clases logra F1\,macro\,=\,0,9838, con la clase \textit{high-critical} (96~muestras
+de test) en 0,9789 — el resultado más débil de los tres, aunque por encima de 0,95—;
+sus 3~errores se clasifican todos como \textit{low-medium}, sin ningún manifiesto
+crítico degradado a \textit{clean}.
 
-\textbf{C2 — La Capa~2 supera el objetivo de Precisión@5 (OE4).} La \ac{GAT} de
-3~capas con \textit{embedding} de tipos de arista alcanza
-F1~macro\,=\,0,870\,\(\pm\)\,0,075 y P@5\,=\,0,720\,\(\pm\)\,0,098 en los 5~pliegues
-bajo el protocolo \textit{group-aware}, superando el objetivo de P@5\,\(>\)\,0,70.
-Tres pliegues alcanzan su techo teórico de P@5, situando todos los clústeres de
-cadena del pliegue en las primeras 5~posiciones del ranking. La ablación de
-arquitectura (Tabla~\ref{tab:arch_ablation}) respalda las decisiones de diseño: la
-\ac{GAT} supera a la \ac{GCN} en 8~puntos de P@5, y la configuración de 3~capas es
-la única que cumple el objetivo de la métrica primaria.
+\textbf{C2 — La Capa~2, en su configuración final, alcanza el objetivo de
+Precisión@5 (OE4).} La \ac{GAT} de 3~capas con \textit{embedding} de tipos de
+arista, entrenada con entropía cruzada ponderada y selección de
+\textit{checkpoints} por Precisión@5 bajo el particionado consciente de familias
+sobre el corpus completo de Rahman et~al.\ (599~grafos originales, 37~cadenas),
+alcanza P@5\,=\,0,720\,\(\pm\)\,0,160 y F1~macro\,=\,0,803\,\(\pm\)\,0,137
+en los 5~pliegues de validación cruzada, superando el objetivo de diseño
+P@5\,\(>\)\,0,70 con la semilla desplegada. La lectura honesta de esta cifra
+exige dos matices que este trabajo documenta explícitamente: a través de tres
+semillas de entrenamiento la media es de 0,68\,\(\pm\)\,0,03 (objetivo dentro
+de una desviación típica, con la variación concentrada íntegramente en el
+pliegue de la familia \texttt{badpods\_*}), y alcanzar el objetivo exigió
+diagnosticar mediante una ablación factorial 2\(\times\)2 que una primera
+configuración con \textit{focal loss} y selección por F1 macro
+(P@5\,=\,0,480\,\(\pm\)\,0,271) atribuía erróneamente al corpus una regresión
+causada por esas dos elecciones (Sección~\ref{sec:ablacion_perdida}). La
+ablación de arquitectura, repetida sobre el corpus completo con la configuración
+final (Tabla~\ref{tab:arch_ablation}), muestra que la atención sobre tipos de
+arista aporta +9,2~puntos de F1 y +4~puntos de P@5 frente a una \ac{GCN} sin
+tipos de arista, y que la profundidad (2 frente a 3~capas) no es el factor
+determinante del ranking — una propiedad de robustez de la arquitectura.
 
-\textbf{C3 — La combinación de aumentación de datos y expansión del corpus es la
-contribución metodológica central (OE1).} La evolución en cinco fases — línea base
-(P@5\,=\,0,40), aumentación (P@5\,=\,0,52), corrección \texttt{HOSTPATH\_MOUNT}
-(P@5\,=\,0,60), dataset extendido con 25~cadenas (P@5\,=\,0,88, protocolo
-preliminar) y corrección \textit{group-aware} del particionado (P@5\,=\,0,72,
-resultado final) — demuestra que la escasez de ejemplos de cadena de ataque es el
-factor limitante predominante y que ambas estrategias de mitigación son efectivas y
-complementarias. La quinta fase ilustra además una lección metodológica: la
-aumentación de datos exige particionado consciente de grupos, pues parte de la
-mejora aparente de la fase~4 procedía de fuga entre variantes aumentadas y sus
-grafos base de evaluación.
+\textbf{C3 — El \textit{ensemble} final, combinado con la restricción de
+viabilidad estructural, mantiene un desempeño operacional sólido sobre el
+conjunto de test.} Sobre los 86~grafos de test (5~cadenas de repositorios reales
+únicos, sin hermanos de plantilla en entrenamiento; techo P@5\,=\,1,00), el
+sistema completo de tres capas alcanza P@1\,=\,1,00, P@3\,=\,1,00 y
+P@5\,=\,0,80, recuperando 4~de las 5~cadenas en las primeras 5~posiciones del
+ranking sin ningún falso positivo de clúster limpio
+(\ac{FPR}\_clean\,=\,0,00), y con estas métricas de test estables a través de
+las tres semillas de entrenamiento evaluadas. Parte esencial del resultado es la
+restricción de viabilidad estructural (un clúster de un solo manifiesto no puede
+albergar una cadena multi-salto, Sección~\ref{sec:gate_estructural}): sin ella
+las métricas de ranking caen a P@1\,=\,0,00 y P@5\,=\,0,60, porque 74 de los
+86~grafos de test son de un solo nodo. El tamaño reducido del conjunto de test
+(intervalo de confianza al 95\,\% de P@5: \([0{,}60,\ 1{,}00]\)) limita la
+confianza que puede depositarse en cualquier comparación puntual.
 
-\textbf{C4 — El ensemble es robusto y no produce falsos positivos de clústeres
-limpios (OE5).} La ablación sobre el conjunto de test
-(Tabla~\ref{tab:ensemble_ablation}) confirma que el componente \ac{GNN} es
-indispensable: la configuración RF-sólo degrada el ranking (P@5 de 0,60 a 0,40) e
-introduce un falso positivo de clúster limpio (\ac{FPR}\,=\,0,20), mientras que
-\ac{FPR}\_clean\,=\,0,00 para cualquier combinación que incluya el \ac{GNN}. El
-clúster de mayor puntuación es una cadena de ataque (P@1\,=\,1,00). Con honestidad
-metodológica debe señalarse que, en este conjunto de test, los pesos optimizados
-por el \ac{GA} no superan a los pesos uniformes ni al \ac{GNN} en solitario: la
-aportación del \textit{ensemble} en estos datos es la robustez frente a la
-degradación de componentes individuales, no una mejora del ranking sobre el mejor
-componente.
+\textbf{C4 — La construcción del corpus y su protocolo de particionado
+anti-fuga son la contribución metodológica central (OE1).} El conjunto de datos
+final satisface los criterios cuantitativos de OE1: 2.827~manifiestos
+(\(\geq\)2.000) y una prevalencia de \texttt{TRUE\_HOST\_PID} del 3,78\,\%
+(\(\geq\)2\,\%). La evolución en seis fases — línea base (P@5\,=\,0,40,
+82~grafos), aumentación (P@5\,=\,0,52, 277~grafos), corrección
+\texttt{HOSTPATH\_MOUNT} (P@5\,=\,0,60, 307~grafos), dataset extendido con
+25~cadenas (P@5\,=\,0,88, 471~grafos, protocolo preliminar), corrección
+\textit{group-aware} del particionado (P@5\,=\,0,72, mismos 471~grafos) y
+corpus completo con familias de plantilla atómicas (P@5\,=\,0,72, 599~grafos,
+resultado final) — enseña dos lecciones metodológicas. Primera: la aumentación
+de datos exige particionado consciente de grupos, pues parte de la mejora
+aparente de la cuarta fase procedía de fuga entre variantes aumentadas y sus
+grafos base de evaluación. Segunda, y descubierta en la fase final: los casi
+duplicados de plantilla (siete \texttt{badpods\_*}, nueve \texttt{datadog\_*})
+constituyen una segunda vía de fuga cuando se reparten entre particiones; su
+corrección hace que las cifras finales midan generalización entre familias no
+vistas, una vara de medir más exigente y más honesta que la de las fases
+anteriores, cuyas métricas estaban infladas por esta contaminación.
 
-\textbf{C5 — El esquema de cinco tipos de arista amplía la cobertura de escalada de
+\textbf{C5 — El ensemble cumple los criterios de OE5, con una salvedad
+documentada sobre el valor añadido de los pesos optimizados.} La ablación sobre
+el conjunto de test (Tabla~\ref{tab:ensemble_ablation}) confirma que el
+componente \ac{GNN} es indispensable: la configuración RF-sólo colapsa el
+ranking (P@1 de 1,00 a 0,00; P@5 de 0,80 a 0,40) porque el \textit{risk score}
+medio por manifiesto de los repositorios reales de cadena es \(\approx\)0,
+mientras que \ac{FPR}\_clean\,=\,0,00 se mantiene en todas las configuraciones.
+Los criterios de OE5 se cumplen: \ac{FPR}\_clean\,=\,0 y P@5 del ensemble igual
+a la del mejor componente individual (0,80). Debe señalarse que los pesos
+optimizados por el \ac{GA} no superan a los pesos uniformes ni al \ac{GNN} en
+solitario: la función objetivo, escalonada, deja los pesos indeterminados sobre
+mesetas amplias, y el conjunto de ajuste \textit{out-of-fold} (dominado por
+cadenas de \textit{fixtures} sintéticas) presenta un desplazamiento de
+distribución respecto a las cadenas reales de test
+(Sección~\ref{sec:layer3}). La aportación del \textit{ensemble} en estos datos
+es igualar al mejor componente sin incurrir en los puntos débiles de ninguno,
+no mejorar su ranking.
+
+\textbf{C6 — El esquema de cinco tipos de arista amplía la cobertura de escalada de
 privilegios (OE3).} El diseño del grafo de clúster incorpora el tipo de arista
 \ac{RBAC} mediante detección de roles privilegiados en dos pasadas sobre los
 manifiestos, limitando las aristas a cuentas de servicio vinculadas realmente a
@@ -64,14 +107,14 @@ sin embargo, la ablación de arquitectura (Tabla~\ref{tab:arch_ablation}) compar
 \ac{RBAC} frente a los otros cuatro, por lo que su aporte incremental al ranking de
 cadenas de ataque queda como trabajo futuro.
 
-\textbf{C6 — kubescan es una herramienta distribuible, instalable y operacionalmente
+\textbf{C7 — kubescan es una herramienta distribuible, instalable y operacionalmente
 viable (OE6).} La evaluación funcional de la Sección~\ref{sec:evaluacion_funcional}
 confirma que el sistema se instala sin compiladores externos (\textit{pip install -e
 kubescan/}), analiza clústeres de hasta 312~manifiestos en menos de 8~segundos en
 hardware de gama media, produce salida en dos formatos (texto y \ac{JSON}) adecuados para
-integración en pipelines CI/CD, y garantiza reproducibilidad de la inferencia
+integración en pipelines \acs{CICD}, y garantiza reproducibilidad de la inferencia
 mediante la resolución determinista de \textit{checkpoints} (sujeto a la variación
-entre \textit{backends} de cómputo documentada en L7). El prototipo implementado
+entre \textit{backends} de cómputo documentada en L6). El prototipo implementado
 en este
 trabajo demuestra que el paradigma \textit{shift-left} —detectar cadenas de ataque
 antes del despliegue, sin requerir acceso al clúster activo— es técnicamente factible
@@ -100,19 +143,28 @@ acceso no autorizado a sistemas informáticos según la legislación aplicable.
 \section{Limitaciones}
 \label{sec:limitaciones}
 
-\textbf{L1 — Varianza entre pliegues.} Con 81~grafos originales en los pliegues de
-validación cruzada, la varianza entre pliegues (\(\sigma\)\,=\,0,075 para F1 macro;
-rango 0,738--0,941) refleja la dependencia de los resultados respecto a qué
-clústeres caen en cada pliegue de validación. Un corpus más amplio reduciría esta
-varianza.
+\textbf{L1 — Concentración por familias y varianza entre pliegues.} El
+particionado consciente de familias, al mantener cada familia de plantilla como
+unidad atómica, concentra las cadenas de validación de cada pliegue en 1--3
+familias independientes: el pliegue~0 evalúa íntegramente la familia
+\texttt{datadog\_*} (F1\,=\,1,0; P@5\,=\,1,0) y el pliegue~1 la familia
+\texttt{badpods\_*} (F1\,=\,0,58), de modo que la varianza entre pliegues
+(\(\sigma\)\,=\,0,137 para F1; 0,160 para P@5) mide en gran parte la dispersión
+de dificultad entre familias, no inestabilidad del modelo — el análisis
+multi-semilla (Sección~\ref{sec:multisemilla}) muestra que cuatro de los cinco
+pliegues puntúan de forma idéntica con las tres semillas. El tamaño muestral
+efectivo por pliegue (número de familias, no de cadenas) es la limitación
+subyacente, y solo puede crecer incorporando repositorios de cadena
+estructuralmente independientes (TF1).
 
-\textbf{L2 — Imputación de características extendidas.} Las 6 características
-extendidas (basadas en \textit{Checkov}) están imputadas para el 42,6\,\% de las
-filas, diluyendo su señal. La descarga completa de los manifiestos referenciados en
-el dataset de Rahman et~al.\ permitiría mejorar estos vectores. Un experimento de
-ablación eliminando las 6 características imputadas y reentrenando únicamente con las
-19 características de alta cobertura podría cuantificar el impacto de esta limitación
-sobre la F1 macro de la Capa~1.
+\textbf{L2 — Imputación de características extendidas.} Las 7 características
+extendidas (basadas en \textit{Checkov}) solo pueden calcularse directamente para
+el 47,4\,\% de las filas con \ac{YAML} descargado y se imputan por la mediana de
+columna para el resto, diluyendo su señal. La descarga completa de los manifiestos
+referenciados en el dataset de Rahman et~al.\ permitiría mejorar estos vectores.
+Un experimento de ablación eliminando las 7 características imputadas y
+reentrenando únicamente con las 21 restantes de alta cobertura podría cuantificar
+el impacto de esta limitación sobre la F1 macro de la Capa~1.
 
 \textbf{L3 — Sesgo de muestreo en el dataset tabular.} Los 10 repositorios más
 representados suponen el 60,8\,\% del dataset, y \textit{gitcontroller} por sí solo
@@ -124,33 +176,7 @@ se ha realizado sobre repositorios públicos. La validación en entornos de prod
 de organizaciones reales es la siguiente etapa crítica para confirmar la validez
 externa del sistema.
 
-\textbf{L5 — Identificabilidad de los pesos del ensemble.} La Capa~3 optimiza
-los pesos \((w_{\text{rf}}, w_{\text{gnn}}, w_{\text{esc}})\) maximizando la función
-objetivo \(F = 0{,}7 \cdot P@5 + 0{,}3 \cdot (1 - \text{\ac{FPR}\_clean})\) sobre las
-predicciones \textit{out-of-fold} (\acs{OOF}) de los 5~modelos de validación
-cruzada, calculadas sobre los 81~grafos originales de entrenamiento/validación
-(21~cadenas); bajo el protocolo \textit{group-aware}, ningún clúster de test
-participa en este ajuste. Un diagnóstico del algoritmo descartó que su
-estancamiento inicial en pesos casi uniformes se debiera, como se supuso en un
-primer momento, a una meseta plana en la función de \textit{fitness}: el cruce por
-promedio aritmético y la mutación gaussiana local no podían alcanzar los vértices
-del símplex de pesos, no porque esos vértices fueran indistinguibles en la función
-objetivo. Al corregir la exploración —sembrando los vértices y aristas del símplex
-en la población inicial y añadiendo una mutación de salto de frontera— el
-\ac{GA} converge de forma determinista, en 5~semillas independientes, al mismo
-óptimo que la búsqueda en rejilla: puntuar únicamente por la señal binaria de
-escape (\textit{objective}\,=\,0,86 frente a 0,72 de los pesos equilibrados). La
-limitación real no es, por tanto, una meseta de \textit{fitness} sino la
-identificabilidad del criterio de selección: el óptimo \acs{OOF} no generaliza al
-conjunto de test, donde el colapso a una señal binaria produce un ranking por
-empates que falla estructuralmente ante cualquier cadena de ataque sin bandera de
-escape (Sección~\ref{sec:layer3}). Los pesos equilibrados, pese a no ser el óptimo
-\acs{OOF}, se conservan para el despliegue porque no exhiben esa falla
-estructural; aun así, el tamaño de ambos conjuntos —81~grafos \acs{OOF} y
-15~de test— limita la confianza estadística de cualquier selección de pesos
-basada en datos, como reflejan los intervalos de confianza reportados.
-
-\textbf{L6 — Etiquetado derivado de reglas sobre el mismo espacio de
+\textbf{L5 — Etiquetado derivado de reglas sobre el mismo espacio de
 características.} Las etiquetas de grafo (clean / isolated / attack\_chain) se
 generan mediante una regla determinista definida sobre las mismas \textit{flags} y
 aristas que observan los modelos (Sección de diseño). El sistema aprende, por
@@ -163,14 +189,22 @@ grafo de ataque sobre clústeres activos (KubeHound, IceKube), el etiquetado exp
 de una submuestra, y la confirmación mediante explotación controlada en entornos de
 laboratorio como \textit{kubernetes-goat}.
 
-\textbf{L7 — No determinismo de CUDA en las operaciones de \textit{scatter} del
-\ac{GNN}.} Al replicar el proceso de entrenamiento de la Capa~2 sobre una GPU
-NVIDIA A100 (CUDA) en lugar del \textit{backend} MPS/CPU empleado para los
-resultados de esta memoria, se observó una variación no trivial en las métricas de
-validación cruzada (F1 macro entre 0,845 y 0,882 frente a 0,917 en el \textit{backend}
-original; P@5 entre 0,77 y 0,92 frente a 0,880), manteniendo semilla, datos,
-particiones e hiperparámetros idénticos. Se descartaron como causa la precisión
-\textit{TF32} (confirmado en tiempo de ejecución que
+\textbf{L6 — No determinismo de CUDA en las operaciones de \textit{scatter} del
+\ac{GNN} (hallazgo histórico, no reverificado sobre el corpus completo).} Durante
+la fase preliminar se observó que, al replicar el entrenamiento de la Capa~2
+sobre una GPU NVIDIA A100 (CUDA) en lugar del \textit{backend} MPS/CPU empleado
+entonces, las métricas de validación cruzada variaban de forma no trivial (F1
+macro entre 0,845 y 0,882 frente a 0,917 en el \textit{backend} de referencia de
+esa fase; P@5 entre 0,77 y 0,92 frente a 0,880), manteniendo semilla, datos,
+particiones e hiperparámetros idénticos. Estas cifras corresponden a la fase
+preliminar de 471~grafos (Tabla~\ref{tab:gnn_evolution}, fase~4, cuyo
+\textit{backend} de referencia era MPS/CPU); los resultados finales de esta
+memoria se entrenaron y evaluaron sobre GPU NVIDIA T4 (CUDA), por lo que la
+amenaza se invierte para el lector que reproduzca en CPU/MPS: es esa réplica la
+que puede divergir de las cifras reportadas. El experimento no se ha repetido
+sobre el corpus completo, por lo que se reporta como hallazgo histórico sobre el
+mecanismo causal, no como una medición vigente sobre el modelo desplegado. Se descartaron como causa la precisión \textit{TF32}
+(confirmado en tiempo de ejecución que
 \texttt{torch.backends.cuda.matmul.allow\_tf32} permanece desactivada) y la
 paralelización del cargador de datos (el conjunto es estático en memoria y el orden
 de muestreo está fijado por un generador con semilla). La causa confirmada son las
@@ -182,9 +216,9 @@ confirmado por los propios mantenedores de \textit{PyTorch Geometric} en los
 \textit{issues} públicos \#2788 y \#3175 del repositorio. El orden de acumulación
 en punto flotante depende de la planificación de hilos de la GPU y, al no ser
 la suma en punto flotante asociativa, pequeñas diferencias numéricas cambian el
-\textit{ranking} sobre un conjunto de validación reducido (81~grafos, entre 4 y 5
-cadenas de ataque por pliegue), amplificando el efecto sobre P@5 y F1 macro. Se
-incorporaron banderas de determinismo específicas de CUDA
+\textit{ranking} sobre un conjunto de validación reducido (471~grafos, entre 4 y 5
+cadenas de ataque por pliegue en ese momento), amplificando el efecto sobre P@5 y
+F1 macro. Se incorporaron banderas de determinismo específicas de CUDA
 (\texttt{torch.use\_deterministic\_algorithms}, \texttt{cudnn.deterministic}) que,
 aunque no resuelven la ausencia de una implementación determinista de
 \texttt{scatter\_add}, sí lograron reproducibilidad exacta entre ejecuciones
@@ -193,18 +227,81 @@ observada no es ruido aleatorio entre ejecuciones sino una divergencia numérica
 y reproducible entre \textit{backends} (CUDA frente a MPS/CPU); su cierre completo
 requeriría sustituir la agregación por la ruta \texttt{SparseTensor} de
 \textit{PyTorch Geometric}, documentada como determinista pero no evaluada en este
-trabajo.
+trabajo, ni reverificada sobre el corpus completo.
+
+\textbf{L7 — Las métricas de las fases previas a la corrección por familias no
+son comparables con las finales, y las estimaciones finales llevan intervalos
+amplios.} Las evaluaciones de las fases 1--5 estaban infladas por dos vías de
+fuga de información corregidas sucesivamente (variantes aumentadas en la fase~5
+y familias de plantilla en la fase~6): el modelo «generalizaba» a casi duplicados
+de grafos vistos en entrenamiento. Tras la corrección, las cifras finales miden
+generalización a familias y repositorios no vistos — una cantidad distinta y
+sistemáticamente menor, por lo que ninguna comparación directa entre fases debe
+leerse como progresión del modelo. Como segunda cara de la misma limitación, el
+conjunto de test contiene solo 5~cadenas (todos los intervalos de confianza de
+test tienen una anchura \(\geq\)0,4) y el \textit{pool out-of-fold} contiene
+32~cadenas de las que 15 son \textit{fixtures} sintéticas: la evidencia sobre
+generalización a cadenas reales descansa en pocas muestras independientes, y
+ampliarlas es la vía prioritaria de trabajo futuro (TF1).
+
+\subsection{Amenazas a la validez}
+\label{sec:amenazas_validez}
+
+Siguiendo la taxonomía de validez de constructo, interna, de conclusión y
+externa empleada en los \textit{ACM SIGSOFT Empirical Standards}, las
+limitaciones L1--L7 se organizan del siguiente modo:
+
+\textbf{Validez de constructo} (¿miden las métricas lo que se pretende medir?):
+L6 cuestiona si el conjunto de métricas reportado en esta memoria (\textit{backend}
+MPS/CPU) mide el mismo constructo que mediría un \textit{backend} CUDA de
+producción, dado el no determinismo documentado en las operaciones de
+\textit{scatter}. L5 cuestiona si la etiqueta de grafo (derivada de reglas sobre
+el mismo espacio de características que observan los modelos) constituye un
+constructo de «cadena de ataque» independiente de la regla de etiquetado, o una
+aproximación circular a ella.
+
+\textbf{Validez interna} (¿las conclusiones causales están justificadas por el
+diseño experimental?): L7 impide atribuir diferencias entre fases experimentales
+al modelo, porque el protocolo de evaluación cambió entre ellas; la ablación
+factorial de la Sección~\ref{sec:ablacion_perdida} es el único contraste interno
+con protocolo constante. L2 acota la validez interna de las características
+extendidas imputadas mediante \textit{Checkov} frente a las obtenidas
+directamente del manifiesto original.
+
+\textbf{Validez de conclusión} (¿son estadísticamente fiables las estimaciones
+puntuales reportadas?): el tamaño del conjunto de test (86~grafos, 5~cadenas) y
+del \textit{pool out-of-fold} (513~grafos, 32~cadenas) se traduce en los
+intervalos de confianza amplios reportados en la Sección~\ref{sec:layer3}
+(P@5\,\(\in\,[0{,}60,\ 1{,}00]\) al 95\,\%), que limitan la confianza que puede
+depositarse en cualquier comparación puntual entre configuraciones del
+\textit{ensemble} (C5). A ello se suma la concentración por familias (L1): el
+tamaño muestral efectivo de la validación cruzada es el número de familias
+independientes por pliegue (1--3), no el número nominal de cadenas.
+
+\textbf{Validez externa / generalización}: L3 (sesgo de muestreo por
+repositorio) y L4 (ausencia de evaluación en clústeres de producción reales)
+acotan directamente hasta qué punto los resultados generalizan más allá de los
+repositorios públicos utilizados. El desplazamiento de distribución entre el
+\textit{pool} de ajuste del \ac{GA} (dominado por \textit{fixtures} sintéticas)
+y las cadenas reales de test (Sección~\ref{sec:layer3}) es una amenaza externa
+adicional identificada empíricamente: los pesos del \textit{ensemble} ajustados
+sobre cadenas sintéticas no aportan ventaja sobre cadenas reales.
 
 \section{Trabajo futuro}
 
 Los resultados de este trabajo permiten formular las siguientes recomendaciones de
 trabajo futuro, ordenadas por impacto esperado:
 
-\textbf{TF1 — Continuar la expansión del corpus.} El objetivo de P@5\,\(>\)\,0,70 ha
-sido alcanzado con 25~clústeres de cadena de ataque. La incorporación de corpus
-adicionales — repositorios de infraestructura de organizaciones de código abierto,
-entornos de laboratorio multiclúster — permitiría reducir la varianza entre pliegues
-y mejorar la generalización a patrones de ataque menos representados.
+\textbf{TF1 — Ampliar la población de cadenas reales estructuralmente
+independientes.} Las limitaciones L1 y L7 comparten la misma causa raíz: pocas
+familias de cadena independientes. Cada nueva familia de plantilla añade poco
+(sus miembros son casi duplicados), mientras que cada repositorio real de cadena
+añade una muestra independiente que aumenta el tamaño muestral efectivo de la
+validación cruzada, estrecha los intervalos de test y reduce el desplazamiento de
+distribución del \textit{pool} de ajuste del \ac{GA}. La incorporación dirigida
+de repositorios de infraestructura de organizaciones de código abierto y de
+entornos de laboratorio multiclúster —priorizando diversidad estructural sobre
+volumen— es la línea de mayor impacto esperado de este trabajo.
 
 \textbf{TF2 — Implementar P@5 global como métrica alternativa.} En lugar de P@5 por
 pliegue, evaluar el ranking del modelo sobre el conjunto completo de grafos en un único
@@ -235,3 +332,16 @@ elección de \textit{mean+max pooling} frente a \textit{mean-only}, así como a 
 barrido más amplio de hiperparámetros del optimizador (número de cabezas de
 atención, \textit{learning rate}, anchura oculta) que en este trabajo se fijaron
 a priori sin búsqueda sistemática (Sección~\ref{sec:capa2_diseno}).
+
+\textbf{TF7 — Ajuste del \textit{ensemble} robusto al desplazamiento de
+distribución.} Los pesos del \ac{GA} se ajustan sobre un \textit{pool
+out-of-fold} en el que 15 de las 32~cadenas son \textit{fixtures} sintéticas con
+\textit{risk scores} \ac{RF} altos, mientras que las cadenas reales de test
+tienen \textit{risk score} medio \(\approx\)0; tres refinamientos evaluados
+(desempate por \textit{mean reciprocal rank}, agregación del \textit{pool} por
+familias, ajuste sobre el \textit{ranking} con restricción estructural) no
+corrigieron el sesgo (Sección~\ref{sec:layer3}). Las vías naturales son ajustar
+sobre un \textit{pool} restringido a cadenas de repositorios reales (viable a
+medida que TF1 amplíe esa población) o sustituir P@5 por una función objetivo
+continua menos escalonada, que reduzca las mesetas donde los pesos quedan
+indeterminados.
