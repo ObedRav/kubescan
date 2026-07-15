@@ -61,7 +61,7 @@ kubescan scan /ruta/a/tus/manifiestos
 
 ## Cuestionario (≈4 min)
 
-Rellena el formulario que te hemos enviado: **[URL DEL FORMULARIO]**
+Rellena el formulario que te hemos enviado: **PEGA_AQUÍ_LA_URL_DEL_FORMULARIO**
 
 *(Si prefieres, responde aquí mismo con los números y nos lo devuelves.)*
 

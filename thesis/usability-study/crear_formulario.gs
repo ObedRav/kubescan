@@ -5,10 +5,14 @@
  * COMO USARLO (≈2 min, sin CLI ni credenciales):
  *   1. Abre https://script.google.com  ->  "Proyecto nuevo".
  *   2. Borra el contenido y pega TODO este archivo.
- *   3. Pulsa "Ejecutar" (funcion crearFormulario). Autoriza el acceso a tu
- *      cuenta la primera vez.
- *   4. En "Registro de ejecucion" apareceran dos URLs: la de responder (para
- *      enviar a los 3 expertos) y la de editar.
+ *   3. En el desplegable de funciones elige "crearFormulario" y pulsa
+ *      "Ejecutar" (Run). Autoriza el acceso a tu cuenta la primera vez.
+ *   4. En "Registro de ejecucion" (Ver -> Registro) apareceran dos URLs: la de
+ *      responder (para enviar a los 3 expertos) y la de editar.
+ *
+ * IMPORTANTE: este script SOLO se EJECUTA; NO uses "Implementar / Desplegar"
+ * ni "Aplicacion web". No es una web app y no tiene doGet/doPost — desplegarlo
+ * da el error "Script function not found: doGet". Solo Ejecutar.
  *
  * Las respuestas se ven en la pestana "Respuestas" del formulario; desde alli
  * "Vincular a Hojas de calculo" -> exportar a CSV -> renombrar columnas a
