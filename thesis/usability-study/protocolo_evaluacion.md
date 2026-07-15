@@ -23,9 +23,10 @@ clústeres *Kubernetes* / integración en *pipelines* CI/CD.
   pruebas formativas, por lo que con 3 se cubre una fracción sustancial pero no
   exhaustiva; los resultados se reportan como indicativos, no concluyentes.
 - **Formato autoservicio asíncrono** (para minimizar la carga de los
-  participantes): cada experto recibe la `GUIA_PARTICIPANTE.md` (tareas con
-  comandos listos para copiar y pegar) y el formulario en línea
-  (`FORMULARIO.md`). Tiempo estimado por participante: **~10 minutos**, sin
+  participantes): cada experto recibió la `GUIA_PARTICIPANTE.md` (tareas con
+  comandos listos para copiar y pegar) y el enlace al cuestionario en línea
+  (construcción documentada en `FORMULARIO.md`). Tiempo estimado por
+  participante: **~10 minutos**, sin
   necesidad de agendar sesión. El *think-aloud* es opcional en este formato; las
   incidencias se recogen en las preguntas abiertas del formulario.
 - Antes del estudio se realizó una **prueba piloto del protocolo** (simulación
