@@ -10,13 +10,17 @@ three-layer ensemble: Random Forest + Graph Attention Network + GA-optimised sco
 
 | Layer | Model | Metric | Result | Target |
 |-------|-------|--------|--------|--------|
-| 1 | Random Forest | Macro-F1 (test) | **0.9935** | > 0.85 ✅ |
-| 2 | GAT (5-fold CV, group-aware) | Precision@5 | **0.720 ± 0.098** | > 0.70 ✅ |
-| 3 | GA Ensemble (held-out test) | P@1 / FPR\_clean | **1.00 / 0.00** | — |
+| 1 | Random Forest | Macro-F1 (test) | **0.9946** | > 0.85 ✅ |
+| 2 | GAT (5-fold CV, family-aware) | Precision@5 | **0.720 ± 0.160** | > 0.70 ✅ |
+| 3 | GA Ensemble (held-out test) | P@1 / P@5 / FPR\_clean | **1.00 / 0.80 / 0.00** | — |
+| — | Usability (SUS, n=3 experts) | SUS score | **88.3** ("excellent") | — |
 
-Evaluation uses group-aware splits (augmented graph variants never cross
-train/eval boundaries; the 15 test clusters are excluded from CV folds and GA
-tuning). See `research/data/DATASET.md` for the full protocol.
+The Layer-3 ranking applies a structural feasibility gate (a single-manifest
+cluster cannot host a multi-hop chain). Evaluation uses group- and
+template-family-aware splits: augmented graph variants and near-duplicate
+template families never cross train/eval boundaries, and the 86 held-out test
+graphs — including all 5 real attack chains — are excluded from the CV folds and
+GA tuning. See `research/data/DATASET.md` for the full protocol.
 
 ## System requirements
 
