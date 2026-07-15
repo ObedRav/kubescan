@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cache-worker
+  namespace: staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cache-worker
+  template:
+    metadata:
+      labels:
+        app: cache-worker
+    spec:
+      # Segundo manifiesto con misconfiguraciones aisladas (distintas a las de
+      # legacy-api), para que el ranking por riesgo no sea trivial. Sin flags de
+      # escape (no privilegiado, sin montajes de host, sin namespaces de host):
+      # sigue siendo ISOLATED, no una cadena de ataque.
+      containers:
+        - name: worker
+          image: redis:latest
+          ports:
+            - containerPort: 6379
+          # imagen con tag 'latest', sin límites de recursos ni securityContext.

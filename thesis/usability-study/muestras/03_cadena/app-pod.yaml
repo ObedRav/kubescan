@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: metrics-agent
+  namespace: kube-system
+spec:
+  # Segundo nodo del clúster que comparte la cuenta de servicio sobre-permisada:
+  # objetivo de movimiento lateral desde el pod privilegiado.
+  serviceAccountName: debug-sa
+  containers:
+    - name: agent
+      image: mycorp/metrics-agent:1.4
+      ports:
+        - containerPort: 9090
+      securityContext:
+        allowPrivilegeEscalation: true

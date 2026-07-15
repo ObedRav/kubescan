@@ -1,0 +1,4 @@
+participant,role,years_k8s,cicd,sec_familiarity,T1_success,T2_success,T3_success,T4_success,T5_success,SUS1,SUS2,SUS3,SUS4,SUS5,SUS6,SUS7,SUS8,SUS9,SUS10,A1,A2,A3,A4
+SIM-AI,IA/ML,<1,Ocasional,Media,1,1,0.5,1,1,4,2,4,2,4,2,4,2,3,2,4,3,4,3
+SIM-DEVOPS,DevOps/SRE,>5,Habitual,Media,1,1,0.5,1,1,4,2,4,2,4,2,4,2,3,2,3,4,4,3
+SIM-QA,QA/IaC,1-3,Habitual,Alta,1,1,0.5,1,1,4,2,4,2,4,1,4,2,4,2,3,4,4,3
