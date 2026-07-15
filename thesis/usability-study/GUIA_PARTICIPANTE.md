@@ -23,7 +23,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -e kubescan/
 kubescan --help          # debe mostrar la ayuda (comandos scan / live)
 ```
-✅ *Éxito de T1:* el comando `kubescan` responde.
+*Éxito de T1:* el comando `kubescan` responde.
 
 ---
 
@@ -35,20 +35,20 @@ kubescan --help          # debe mostrar la ayuda (comandos scan / live)
 ```bash
 kubescan scan thesis/usability-study/muestras/03_cadena
 ```
-📝 Anota: **veredicto** y **puntuación (Ensemble score)**.
+Anota: **veredicto** y **puntuación (Ensemble score)**.
 
 ### Tarea T3 — Interpretación
 ```bash
 kubescan scan thesis/usability-study/muestras/02_misconfig --show-nodes
 ```
-📝 Anota: de los **dos** manifiestos, ¿cuál es el de **mayor riesgo** y qué
+Anota: de los **dos** manifiestos, ¿cuál es el de **mayor riesgo** y qué
 **flags** explican su riesgo?
 
 ### Tarea T4 — Salida para automatización (JSON)
 ```bash
 kubescan scan thesis/usability-study/muestras/03_cadena --format json
 ```
-📝 Anota: los valores de `ensemble_score` y `n_escape_capable`.
+Anota: los valores de `ensemble_score` y `n_escape_capable`.
 
 ### Tarea T5 — (opcional) tu propio caso
 Si tienes a mano un directorio de manifiestos propios, escanéalo y comenta el
