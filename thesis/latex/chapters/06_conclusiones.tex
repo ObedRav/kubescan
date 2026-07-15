@@ -118,7 +118,18 @@ entre \textit{backends} de cómputo documentada en L6). El prototipo implementad
 en este
 trabajo demuestra que el paradigma \textit{shift-left} —detectar cadenas de ataque
 antes del despliegue, sin requerir acceso al clúster activo— es técnicamente factible
-y operacionalmente eficiente.
+y operacionalmente eficiente. Complementariamente, la evaluación de usabilidad y
+aplicabilidad con usuarios expertos (Sección~\ref{sec:usabilidad}) respalda este
+objetivo desde la perspectiva del usuario: la herramienta obtiene una puntuación
+\textbf{SUS de 88,3} (valoración «excelente») y una aplicabilidad alta —integración
+en CI/CD, priorización de riesgo y confianza en el veredicto (medias de 4,3 sobre
+5)—, con una tasa de éxito del 100\,\% en las tareas de instalación, escaneo e
+interpretación. El principal punto de mejora señalado por los participantes es la
+\textbf{accionabilidad} del informe (A3\,=\,3,7): la herramienta comunica el
+riesgo pero no las acciones de remediación ni las reglas concretas tras el
+veredicto, lo que se recoge como trabajo futuro (TF8). Estos resultados deben
+interpretarse como indicativos por el tamaño de la muestra (\(n=3\),
+Sección~\ref{sec:usab_amenazas}).
 
 \section{Consideraciones éticas y uso responsable}
 \label{sec:etica}
@@ -345,3 +356,13 @@ sobre un \textit{pool} restringido a cadenas de repositorios reales (viable a
 medida que TF1 amplíe esa población) o sustituir P@5 por una función objetivo
 continua menos escalonada, que reduzca las mesetas donde los pesos quedan
 indeterminados.
+
+\textbf{TF8 — Explicabilidad y recomendaciones de remediación.} La evaluación
+con usuarios expertos (Sección~\ref{sec:usabilidad}) identificó la accionabilidad
+del informe como el principal punto de mejora: dos participantes echaron en falta
+que la herramienta indicara \textit{qué} corregir y expusiera las reglas concretas
+tras la puntuación de riesgo. Como trabajo futuro, el informe podría enriquecerse
+con recomendaciones de remediación por manifiesto (por ejemplo, la corrección de
+configuración asociada a cada \textit{flag} de escape detectada) y con una
+explicación de la contribución de cada capa al veredicto, reforzando la confianza
+del operador sin sacrificar la brevedad del \textit{ranking}.
