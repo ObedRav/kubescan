@@ -71,3 +71,6 @@ thesis/latex/*.lot
 thesis/latex/*.loe
 thesis/latex/*.synctex.gz
 thesis/latex/test_fig.pdf
+
+# Internal audit / working notes — kept local, not for reviewers
+audit/

@@ -27,7 +27,7 @@
       "w_escape": 0.7,
       "p_at_k": 0.8
     },
-    "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) that discourages degenerate zero-weight solutions (see audit/model_fixes.md) and a chain-MRR tie-breaker (mrr_weight * mean reciprocal rank of true chains) that orders solutions within a P@k plateau; see audit/gnn_p5_refit_2026-07-14.md.",
+    "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) that discourages degenerate zero-weight solutions , and a chain-MRR tie-breaker (mrr_weight * mean reciprocal rank of true chains) that orders solutions within a P@k plateau.",
     "_provenance": {
       "created_utc": "2026-07-15T00:28:12.287866+00:00",
       "git_commit": "14c95e4c9f5e593ddb135e676a6c94c3eca821af",

@@ -75,7 +75,7 @@ SCORE_MODERATE_THRESHOLD: Final[float] = 0.30
 #: host one by definition. Corpus-verified: every attack_chain graph has
 #: >= 2 nodes and >= 1 edge, while 499/537 isolated graphs are single-node —
 #: exactly the population that produced the top-ranked false positives in the
-#: 2026-07-14 test evaluation (audit/gnn_p5_refit_2026-07-14.md §C).
+#: 2026-07-14 test evaluation.
 MIN_CHAIN_NODES: Final[int] = 2
 
 

@@ -122,7 +122,7 @@
         "w_escape": 0.6,
         "p_at_k": 0.8
       },
-      "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) that discourages degenerate zero-weight solutions; see audit/model_fixes.md.",
+      "note": "Ensemble score = w_rf*mean_rf_risk + w_gnn*gnn_chain_prob + w_escape*escape_signal. escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) that discourages degenerate zero-weight solutions.",
       "_provenance": {
         "created_utc": "2026-07-06T02:35:49.247576+00:00",
         "git_commit": "f142e1e646fdd6d9405bc75c1166f4d835566760",

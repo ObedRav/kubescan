@@ -12,7 +12,7 @@ GNN_HIDDEN  := 64
 GNN_HEADS   := 4
 GNN_LAYERS  := 3
 # Loss / checkpoint-selection knobs (ablatable: `make reproduce GNN_FOCAL=1 GNN_SELECT_BY=f1`).
-# Defaults from the 2026-07-14 loss x selection ablation (audit/gnn_p5_refit_2026-07-14.md §G):
+# Defaults from the 2026-07-14 loss x selection ablation:
 # weighted CE + P@5 checkpoint selection is the only arm meeting the >0.70 CV P@5
 # target (0.72 ± 0.16); focal loss costs 0.12 CV P@5 and zeroes test chain F1.
 GNN_FOCAL     ?= 0

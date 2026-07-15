@@ -134,8 +134,8 @@ CLUSTERS: list[dict] = [
     # (split_by_file, not split_by_subdir): bundling a policy category's
     # allowed+disallowed samples into one multi-node cluster let unrelated
     # samples that happen to share an unrelated escape flag (e.g. a shared
-    # base template) trip the graph-level ">=2 escape nodes" chain rule —
-    # see audit/model_fixes.md option 3. Per-file clusters can't do that.
+    # base template) trip the graph-level ">=2 escape nodes" chain rule.
+    # Per-file clusters can't do that.
     {
         "cluster_prefix": "gatekeeper",
         "dir":            ATTACK_REPOS_DIR / "gatekeeper-library" / "library" / "pod-security-policy",
@@ -207,7 +207,7 @@ CLUSTERS: list[dict] = [
                    "hostNetwork/hostPID/hostPath; the other 83 (Prometheus, "
                    "Alertmanager, Grafana, kube-state-metrics, blackbox-exporter) "
                    "are unprivileged. Targets the sparse-escape-in-a-large-graph "
-                   "hard-negative pattern (see audit/model_fixes.md option 3b).",
+                   "hard-negative pattern.",
     },
     # --- Purpose-built attack-graph tooling fixtures ---
     # Flat directory, one self-contained SA+Role/ClusterRole+RoleBinding+Pod
@@ -361,8 +361,7 @@ def _slugify_relpath(rel: Path) -> str:
     segments with a single underscore, so distinct paths can never collide
     after slugging — a naive '/' -> '_' replacement would map both
     'foo_bar/baz.yaml' and 'foo/bar_baz.yaml' to 'foo_bar_baz', silently
-    merging two unrelated fixtures into one cluster (see review discussion,
-    audit/model_fixes.md option 3 rationale).
+    merging two unrelated fixtures into one cluster.
     """
     segments = rel.with_suffix("").as_posix().split("/")
     return "_".join(segment.replace("_", "__") for segment in segments)
@@ -377,7 +376,7 @@ def _expand_split_by_file(defn: dict) -> list[dict]:
     test an unrelated, narrow config setting but happen to share unrelated
     escape flags baked into their shared base template, which would trip the
     graph-level ">=2 escape nodes" chain rule despite representing no real
-    escalation chain (see audit/model_fixes.md, option 3). A single-node
+    escalation chain. A single-node
     cluster structurally can't satisfy that rule, which is exactly the fix.
     """
     base_dir: Path = defn["dir"]

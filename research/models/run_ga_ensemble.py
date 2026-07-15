@@ -34,8 +34,7 @@ Optimisation objective:
 The last term is a floor penalty (Fix 7): without it, the optimizer is free to
 drive any of the three weights to zero whenever that scores marginally higher
 on the OOF sample, which produced a degenerate escape-only optimum
-(w_esc=1.0) that fails to generalise to the held-out test set (see
-audit/model_fixes.md, problem 2). The penalty makes "ignore a signal
+(w_esc=1.0) that fails to generalise to the held-out test set. The penalty makes "ignore a signal
 entirely" strictly dominated unless the OOF gain from doing so exceeds λ
 times the shortfall — forcing the optimizer to keep all three signals
 contributing.
@@ -46,7 +45,6 @@ Weight selection methods (--select-method):
             resample, and take the per-weight median across resamples (Fix
             8). Makes the weight choice defensible on its own terms — stable
             across resamples — rather than a single fit to one fixed sample.
-            See audit/model_fixes.md, option 2.
 
 Output:
     models/checkpoints/ga_weights.json      — best weights found
@@ -336,8 +334,7 @@ DEFAULT_REG_LAMBDA: Final[float] = 2.0
 #: P@k is a step function: over a 500+ graph OOF pool, vast regions of the
 #: weight simplex tie at the same P@k, and the optimizer's pick inside a
 #: plateau is arbitrary (the 2026-07-14 refit found its final weights in
-#: generation 0 and never improved on them — see
-#: audit/gnn_p5_refit_2026-07-14.md). MRR is a smooth ranking signal that
+#: generation 0 and never improved on them). MRR is a smooth ranking signal that
 #: orders solutions *within* a plateau by how high they rank the true chains
 #: overall; a coefficient below one P@5 step (alpha * 1/k = 0.14) and one
 #: FPR_clean step (beta * 1/k = 0.06) can only break ties, never trade away
@@ -991,9 +988,9 @@ def main():
             "escape_signal = 1.0 if ANY node has an ESCAPE_FLAG set, else 0.0 (binary). "
             "ESCAPE_FLAG_INDICES derived from kubescan FEATURE_COLS in 26-dim node feature vector. "
             "Objective includes a floor penalty (reg_lambda * shortfall below min_weight per weight) "
-            "that discourages degenerate zero-weight solutions (see audit/model_fixes.md) and a "
+            "that discourages degenerate zero-weight solutions, and a "
             "chain-MRR tie-breaker (mrr_weight * mean reciprocal rank of true chains) that orders "
-            "solutions within a P@k plateau; see audit/gnn_p5_refit_2026-07-14.md."
+            "solutions within a P@k plateau."
         ),
         "_provenance": provenance(
             seed=args.seed, mode="oof" if args.oof else "val",
