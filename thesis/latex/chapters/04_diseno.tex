@@ -89,12 +89,13 @@ validación cruzada (Sección~\ref{sec:capa3_diseno}).
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{fig_arquitectura}
   \caption{Arquitectura del sistema \textit{kubescan}: pipeline de tres capas desde
            manifiestos \ac{YAML} de entrada hasta la clasificación de riesgo del clúster.
            Los \textit{risk\_scores} producidos por la Capa~1 se incorporan como
            atributo nodal 26 del grafo de entrada de la Capa~2.}
   \label{fig:arquitectura}
+  \includegraphics[width=\textwidth]{fig_arquitectura}
+  
   \fuentepropia
 \end{figure}
 
@@ -212,11 +213,12 @@ contiene el \textit{risk\_score} producido por el modelo \textit{Random Forest}.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.72\textwidth]{fig_grafo_cluster}
   \caption{Ejemplo de grafo de clúster Kubernetes con cuatro nodos, mostrando los
            tres tipos de nodo (escape, movimiento lateral y limpio) y las aristas
            dirigidas que cada uno origina.}
   \label{fig:grafo_cluster}
+  \includegraphics[width=0.72\textwidth]{fig_grafo_cluster}
+  
   \fuentepropia
 \end{figure}
 

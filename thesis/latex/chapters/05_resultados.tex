@@ -67,11 +67,12 @@ que refleja la densidad de misconfiguraciones del manifiesto.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.52\textwidth]{fig_rf_confusion}
   \caption{Matriz de confusión del modelo Random Forest en el conjunto de test
            (566 muestras). Los 3~falsos positivos son manifiestos seguros con alta
            densidad de características de riesgo; no existe ningún falso negativo.}
   \label{fig:rf_confusion}
+  \includegraphics[width=0.52\textwidth]{fig_rf_confusion}
+  
   \fuentepropia
 \end{figure}
 
@@ -88,11 +89,12 @@ como confirma la ausencia de falsos negativos en la clasificación binaria.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{fig_rf_importance}
   \caption{Importancia de las 10 características más relevantes del clasificador
            Random Forest. Las dos primeras (en rojo) concentran el 48\,\% de la
            capacidad discriminativa total del modelo.}
   \label{fig:rf_importance}
+  \includegraphics[width=\textwidth]{fig_rf_importance}
+  
   \fuentepropia
 \end{figure}
 
@@ -215,10 +217,11 @@ y el pliegue~0 lo alcanza.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\textwidth]{fig_gnn_evolution}
   \caption{Evolución de F1 macro y Precisión@5 de la Capa~2 a lo largo de las
            cuatro primeras fases experimentales (protocolo preliminar).}
   \label{fig:gnn_evolution}
+  \includegraphics[width=\textwidth]{fig_gnn_evolution}
+  
   \fuentepropia
 \end{figure}
 
@@ -339,12 +342,13 @@ selección por Precisión@5.selección por Precisión@5.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.82\textwidth]{fig_loss_ablation}
   \caption{Ablación 2\(\times\)2 de función de pérdida \(\times\) criterio de
            selección de \textit{checkpoints} (Precisión@5 de validación cruzada,
            \(\pm\)\(\sigma\)). Solo la configuración desplegada —entropía cruzada
            ponderada con selección por Precisión@5— supera el objetivo de diseño.}
   \label{fig:loss_ablation}
+  \includegraphics[width=0.82\textwidth]{fig_loss_ablation}
+  
   \fuentepropia
 \end{figure}
 
@@ -388,12 +392,13 @@ comportamiento observable del sistema sobre repositorios reales no vistos.compor
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.85\textwidth]{fig_multiseed_folds}
   \caption{Precisión@5 por pliegue con tres semillas de entrenamiento
            (particionado fijo). Cuatro de los cinco pliegues puntúan de forma
            idéntica; la varianza entre semillas se concentra íntegramente en el
            pliegue de la familia \texttt{badpods\_*}.}
   \label{fig:multiseed_folds}
+  \includegraphics[width=0.85\textwidth]{fig_multiseed_folds}
+  
   \fuentepropia
 \end{figure}
 
@@ -478,12 +483,13 @@ con 3 de las 5~cadenas correctamente clasificadas).con 3 de las 5~cadenas correc
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.82\textwidth]{fig_structural_gate}
   \caption{Efecto de la restricción de viabilidad estructural sobre las métricas
            de ranking del conjunto de test. Descartar los clústeres de un solo
            nodo del \textit{ranking} eleva P@1 de 0,00 a 1,00 y P@5 de 0,60 a
            0,80.}
   \label{fig:structural_gate}
+  \includegraphics[width=0.82\textwidth]{fig_structural_gate}
+  
   \fuentepropia
 \end{figure}
 
@@ -498,10 +504,11 @@ tres métricas de ranking del ensemble sobre el conjunto de test.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.6\textwidth]{fig_ensemble_pat_k}
   \caption{Precisión@k del ensemble sobre el conjunto de test (86~grafos,
            5~cadenas, restricción de viabilidad estructural).}
   \label{fig:ensemble_patk}
+  \includegraphics[width=0.6\textwidth]{fig_ensemble_pat_k}
+  
   \fuentepropia
 \end{figure}
 
@@ -559,11 +566,12 @@ sistema degrada hacia la clase intermedia, no hacia la omisión total.
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.55\textwidth]{fig_gnn_confusion}
   \caption{Matriz de confusión del ensemble de pliegues sobre el conjunto de
            test (clasificación \textit{argmax}). Los errores caen en la frontera
            cadena/aislado; ningún manifiesto crítico se degrada a limpio.}
   \label{fig:gnn_confusion}
+  \includegraphics[width=0.55\textwidth]{fig_gnn_confusion}
+  
   \fuentepropia
 \end{figure}
 

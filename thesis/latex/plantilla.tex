@@ -17,11 +17,12 @@
 %   \includeonly{chapters/05_resultados,chapters/06_conclusiones}
 % ============================================================
 
-\documentclass[11pt,a4paper,spanish]{book}
+\documentclass[12pt,a4paper,spanish]{book}
 \usepackage{estilo_unir-1}
 \usepackage[natbibapa]{apacite}  % natbibapa enables \citep, \citet etc.
 \usepackage{hyperref}
 \usepackage{bookmark}
+\hypersetup{hidelinks}  % enlaces navegables sin recuadros de color (aspecto elegante)
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{amsmath}
@@ -29,8 +30,7 @@
 \usepackage{acronym}  % definitions only; list built manually below
 \usepackage{tocloft}
 \graphicspath{{../figures/}}
-\setlength{\headheight}{25.3pt}
-\addtolength{\topmargin}{-11.3pt}
+% Márgenes y altura de cabecera los fija estilo_unir-1 (vmargin/setmarginsrb).
 \raggedbottom
 \emergencystretch=3em
 \newcommand{\safeincludegraphics}[2][]{%
@@ -44,7 +44,7 @@
   \addcontentsline{loe}{ecuaciones}{\protect\numberline{\theequation}#1}%
 }
 \newcommand{\startchapter}{\addtocontents{loe}{\protect\addvspace{10pt}}}
-\newcommand{\fuentepropia}{\par\noindent{\footnotesize\textit{Fuente: elaboración propia.}}}
+\newcommand{\fuentepropia}{\par\begin{center}{\footnotesize\textit{Fuente: elaboración propia.}}\end{center}}
 
 %---------------------------
 % Metadatos del trabajo
@@ -61,7 +61,7 @@
 %\includeonly{chapters/05_resultados}
 
 \begin{document}
-\renewcommand{\listfigurename}{Índice de Ilustraciones}
+\renewcommand{\listfigurename}{Índice de Figuras}
 \renewcommand{\listtablename}{Índice de Tablas}
 \renewcommand{\contentsname}{Índice de Contenidos}
 \renewcommand{\figurename}{Figura}
