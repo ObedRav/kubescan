@@ -1,5 +1,5 @@
 % ============================================================
-\chapter{Diseño e Implementación}
+\chapter{Diseño e implementación}
 \label{cap:diseno}
 % ============================================================
 
@@ -89,15 +89,17 @@ validación cruzada (Sección~\ref{sec:capa3_diseno}).
 
 \begin{figure}[htbp]
   \centering
-  \caption{Arquitectura del sistema \textit{kubescan}: pipeline de tres capas desde
-           manifiestos \ac{YAML} de entrada hasta la clasificación de riesgo del clúster.
-           Los \textit{risk\_scores} producidos por la Capa~1 se incorporan como
-           atributo nodal 26 del grafo de entrada de la Capa~2.}
+  \caption{Arquitectura del sistema \textit{kubescan}}
   \label{fig:arquitectura}
   \includegraphics[width=\textwidth]{fig_arquitectura}
-  
+
   \fuentepropia
 \end{figure}
+
+La Figura~\ref{fig:arquitectura} muestra el pipeline de tres capas, desde los
+manifiestos \ac{YAML} de entrada hasta la clasificación de riesgo del clúster. Los
+\textit{risk\_scores} producidos por la Capa~1 se incorporan como atributo nodal~26
+del grafo de entrada de la Capa~2.
 
 % -----------------------------------------------------------
 \section{Construcción del dataset}
@@ -213,16 +215,16 @@ contiene el \textit{risk\_score} producido por el modelo \textit{Random Forest}.
 
 \begin{figure}[htbp]
   \centering
-  \caption{Ejemplo de grafo de clúster Kubernetes con cuatro nodos, mostrando los
-           tres tipos de nodo (escape, movimiento lateral y limpio) y las aristas
-           dirigidas que cada uno origina.}
+  \caption{Ejemplo de grafo de clúster Kubernetes con cuatro nodos}
   \label{fig:grafo_cluster}
   \includegraphics[width=0.72\textwidth]{fig_grafo_cluster}
   
   \fuentepropia
 \end{figure}
 
-Como se observa en la Figura~\ref{fig:grafo_cluster}, el nodo rojo (pod-A) tiene
+La Figura~\ref{fig:grafo_cluster} muestra los tres tipos de nodo (escape, movimiento
+lateral y limpio) y las aristas dirigidas que cada uno origina. Como se observa,
+el nodo rojo (pod-A) tiene
 flags de escape activas y emite aristas de tipo~1 (\textit{privilege\_reach}) hacia
 todos los demás nodos del clúster. El nodo naranja (pod-B) tiene flags de
 movimiento lateral y emite aristas de tipo~2 (\textit{sa\_lateral}). La arista de

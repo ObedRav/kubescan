@@ -42,7 +42,7 @@ Este trabajo aborda ese vacío: construir un sistema capaz de razonar sobre la
 un clúster activo, para identificar automáticamente cadenas de ataque potenciales
 antes de que sean desplegadas.
 
-\section{Planteamiento del problema}
+\section{Planteamiento del trabajo}
 
 Formalmente, dado un conjunto de manifiestos \ac{YAML} que describen un clúster
 \textit{Kubernetes}, el problema consiste en:
@@ -66,9 +66,7 @@ clúster activo— es un requisito de diseño explícito que diferencia el prese
 de las soluciones de grafo de ataque existentes y lo posiciona como un control de
 seguridad integrable en pipelines \acs{CICD}.
 
-\section{Objetivos generales}
-
-El objetivo general es diseñar, implementar y evaluar un sistema de detección de
+En términos generales, el objetivo es diseñar, implementar y evaluar un sistema de detección de
 cadenas de ataque en \textit{Kubernetes} que complemente los enfoques de análisis
 estático por manifiesto individual con el contexto estructural del clúster, mediante
 la combinación de aprendizaje automático clásico y aprendizaje sobre grafos, operando

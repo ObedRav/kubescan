@@ -4,14 +4,14 @@
 % Chapter content lives in:
 %   chapters/00_resumen.tex       Resumen + Abstract
 %   chapters/01_introduccion.tex  Cap. 1 Introducción
-%   chapters/02_estado_arte.tex   Cap. 2 Estado del Arte
-%   chapters/03_objetivos.tex     Cap. 3 Objetivos y Metodología
-%   chapters/04_diseno.tex        Cap. 4 Diseño e Implementación
-%   chapters/05_resultados.tex    Cap. 5 Resultados y Evaluación
-%   chapters/06_conclusiones.tex  Cap. 6 Conclusiones y Trabajo Futuro
-%   appendix/acronimos.tex        Apéndice A: Acrónimos
-%   appendix/repositorio.tex      Apéndice B: Repositorio de código
-%   appendix/guia_uso.tex         Apéndice C: Guía de uso y reproducción
+%   chapters/02_estado_arte.tex   Cap. 2 Contexto y estado del arte
+%   chapters/03_objetivos.tex     Cap. 3 Objetivos concretos y metodología de trabajo
+%   chapters/04_diseno.tex        Cap. 4 Diseño e implementación
+%   chapters/05_resultados.tex    Cap. 5 Resultados y evaluación
+%   chapters/06_conclusiones.tex  Cap. 6 Conclusiones y trabajo futuro
+%   appendix/repositorio.tex      Anexo A: Código fuente y datos analizados
+%   appendix/guia_uso.tex         Anexo B: Guía de uso y reproducción
+%   appendix/acronimos.tex        Anexo C: Acrónimos y abreviaturas
 %
 % To compile only selected chapters during editing, uncomment \includeonly:
 %   \includeonly{chapters/05_resultados,chapters/06_conclusiones}
@@ -36,15 +36,49 @@
 \newcommand{\safeincludegraphics}[2][]{%
   \includegraphics[#1]{#2}%
 }
-\numberwithin{equation}{chapter}
-\numberwithin{figure}{chapter}
-\newlistof{ecuaciones}{loe}{Índice de Ecuaciones}
-\cftsetindents{ecuaciones}{1.5em}{2.3em}
+% La plantilla numera figuras, tablas y ecuaciones de forma continua
+% («Figura 1», «Tabla 1», «(1)»), no por capítulo.
+\counterwithout{equation}{chapter}
+\counterwithout{figure}{chapter}
+\counterwithout{table}{chapter}
+% Títulos de los índices con el estilo «Título Índices» de la plantilla:
+% 18 pt, redonda, azul UNIR, sin numerar.
+\newcommand{\estilotituloindice}{\fontsize{18pt}{22pt}\selectfont\mdseries\color{azulunir}}
+\renewcommand{\cfttoctitlefont}{\estilotituloindice}
+\renewcommand{\cftloftitlefont}{\estilotituloindice}
+\renewcommand{\cftlottitlefont}{\estilotituloindice}
+% Numeración con punto final en los índices («1.», «1.1.»), como la plantilla.
+\renewcommand{\cftchapaftersnum}{.}
+\renewcommand{\cftsecaftersnum}{.}
+\renewcommand{\cftsubsecaftersnum}{.}
+% Las entradas de los índices de figuras/tablas llevan la etiqueta completa,
+% como en la plantilla: «Figura 1. …», «Tabla 1. …».
+\renewcommand{\cftfigpresnum}{Figura }
+\renewcommand{\cftfigaftersnum}{.}
+\setlength{\cftfignumwidth}{5.5em}
+\renewcommand{\cfttabpresnum}{Tabla }
+\renewcommand{\cfttabaftersnum}{.}
+\setlength{\cfttabnumwidth}{5em}
+\newlistof{ecuaciones}{loe}{Índice de ecuaciones}
+\renewcommand{\cftloetitlefont}{\estilotituloindice}
+\renewcommand{\cftecuacionespresnum}{Ecuación }
+\renewcommand{\cftecuacionesaftersnum}{.}
+\setlength{\cftecuacionesnumwidth}{7em}
+% Los títulos de índice comienzan en el margen superior, como los capítulos.
+\setlength{\cftbeforetoctitleskip}{0pt}
+\setlength{\cftbeforeloftitleskip}{0pt}
+\setlength{\cftbeforelottitleskip}{0pt}
+\setlength{\cftbeforeloetitleskip}{0pt}
+\cftsetindents{ecuaciones}{1.5em}{7em}
 \newcommand{\addequationtoindex}[1]{%
   \addcontentsline{loe}{ecuaciones}{\protect\numberline{\theequation}#1}%
 }
 \newcommand{\startchapter}{\addtocontents{loe}{\protect\addvspace{10pt}}}
-\newcommand{\fuentepropia}{\par\begin{center}{\footnotesize\textit{Fuente: elaboración propia.}}\end{center}}
+% «Fuente:» según el estilo «Pie de foto-tabla» de la plantilla:
+% centrado, 9,5 pt, gris (#595959), redonda.
+\definecolor{grisfuente}{rgb}{0.349,0.349,0.349}
+\newcommand{\notafuente}[1]{\par\begin{center}{\fontsize{9.5pt}{11pt}\selectfont\color{grisfuente}Fuente: #1}\end{center}}
+\newcommand{\fuentepropia}{\notafuente{elaboración propia.}}
 
 %---------------------------
 % Metadatos del trabajo
@@ -55,15 +89,16 @@
 \author{Milton Obed Rayo Viana}
 \date{Julio de 2026}
 \director{Pedro León Millán}
+\tipotrabajo{Desarrollo de software}
 \nombreciudad{Medellín}
 
 % Uncomment to speed up compilation while editing a single chapter:
 %\includeonly{chapters/05_resultados}
 
 \begin{document}
-\renewcommand{\listfigurename}{Índice de Figuras}
-\renewcommand{\listtablename}{Índice de Tablas}
-\renewcommand{\contentsname}{Índice de Contenidos}
+\renewcommand{\listfigurename}{Índice de figuras}
+\renewcommand{\listtablename}{Índice de tablas}
+\renewcommand{\contentsname}{Índice de contenidos}
 \renewcommand{\figurename}{Figura}
 \renewcommand{\tablename}{Tabla}
 
@@ -73,6 +108,8 @@
 % Orden mandado por las instrucciones del TFE: el resumen/abstract precede a
 % los índices numerados.
 \frontmatter
+% La plantilla 2026 pagina la parte preliminar en números romanos en mayúscula.
+\renewcommand{\thepage}{\Roman{page}}
 \include{chapters/00_resumen}
 \tableofcontents
 \clearpage
@@ -95,6 +132,7 @@
 % ---- Bibliography -----------------------------------------
 \cleardoublepage
 \phantomsection
+\renewcommand{\bibname}{Referencias bibliográficas}
 \addcontentsline{toc}{chapter}{Referencias bibliográficas}
 \bibliographystyle{apacite}
 \bibliography{bibliografia}
@@ -104,6 +142,7 @@
 % índice de acrónimos tras los anexos de contenido.
 \appendix
 \renewcommand{\appendixname}{Anexo}
+\activaformatoanexo
 \startchapter\include{appendix/repositorio}
 \startchapter\include{appendix/guia_uso}
 \startchapter\include{appendix/acronimos}
