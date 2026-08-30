@@ -109,9 +109,9 @@ este trabajo, aunque opera en el mismo nivel de manifiesto individual.
 La limitación estructural común a estas herramientas es que ninguna aprende ni predice
 cadenas de ataque a partir de la estructura del clúster: incluso las comprobaciones de
 grafo de \textit{Checkov} son reglas fijas sobre dependencias conocidas, no un modelo
-entrenado. Saben que un pod tiene \texttt{privileged: true}, pero no infieren si ese
-pod encadena con el acceso de red a los recursos críticos del clúster para formar una
-ruta de ataque completa. La detección de cadenas de ataque requiere, inevitablemente,
+entrenado. Estas herramientas detectan que un pod tiene \texttt{privileged: true}, pero no infieren
+si ese pod encadena con el acceso de red a los recursos críticos del clúster para formar
+una ruta de ataque completa. La detección de cadenas de ataque requiere, inevitablemente,
 razonar sobre la estructura del clúster como un todo.
 
 % -----------------------------------------------------------
@@ -138,7 +138,7 @@ de clases moderado (56,3\,\% seguros vs.\ 43,7\,\% mal configurados); el
 desafío de desequilibrio más severo se concentra en las \textit{flags} de escape
 individuales, algunas presentes en menos del 1\,\% de los manifiestos reales.
 El desequilibrio de clases es un problema generalizado
-en los datasets de seguridad: las misconfiguraciones críticas son rarísimas en
+en los conjuntos de datos de seguridad: las misconfiguraciones críticas son rarísimas en
 repositorios reales, lo que obliga a adoptar estrategias explícitas de compensación.
 La alternativa más común es asignar pesos de clase inversamente proporcionales a su
 frecuencia (\textit{class\_weight=balanced} en \textit{scikit-learn}), que es la
@@ -300,7 +300,7 @@ los últimos años.
 
 \textit{E-GraphSAGE} \citep{Lo2022} propone representar flujos de red como grafos de
 transacción para clasificación de intrusiones en \acs{IoT}, alcanzando tasas de detección
-superiores a los clasificadores tabulares clásicos en el dataset UNSW-NB15. La
+superiores a los clasificadores tabulares clásicos en el conjunto de datos UNSW-NB15. La
 analogía con el presente trabajo es directa: los manifiestos \textit{Kubernetes}
 son los nodos y las relaciones de privilegio y movimiento lateral son las aristas del
 grafo de amenaza. Una diferencia clave es que \textit{E-GraphSAGE} modela flujos de

@@ -63,7 +63,10 @@ de test de mayor a menor \textit{risk\_score}, los manifiestos misconfigured apa
 casi todos antes que los seguros. Esta propiedad es la que habilita el uso del
 \textit{risk\_score} como característica nodal cuantitativa en el grafo de la Capa~2:
 la señal transmitida a la \ac{GNN} no es un bit binario sino una probabilidad calibrada
-que refleja la densidad de misconfiguraciones del manifiesto.
+que refleja la densidad de misconfiguraciones del manifiesto. En la matriz de
+confusión de la Figura~\ref{fig:rf_confusion} (566~muestras), los 3~falsos
+positivos corresponden a manifiestos seguros con alta densidad de
+características de riesgo, y no existe ningún falso negativo.
 
 \begin{figure}[htbp]
   \centering
@@ -74,10 +77,6 @@ que refleja la densidad de misconfiguraciones del manifiesto.
   \fuentepropia
 \end{figure}
 
-En la matriz de la Figura~\ref{fig:rf_confusion} (566~muestras), los 3~falsos
-positivos son manifiestos seguros con alta densidad de características de riesgo;
-no existe ningún falso negativo.
-
 \subsection{Importancia de características}
 \label{sec:rf_importance}
 
@@ -87,7 +86,9 @@ modelo. La característica más discriminativa es \texttt{total\_misconfigs}
 \texttt{INSECURE\_HTTP} (11,90\,\%). Las flags de escape críticas (\texttt{TRUE\_HOST\_PID},
 \texttt{SEC\_CONT\_OVER\_PRIVIL}) presentan importancias menores (\(<\)1\,\%) por su
 rareza en el dataset, pero son identificadas correctamente cuando están presentes,
-como confirma la ausencia de falsos negativos en la clasificación binaria.
+como confirma la ausencia de falsos negativos en la clasificación binaria. Las
+dos primeras características de la Figura~\ref{fig:rf_importance} (en rojo)
+concentran el 48\,\% de la capacidad discriminativa total del modelo.
 
 \begin{figure}[htbp]
   \centering
@@ -97,9 +98,6 @@ como confirma la ausencia de falsos negativos en la clasificación binaria.
 
   \fuentepropia
 \end{figure}
-
-Las dos primeras características de la Figura~\ref{fig:rf_importance} (en rojo)
-concentran el 48\,\% de la capacidad discriminativa total del modelo.
 
 Un estudio de ablación eliminando \texttt{total\_misconfigs} produce F1 idéntico
 y la misma matriz de confusión, confirmando que el modelo no depende de esta
@@ -245,7 +243,7 @@ El objetivo de diseño es P@5\,>\,0,70 (OE4). En el resultado final de este trab
 los pliegues de validación cruzada particionan los 513~grafos originales no
 reservados para test (32~cadenas). El modelo obtiene
 P@5\,=\,0,720\,\(\pm\)\,0,160, alcanzando el objetivo con la semilla de
-entrenamiento desplegada (42); a través de tres semillas (7, 42, 123) la media es
+entrenamiento desplegada (42); en las tres semillas (7, 42, 123) la media es
 de 0,68\,\(\pm\)\,0,03\footnote{Las desviaciones típicas de las métricas del modelo
 se reportan como desviación poblacional (\(\text{ddof}=0\)), consistente con la
 instrumentación de \textit{NumPy} empleada en la validación cruzada; la del \ac{SUS}
@@ -491,7 +489,10 @@ albergar una cadena. \ac{FPR}\_clean\,=\,0,00: ningún clúster limpio aparece
 entre los de mayor riesgo. La F1~macro por clasificación \textit{argmax} del
 ensemble de pliegues sobre el conjunto de test es 0,883 (F1 por clase:
 \textit{clean} 1,0; \textit{isolated} 0,981; \textit{attack\_chain} 0,667,
-con 3 de las 5~cadenas correctamente clasificadas).
+con 3 de las 5~cadenas correctamente clasificadas). La Figura~\ref{fig:structural_gate}
+compara las métricas de ranking del conjunto de test con y sin la restricción:
+descartar los clústeres de un solo nodo del \textit{ranking} eleva P@1 de 0,00 a
+1,00 y P@5 de 0,60 a 0,80.
 
 \begin{figure}[htbp]
   \centering
@@ -501,10 +502,6 @@ con 3 de las 5~cadenas correctamente clasificadas).
 
   \fuentepropia
 \end{figure}
-
-La Figura~\ref{fig:structural_gate} compara las métricas de ranking del conjunto
-de test con y sin la restricción: descartar los clústeres de un solo nodo del
-\textit{ranking} eleva P@1 de 0,00 a 1,00 y P@5 de 0,60 a 0,80.
 
 Dado el tamaño del conjunto de test, estas estimaciones llevan asociados
 intervalos de confianza amplios (bootstrap de 10\,000 remuestreos, 95\,\%):

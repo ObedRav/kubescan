@@ -31,7 +31,7 @@ clúster (OE6).
 \begin{description}
   \item[OE1.] Construir un conjunto de datos de manifiestos \textit{Kubernetes}
     etiquetados que combine múltiples fuentes públicas, contenga al menos
-    2.000~manifiestos, y alcance una cobertura mínima del 2\,\% en la flag de escape
+    2.000~manifiestos, y alcance una cobertura mínima del 2\,\% en la bandera de escape
     \texttt{TRUE\_HOST\_PID}, superando el 0,3\,\% de los repositorios reales no
     aumentados.
 
@@ -82,7 +82,7 @@ de Rahman et~al.\ \citep{Rahman2022} (repositorios reales etiquetados), BishopFo
 BadPods \citep{BishopFox2021} (pods intencionadamente vulnerables), \textit{Kubernetes
 Goat} \citep{KubernetesGoat} (escenarios de vulnerabilidad) y repositorios de
 seguridad adicionales (CTFs, laboratorios y \textit{fixtures}). El criterio de
-inclusión de repositorios adicionales fue la presencia de al menos una flag de escape
+inclusión de repositorios adicionales fue la presencia de al menos una bandera de escape
 activa (\texttt{HOSTPATH\_MOUNT}, \texttt{TRUE\_HOST\_PID}, etc.) en al menos un
 manifiesto del directorio.
 
@@ -91,7 +91,7 @@ de 28 características por manifiesto (25 indicadores binarios y 3 agregados
 derivados) mediante análisis estático multi-herramienta
 (Sección~\ref{sec:features_table}) y construcción del grafo de
 clúster con cinco tipos de arista (Tabla~\ref{tab:edge_types}). En esta fase se
-realizó también la validación de cobertura de la flag \texttt{HOSTPATH\_MOUNT},
+realizó también la validación de cobertura de la bandera \texttt{HOSTPATH\_MOUNT},
 documentada en la Sección~\ref{sec:layer2}.
 
 \textbf{Fase~3 — Entrenamiento de la Capa~1.} Entrenamiento de un clasificador
