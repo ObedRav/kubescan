@@ -51,17 +51,25 @@
 \renewcommand{\cftchapaftersnum}{.}
 \renewcommand{\cftsecaftersnum}{.}
 \renewcommand{\cftsubsecaftersnum}{.}
+% Las entradas de los índices de figuras/tablas llevan la etiqueta completa,
+% como en la plantilla: «Figura 1. …», «Tabla 1. …».
+\renewcommand{\cftfigpresnum}{Figura }
 \renewcommand{\cftfigaftersnum}{.}
+\setlength{\cftfignumwidth}{5.5em}
+\renewcommand{\cfttabpresnum}{Tabla }
 \renewcommand{\cfttabaftersnum}{.}
+\setlength{\cfttabnumwidth}{5em}
 \newlistof{ecuaciones}{loe}{Índice de ecuaciones}
 \renewcommand{\cftloetitlefont}{\estilotituloindice}
+\renewcommand{\cftecuacionespresnum}{Ecuación }
 \renewcommand{\cftecuacionesaftersnum}{.}
+\setlength{\cftecuacionesnumwidth}{7em}
 % Los títulos de índice comienzan en el margen superior, como los capítulos.
 \setlength{\cftbeforetoctitleskip}{0pt}
 \setlength{\cftbeforeloftitleskip}{0pt}
 \setlength{\cftbeforelottitleskip}{0pt}
 \setlength{\cftbeforeloetitleskip}{0pt}
-\cftsetindents{ecuaciones}{1.5em}{2.3em}
+\cftsetindents{ecuaciones}{1.5em}{7em}
 \newcommand{\addequationtoindex}[1]{%
   \addcontentsline{loe}{ecuaciones}{\protect\numberline{\theequation}#1}%
 }
