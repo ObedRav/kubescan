@@ -37,7 +37,10 @@
   \includegraphics[#1]{#2}%
 }
 \numberwithin{equation}{chapter}
-\numberwithin{figure}{chapter}
+% La plantilla numera figuras y tablas de forma continua («Figura 1», «Tabla 1»),
+% no por capítulo.
+\counterwithout{figure}{chapter}
+\counterwithout{table}{chapter}
 % Títulos de los índices con el estilo «Título Índices» de la plantilla:
 % 18 pt, redonda, azul UNIR, sin numerar.
 \newcommand{\estilotituloindice}{\fontsize{18pt}{22pt}\selectfont\mdseries\color{azulunir}}

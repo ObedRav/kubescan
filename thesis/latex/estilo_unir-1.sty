@@ -57,7 +57,9 @@
 %--- Títulos de tablas y figuras (arriba), fuente al pie: número en negrita,
 %    nombre en cursiva, según la plantilla UNIR.
 \usepackage{caption}
-\captionsetup{labelfont=bf,textfont=it,labelsep=period,justification=justified,font=footnotesize}
+%--- Estilo «Descripción» de la plantilla: todo el pie en negrita 10 pt,
+%    el título además en cursiva («Tabla 1. \textit{Título}.»).
+\captionsetup{labelfont=bf,textfont={bf,it},labelsep=period,justification=justified,font=footnotesize}
 \captionsetup[table]{position=above,skip=6pt}
 \captionsetup[figure]{position=above,skip=6pt}
 
