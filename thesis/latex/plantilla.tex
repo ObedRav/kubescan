@@ -36,9 +36,9 @@
 \newcommand{\safeincludegraphics}[2][]{%
   \includegraphics[#1]{#2}%
 }
-\numberwithin{equation}{chapter}
-% La plantilla numera figuras y tablas de forma continua («Figura 1», «Tabla 1»),
-% no por capítulo.
+% La plantilla numera figuras, tablas y ecuaciones de forma continua
+% («Figura 1», «Tabla 1», «(1)»), no por capítulo.
+\counterwithout{equation}{chapter}
 \counterwithout{figure}{chapter}
 \counterwithout{table}{chapter}
 % Títulos de los índices con el estilo «Título Índices» de la plantilla:
@@ -55,6 +55,7 @@
 \renewcommand{\cfttabaftersnum}{.}
 \newlistof{ecuaciones}{loe}{Índice de ecuaciones}
 \renewcommand{\cftloetitlefont}{\estilotituloindice}
+\renewcommand{\cftecuacionesaftersnum}{.}
 % Los títulos de índice comienzan en el margen superior, como los capítulos.
 \setlength{\cftbeforetoctitleskip}{0pt}
 \setlength{\cftbeforeloftitleskip}{0pt}
