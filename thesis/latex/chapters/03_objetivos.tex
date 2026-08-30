@@ -22,7 +22,8 @@ clúster, mediante la combinación de un clasificador de manifiestos individuale
 Network}) y optimización de ensemble mediante Algoritmo Genético. El sistema opera
 principalmente sobre manifiestos \acs{YAML} estáticos, sin requerir acceso a un
 clúster activo, si bien incorpora opcionalmente una vía de consulta directa al
-clúster (OE6).
+clúster (OE6). Los objetivos específicos que concretan este objetivo general,
+numerados OE1 a OE6, se detallan a continuación.
 
 % -----------------------------------------------------------
 \section{Objetivos específicos}
@@ -134,7 +135,8 @@ La estrategia de partición de datos difiere entre la Capa~1 (datos tabulares) y
 Capa~2 (datos de grafos), dado que sus tamaños y distribuciones son distintos. El
 tamaño final de cada conjunto depende del proceso de adquisición y construcción
 descrito en las Secciones~\ref{sec:construccion_dataset} y~\ref{sec:construccion_grafo}
-del Capítulo~\ref{cap:diseno}.
+del Capítulo~\ref{cap:diseno}. A continuación se describe la partición seguida en
+cada capa por separado.
 
 Para la Capa~1, el conjunto de manifiestos se divide en un conjunto de entrenamiento
 (80\,\%) y un conjunto de test (20\,\%), con estratificación por la variable objetivo

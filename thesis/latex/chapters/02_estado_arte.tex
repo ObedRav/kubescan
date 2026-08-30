@@ -36,9 +36,7 @@ producción puede conceder privilegios excesivos a un contenedor o exponer secre
 en texto plano. La flexibilidad de \textit{Kubernetes} —que permite configurar desde
 el sistema de ficheros del anfitrión hasta los permisos de red a nivel de pod— implica
 que el número de vectores de ataque crece proporcionalmente con la riqueza del modelo
-de configuración.
-
-La Agencia de Seguridad Nacional de Estados Unidos (\acs{NSA}) y la Agencia de
+de configuración. La Agencia de Seguridad Nacional de Estados Unidos (\acs{NSA}) y la Agencia de
 Ciberseguridad e Infraestructura (\acs{CISA}) publicaron en 2022 una guía técnica
 \citep{NSA2022} que enumera las misconfiguraciones más críticas: uso de
 \texttt{privileged: true}, montaje del socket de Docker, compartición del espacio de
@@ -69,7 +67,7 @@ el espacio de detección cubre los vectores de ataque documentados y más explot
 la industria.
 
 % -----------------------------------------------------------
-\section{Análisis estático de \acs{IaC}}
+\section{Análisis estático de IaC}
 % -----------------------------------------------------------
 
 El análisis estático de manifiestos \ac{IaC} cuenta con una larga trayectoria en la
@@ -105,7 +103,6 @@ poder compararlas, un problema afín al de generar un \textit{risk\_score} unifi
 como el de la Capa~1 del presente sistema. Su propuesta, que incorpora un modelo de
 lenguaje de gran escala (\acs{LLM}) para la clasificación, es complementaria a la de
 este trabajo, aunque opera en el mismo nivel de manifiesto individual.
-
 La limitación estructural común a estas herramientas es que ninguna aprende ni predice
 cadenas de ataque a partir de la estructura del clúster: incluso las comprobaciones de
 grafo de \textit{Checkov} son reglas fijas sobre dependencias conocidas, no un modelo
@@ -317,7 +314,6 @@ nodos individuales. Aunque opera sobre conocimiento de ataques pasados (retrospe
 y no sobre configuraciones declarativas (preventivo), la arquitectura basada en grafos
 de conocimiento inspiró el diseño de los tipos de arista semánticamente diferenciados
 del presente sistema.
-
 Una limitación reconocida en la literatura es la escasez de conjuntos de datos de
 grafos etiquetados de alta calidad para ciberseguridad. Tanto \citeauthor{Bilot2023}
 (\citeyear{Bilot2023}) como \citeauthor{GNNSurvey2024} (\citeyear{GNNSurvey2024})
@@ -339,7 +335,6 @@ mínimo (1) un pod con capacidad de escape al anfitrión (\textit{TRUE\_HOST\_PI
 \textit{privileged: true}, \textit{hostPath} montado, etc.) y (2) un mecanismo de
 movimiento lateral hacia otros recursos del clúster (token de cuenta de servicio con
 permisos excesivos, montaje de secretos en el manifiesto, etc.).
-
 En los últimos años han surgido dos herramientas de código abierto que abordan la
 detección de rutas de ataque en \textit{Kubernetes} mediante grafos:
 \textit{KubeHound} \citep{KubeHound2023} e \textit{IceKube} \citep{IceKube2023}.
@@ -357,7 +352,6 @@ amplio conjunto de ataques y ha sido adoptado por equipos de seguridad en produc
 en Neo4j, y permite definir rutas de ataque mediante consultas Cypher. Modela un
 amplio conjunto de técnicas de ataque como relaciones en el grafo y puede encontrar
 rutas desde cualquier identidad de bajo privilegio hasta \textit{cluster-admin}.
-
 La diferencia fundamental entre estas herramientas y \textit{kubescan} es de
 paradigma: KubeHound e IceKube operan sobre un \textbf{clúster activo}, requiriendo
 acceso con privilegios elevados a \texttt{kubectl}. \textit{kubescan}, en cambio,
@@ -421,4 +415,6 @@ originales con etiquetas de cadena de ataque derivadas de reglas de seguridad
 explícitas y auditables. Al operar sobre manifiestos \acs{YAML} sin requerir acceso
 al clúster, \textit{kubescan} se posiciona como un control preventivo integrable en
 pipelines \acs{CICD}, complementario a —y no sustituto de— las herramientas de
-análisis de clúster activo como KubeHound.
+análisis de clúster activo como KubeHound. Los capítulos siguientes describen en
+detalle los objetivos específicos, el diseño e implementación del sistema y la
+evaluación experimental de cada una de sus tres capas.

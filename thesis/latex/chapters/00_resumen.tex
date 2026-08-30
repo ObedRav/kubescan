@@ -16,21 +16,18 @@ alcanza una F1 macro de 0,9946 en la clasificación de manifiestos individuales,
 basada en \acs{GAT} de 3 capas con 4 cabezas de atención, \textit{embedding} de
 tipos de arista y aumentación de grafos, logra F1~macro\,=\,0,803\,\(\pm\)\,0,137
 y Precisión@5\,=\,0,720\,\(\pm\)\,0,160 en validación cruzada de 5~pliegues con un
-protocolo de particionado consciente de grupos y de familias de plantilla (sin fuga
-entre variantes casi duplicadas y sus grafos base), superando el objetivo de diseño
-de P@5\,>\,0,70. En el conjunto de test —86~grafos con 5~cadenas de ataque de
-repositorios reales, excluido de la validación cruzada y del ajuste del
-\textit{ensemble}— el sistema completo de tres capas, combinado con una
-restricción de viabilidad estructural (un clúster de un solo manifiesto no puede
-albergar una cadena multi-salto), alcanza Precisión@1\,=\,1,00 y
+protocolo de particionado consciente de grupos y de familias de plantilla,
+superando el objetivo de diseño de P@5\,>\,0,70. En el conjunto de test
+independiente —86~grafos con 5~cadenas de ataque de repositorios reales— el
+sistema completo de tres capas, combinado con una
+restricción de viabilidad estructural, alcanza Precisión@1\,=\,1,00 y
 Precisión@3\,=\,1,00, recupera 4 de las 5~cadenas en las primeras 5~posiciones
 (Precisión@5\,=\,0,80) y no produce falsos positivos de clústeres limpios
 (\acs{FPR}\_clean\,=\,0\,\%). Una evaluación de usabilidad con tres usuarios
 expertos otorga a la herramienta una puntuación \acs{SUS} media de 88,3
 («excelente»). El trabajo aporta además una contribución metodológica: la
-detección y corrección de una fuga de información por familias de plantilla que
-inflaba las métricas de validación cruzada previas, junto con la ablación que
-explica y revierte la regresión asociada a dicha corrección.
+detección y corrección de una fuga de información por familias de plantilla,
+junto con la ablación que explica la regresión asociada.
 
 \medskip
 \noindent\textbf{Palabras clave:} Kubernetes, Graph Neural Networks, Random Forest,
@@ -52,20 +49,17 @@ representing privilege-escalation, lateral-movement, proximity, namespace, and
 and zero false negatives on the test set. Layer~2, a 3-layer \acs{GAT} with 4
 attention heads, edge-type embeddings and graph augmentation, achieves
 macro-F1\,=\,0.803\,\(\pm\)\,0.137 and Precision@5\,=\,0.720\,\(\pm\)\,0.160 under a
-5-fold cross-validation protocol that is group- and template-family-aware (no
-leakage between near-duplicate variants and their base clusters), exceeding the
-P@5\,>\,0.70 design target. On the test set — 86~graphs containing 5~attack
-chains from real-world repositories, held out from cross-validation and ensemble
-tuning — the full three-layer system, combined with a structural feasibility
-constraint (a single-manifest cluster cannot host a multi-hop chain), achieves
-Precision@1\,=\,1.00 and Precision@3\,=\,1.00, recovers 4 of the 5~attack chains
-within the top-5 ranking (Precision@5\,=\,0.80), and produces no false positives
-on clean clusters (FPR\_clean\,=\,0). A usability evaluation with three expert
-users yields a mean \acs{SUS} score of 88.3 (``excellent'' rating). The work
-additionally contributes a methodological finding: the detection and correction
-of template-family information leakage that inflated earlier evaluation metrics,
-together with the ablation that explains and reverses the regression associated
-with that correction.
+5-fold cross-validation protocol that is group- and template-family-aware,
+exceeding the P@5\,>\,0.70 design target. On the independent test set —
+86~graphs containing 5~attack chains from real-world repositories — the full
+three-layer system, combined with a structural feasibility constraint,
+achieves Precision@1\,=\,1.00 and Precision@3\,=\,1.00, recovers 4 of the
+5~attack chains within the top-5 ranking (Precision@5\,=\,0.80), and produces
+no false positives on clean clusters (FPR\_clean\,=\,0). A usability
+evaluation with three expert users yields a mean \acs{SUS} score of 88.3
+(``excellent'' rating). The work additionally contributes a methodological
+finding: the detection and correction of template-family information leakage,
+together with the ablation that explains the associated regression.
 
 \medskip
 \noindent\textbf{Keywords:} Kubernetes, Graph Neural Networks, Random Forest,

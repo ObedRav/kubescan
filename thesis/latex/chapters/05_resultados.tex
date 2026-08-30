@@ -17,7 +17,9 @@ métricas empleadas se justifican en detalle en la Sección~\ref{sec:metricas}.
 Esta sección presenta los resultados de los dos modelos de la Capa~1 descritos en
 el Capítulo~\ref{cap:diseno}: el clasificador binario y el modelo de severidad. Se
 reportan primero las métricas de clasificación binaria y la importancia de las
-características, y a continuación los resultados del modelo de severidad.
+características, y a continuación los resultados del modelo de severidad. Ambos
+modelos comparten el mismo conjunto de 28~características extraídas por
+manifiesto, descrito en la Sección~\ref{sec:construccion_dataset}.
 
 \subsection{Clasificación binaria}
 
@@ -93,7 +95,10 @@ modelo. La característica más discriminativa es \texttt{total\_misconfigs}
 rareza en el dataset, pero son identificadas correctamente cuando están presentes,
 como confirma la ausencia de falsos negativos en la clasificación binaria. Las
 dos primeras características de la Figura~\ref{fig:rf_importance} (en rojo)
-concentran el 48\,\% de la capacidad discriminativa total del modelo.
+concentran el 48\,\% de la capacidad discriminativa total del modelo. Un estudio
+de ablación eliminando \texttt{total\_misconfigs} produce F1 idéntico y la misma
+matriz de confusión, confirmando que el modelo no depende de esta característica
+derivada y que no existe fuga de datos circular.
 
 \begin{figure}[htbp]
   \centering
@@ -103,10 +108,6 @@ concentran el 48\,\% de la capacidad discriminativa total del modelo.
 
   \fuentepropia
 \end{figure}
-
-Un estudio de ablación eliminando \texttt{total\_misconfigs} produce F1 idéntico
-y la misma matriz de confusión, confirmando que el modelo no depende de esta
-característica derivada y que no existe fuga de datos circular.
 
 \subsection{Modelo de severidad}
 
@@ -146,11 +147,10 @@ modelo se concentra en la frontera entre \textit{clean} y \textit{low-medium} (3
 algunos manifiestos con pocas flags de baja severidad se sobreclasifican como
 \textit{low-medium} (falsos positivos benignos desde el punto de vista del operador); un
 único manifiesto \textit{low-medium} se sobreclasifica como \textit{high-critical}, un error
-igualmente conservador.
-
-El modelo de severidad se utiliza en el informe de salida de \textit{kubescan} para
-proporcionar al operador una descripción cualitativa del nivel de riesgo de cada
-manifiesto, complementando el \textit{risk\_score} numérico del modelo binario.
+igualmente conservador. El modelo de severidad se utiliza en el informe de salida
+de \textit{kubescan} para proporcionar al operador una descripción cualitativa
+del nivel de riesgo de cada manifiesto, complementando el \textit{risk\_score}
+numérico del modelo binario.
 
 % -----------------------------------------------------------
 \section{Resultados de la Capa 2: \acs{GNN}}
@@ -162,7 +162,10 @@ obtenidos durante el desarrollo experimental: la evolución de las métricas a l
 largo de las fases de mejora del modelo, el análisis de Precisión@5, los
 resultados por pliegue de la configuración final, la ablación de la función de
 pérdida y del criterio de selección, y la robustez frente a la semilla de
-entrenamiento.
+entrenamiento. A diferencia de la Capa~1, la Capa~2 requirió varias iteraciones
+metodológicas antes de alcanzar una configuración cuyas métricas fueran a la vez
+válidas y reproducibles. Esta evolución se documenta explícitamente porque es
+también, en sí misma, una contribución metodológica del trabajo.
 
 \subsection{Evolución por fase experimental}
 
@@ -375,6 +378,9 @@ selección por Precisión@5 (Figura~\ref{fig:loss_ablation}).
 La Figura~\ref{fig:loss_ablation} representa la Precisión@5 de validación cruzada
 (\(\pm\)\(\sigma\)) de las cuatro configuraciones; solo la desplegada —entropía
 cruzada ponderada con selección por Precisión@5— supera el objetivo de diseño.
+Las otras tres configuraciones quedan por debajo de P@5\,>\,0,70 con márgenes
+distintos, lo que confirma que ambos factores —función de pérdida y criterio de
+selección— deben acertarse simultáneamente para alcanzar el objetivo.
 
 \subsection{Robustez frente a la semilla de entrenamiento}
 \label{sec:multisemilla}
@@ -679,7 +685,10 @@ predicciones.
 Además de la evaluación cuantitativa sobre los conjuntos de datos etiquetados, se
 realizó una evaluación funcional de \textit{kubescan} como herramienta de software
 distribuible, atendiendo a los requisitos no funcionales definidos en la
-Sección~\ref{sec:requisitos}.
+Sección~\ref{sec:requisitos}. Esta evaluación complementa las métricas de las
+capas 1--3, que miden capacidad predictiva, con evidencia de que el sistema es
+efectivamente utilizable como herramienta de línea de comandos. Los cuatro
+requisitos no funcionales se verifican de forma independiente a continuación.
 
 \paragraph{Instalabilidad (RNF-3).} El paquete se instaló satisfactoriamente en
 entornos Python 3.10 y 3.11 mediante \texttt{pip install -e kubescan/} en sistemas
@@ -770,7 +779,9 @@ El núcleo del flujo de trabajo —instalación, escaneo e interpretación del
 informe— se completó sin ayuda por los tres participantes. Las únicas fricciones
 fueron puntuales: un participante necesitó ayuda para extraer campos de la salida
 \ac{JSON} (T4) y la tarea opcional sobre un caso propio (T5) se completó con
-ayuda en dos casos.
+ayuda en dos casos. La tasa de éxito global del 90\,\% (Tabla~\ref{tab:usab_tareas})
+refleja, por tanto, un flujo de trabajo principal robusto con puntos de fricción
+concentrados en tareas secundarias u opcionales.
 
 \subsection{Usabilidad percibida (SUS)}
 
@@ -788,9 +799,7 @@ Los participantes valoraron cuatro afirmaciones de aplicabilidad (escala 1--5):
 integración en CI/CD o auditoría (A1), ajuste de la priorización de riesgo a su
 forma de auditar (A2), accionabilidad del informe (A3) y confianza en el
 veredicto (A4). Las medias fueron A1\,=\,4,3, A2\,=\,4,3, A4\,=\,4,3 y, como
-punto más bajo, A3\,=\,3,7.
-
-El análisis cualitativo de las respuestas abiertas es coherente con estas cifras.
+punto más bajo, A3\,=\,3,7. El análisis cualitativo de las respuestas abiertas es coherente con estas cifras.
 Como fortaleza, un participante destacó exactamente la contribución central del
 trabajo: la herramienta «no solo te dice qué está mal en un manifiesto, sino que
 conecta varios problemas pequeños para mostrarte» una cadena de ataque, en lugar
@@ -825,7 +834,11 @@ directa para robustecer estas conclusiones.
 % -----------------------------------------------------------
 
 Esta sección contextualiza los resultados de \textit{kubescan} respecto a los
-trabajos revisados en el Capítulo~\ref{cap:estado}.
+trabajos revisados en el Capítulo~\ref{cap:estado}. La comparación se organiza
+por capa, dado que la Capa~1 dispone de referencias directas en la literatura de
+clasificación de \textit{IaC}, mientras que la Capa~2 carece de trabajos previos
+estrictamente comparables. En ambos casos se prioriza la comparación con
+resultados obtenidos sobre conjuntos de datos de tamaño y naturaleza similares.
 
 \subsection{Capa 1 en contexto}
 
@@ -838,7 +851,6 @@ misconfiguraciones, no la predicción. El umbral objetivo F1\,>\,0,85 adoptado e
 este trabajo se alinea con los estándares de la literatura de \acs{IDS} sobre UNSW-NB15
 \citep{Moustafa2015}, donde clasificadores basados en \textit{Random Forest}
 típicamente alcanzan F1 macro entre 0,85 y 0,93.
-
 El \ac{AUC}-\ac{ROC} de 0,9986 indica que el clasificador separa casi perfectamente las dos
 clases a cualquier umbral de decisión. Este resultado es consistente con la naturaleza
 del problema: las misconfiguraciones en manifiestos \acs{YAML} son mayoritariamente discretas
@@ -861,7 +873,6 @@ visto: P@5 pasa de 0,40 (\ac{RF}-sólo) a 0,80 (configuraciones con \ac{GNN}) y
 P@1 de 0,00 a 1,00 (Tabla~\ref{tab:ensemble_ablation}), lo que indica que la
 información estructural del grafo es decisiva para identificar cadenas de
 ataque reales.
-
 La varianza entre pliegues (\(\sigma\)\,=\,0,160 para P@5 en la fase final) es
 coherente con lo reportado en la literatura para conjuntos de grafos pequeños
 (n\,<\,200): trabajos como los revisados en \citeauthor{GNNSurvey2024}
