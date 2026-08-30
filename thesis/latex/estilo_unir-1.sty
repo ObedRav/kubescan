@@ -14,10 +14,24 @@
 %\usepackage[latin1]{inputenc} %comentar esta línea si se trabaja en linux
 
 %--- Tipografía exigida por la plantilla UNIR: Calibri.
-%    Carlito es el clon métrico libre de Calibri, compatible con pdfLaTeX.
+%    Carlito es el clon métrico libre de Calibri, compatible con pdfLaTeX,
+%    y se usa para todo el cuerpo del documento y los Títulos 2-4.
 \usepackage[T1]{fontenc}
 \usepackage{carlito}
 \renewcommand{\familydefault}{\sfdefault}
+
+%--- Título 1 (N1) de la plantilla exige Calibri Light, un peso que Carlito no
+%    define. Se carga la Calibri Light instalada localmente (viene con
+%    Microsoft Office) sólo para ese uso puntual; requiere compilar con
+%    XeLaTeX o LuaLaTeX. Si el paquete de fuente no está disponible en la
+%    máquina de compilación, sustituir \calibrilight por \mdseries más abajo.
+\usepackage{fontspec}
+\newfontfamily\calibrilight[
+  Path = /Applications/Microsoft Word.app/Contents/Resources/DFonts/,
+  Extension = .ttf,
+  UprightFont = calibril,
+  ItalicFont = calibrili,
+]{Calibri Light}
 
 
 %simbolos
@@ -50,9 +64,10 @@
 \renewcommand{\headrulewidth}{0.0pt}
 \setlength{\headheight}{24pt}%
 
-%--- Formato de párrafo de la plantilla: sin sangría, 6 pt de separación.
+%--- Formato de párrafo de la plantilla Word (Normal: before=120, after=120
+%    twips = 6pt+6pt = 12pt entre párrafos consecutivos): sin sangría.
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt}
+\setlength{\parskip}{12pt}
 
 %--- Títulos de tablas y figuras (arriba), fuente al pie: número en negrita,
 %    nombre en cursiva, según la plantilla UNIR.
@@ -97,20 +112,20 @@
 %    Título 2: 14 pt, regular, MAYÚSCULAS, azul  (numeración «1.1.»)
 %    Título 3: 12 pt, negrita, redonda, negro    (numeración «1.1.1.»)
 %    Título 4: 12 pt, regular, negro             (numeración «1.1.1.1.»)
-\titleformat{\chapter}[hang]{\fontsize{18pt}{22pt}\selectfont\mdseries\color{azulunir}}{\thechapter.}{0.5em}{\MakeUppercase}
-\titleformat{name=\chapter,numberless}[hang]{\fontsize{18pt}{22pt}\selectfont\mdseries\color{azulunir}}{}{0pt}{}
+\titleformat{\chapter}[hang]{\fontsize{18pt}{22pt}\selectfont\calibrilight\color{azulunir}}{\thechapter.}{0.5em}{\MakeUppercase}
+\titleformat{name=\chapter,numberless}[hang]{\fontsize{18pt}{22pt}\selectfont\calibrilight\color{azulunir}}{}{0pt}{}
 %--- El título de capítulo comienza en el margen superior del cuerpo (2,5 cm),
 %    sin el hueco de 50 pt que el estilo book añade por defecto.
 \titlespacing*{\chapter}{0pt}{0pt}{18pt}
 \titlespacing*{name=\chapter,numberless}{0pt}{0pt}{18pt}
-\titleformat{\section}{\fontsize{14pt}{17pt}\selectfont\mdseries\color{azulunir}}{\thesection.}{0.5em}{\MakeUppercase}
+\titleformat{\section}{\fontsize{14pt}{17pt}\selectfont\calibrilight\color{azulunir}}{\thesection.}{0.5em}{\MakeUppercase}
 \titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
 \titleformat{\subsubsection}{\normalsize\mdseries}{\thesubsubsection.}{0.5em}{}
 \setcounter{secnumdepth}{3}
 
 %--- Anexos: «Anexo A. Título», sin mayúsculas forzadas (estilo «Anexo»).
 \newcommand{\activaformatoanexo}{%
-  \titleformat{\chapter}[hang]{\fontsize{18pt}{22pt}\selectfont\mdseries\color{azulunir}}{\appendixname~\thechapter.}{0.5em}{}%
+  \titleformat{\chapter}[hang]{\fontsize{18pt}{22pt}\selectfont\calibrilight\color{azulunir}}{\appendixname~\thechapter.}{0.5em}{}%
 }
 
 
