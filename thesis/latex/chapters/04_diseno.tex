@@ -20,6 +20,9 @@ indicado en el Apéndice~\ref{ap:repositorio}.
 El diseño de \textit{kubescan} parte de un análisis de requisitos derivado tanto de
 las limitaciones identificadas en el estado del arte (Sección~\ref{sec:sintesis}) como
 de los vectores de ataque documentados por la \ac{NSA} y la \ac{CISA} \citep{NSA2022}.
+Este análisis se traduce en dos conjuntos de requisitos: funcionales, que definen
+las capacidades que el sistema debe ofrecer, y no funcionales, que acotan sus
+propiedades de calidad. Ambos conjuntos se detallan a continuación.
 
 \subsection{Requisitos funcionales}
 
@@ -99,7 +102,9 @@ validación cruzada (Sección~\ref{sec:capa3_diseno}).
 La Figura~\ref{fig:arquitectura} muestra el proceso de tres capas, desde los
 manifiestos \acs{YAML} de entrada hasta la clasificación de riesgo del clúster. Los
 \textit{risk\_scores} producidos por la Capa~1 se incorporan como atributo nodal~26
-del grafo de entrada de la Capa~2.
+del grafo de entrada de la Capa~2. Las secciones siguientes detallan, en este mismo
+orden, la construcción del conjunto de datos, la construcción del grafo y el diseño
+de cada una de las tres capas.
 
 % -----------------------------------------------------------
 \section{Construcción del conjunto de datos}
@@ -111,7 +116,9 @@ La construcción del conjunto de datos parte de la recolección de manifiestos
 extracción de las características que alimentan la Capa~1. Esta sección describe
 primero el origen y la composición de los manifiestos recopilados y, a
 continuación, el proceso de extracción de características que transforma cada
-manifiesto en un vector estructurado.
+manifiesto en un vector estructurado. El conjunto resultante es la base tanto del
+clasificador de la Capa~1 como del grafo de clúster construido en la
+Sección~\ref{sec:construccion_grafo}.
 
 \subsection{Fuentes de datos}
 \label{sec:fuentes_datos}
@@ -177,13 +184,13 @@ La Capa~2 (\ac{GNN}) consume únicamente las 18~flags Rahman y las 7~features ex
 (25 en total, \texttt{FEATURE\_COLS} en \texttt{yaml\_parser.py}) como vector de nodo,
 excluyendo las 3~features derivadas —agregados calculados a partir de las otras 25 que
 no aportan información estructural adicional al grafo—; ver
-Sección~\ref{sec:features_table}.
-
-Tres features presentan varianza casi nula pero se mantienen en el entrenamiento (con
-importancia residual o nula, Sección~\ref{sec:rf_importance}):
-\texttt{SECCOMP\_UNCONFINED} (15/2.827 activa), \texttt{VALID\_TAINT\_SECRET}
-(0/2.827 activa) y \texttt{NO\_NETWORK\_POLICY} (2.818/2.827 activa, sin poder
-discriminativo).
+Sección~\ref{sec:features_table}. De estas 25, tres presentan varianza casi nula pero
+se mantienen en el entrenamiento, con importancia residual o nula
+(Sección~\ref{sec:rf_importance}): \texttt{SECCOMP\_UNCONFINED} (15/2.827 activa),
+\texttt{VALID\_TAINT\_SECRET} (0/2.827 activa) y \texttt{NO\_NETWORK\_POLICY}
+(2.818/2.827 activa, sin poder discriminativo). Se conservan pese a su bajo aporte
+individual porque su ausencia no simplifica el vector de nodo ni mejora el
+entrenamiento de forma medible.
 
 % -----------------------------------------------------------
 \section{Construcción del grafo de clúster}
@@ -196,7 +203,8 @@ Cada directorio de manifiestos se representa, mediante \textit{NetworkX}
 \(E\) contiene aristas de cinco tipos semánticamente distintos
 (Tabla~\ref{tab:edge_types}). La Figura~\ref{fig:grafo_cluster} ilustra un ejemplo
 con cuatro nodos que incluye los tres tipos de nodo posibles: escape, movimiento
-lateral y limpio.
+lateral y limpio. Las reglas de asignación de cada tipo de nodo y de arista se
+detallan en las dos subsecciones siguientes.
 
 \begin{table}[htbp]
 \centering\small
