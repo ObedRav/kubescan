@@ -24,7 +24,7 @@ relaciones entre recursos del clúster. Un único indicador de privilegio en un 
 suficiente para determinar si existe una cadena de ataque viable; es la combinación de nodos de
 escape con recursos de movimiento lateral la que habilita rutas de explotación
 completas, siguiendo la lógica de encadenamiento de etapas del modelo de
-\textit{kill chain} de \citeauthor{Hutchins2011} \citeyear{Hutchins2011}; las
+\textit{kill chain} de Hutchins, Cloppert y Amin (\citeyear{Hutchins2011}); las
 técnicas concretas de escalada de privilegios en contenedores están catalogadas
 en el marco MITRE ATT\&CK for Containers \citep{MITRE2021Containers}.
 
@@ -37,12 +37,12 @@ preventivo en el proceso de \ac{CICD}, conforme al principio conocido como
 \textit{shift-left security}, que consiste en adelantar los controles de seguridad a
 las etapas más tempranas del desarrollo. Este trabajo aborda ese vacío: construir
 un sistema capaz de razonar sobre la \emph{estructura} del clúster a partir de
-manifiestos \ac{YAML} estáticos, sin requerir un clúster activo, para identificar
+manifiestos \acs{YAML} estáticos, sin requerir un clúster activo, para identificar
 automáticamente cadenas de ataque potenciales antes de que sean desplegadas.
 
 \section{Planteamiento del trabajo}
 
-Formalmente, dado un conjunto de manifiestos \ac{YAML} que describen un clúster
+Formalmente, dado un conjunto de manifiestos \acs{YAML} que describen un clúster
 \textit{Kubernetes}, el problema consiste en:
 
 \begin{enumerate}
@@ -59,7 +59,7 @@ Formalmente, dado un conjunto de manifiestos \ac{YAML} que describen un clúster
         ranking final (Capa~3).
 \end{enumerate}
 
-La capacidad de operar sobre manifiestos \ac{YAML} estáticos —sin requerir acceso al
+La capacidad de operar sobre manifiestos \acs{YAML} estáticos —sin requerir acceso al
 clúster activo— es un requisito de diseño explícito que diferencia el presente trabajo
 de las soluciones de grafo de ataque existentes y lo posiciona como un control de
 seguridad integrable en pipelines \acs{CICD}. En términos generales, el objetivo es
@@ -67,7 +67,7 @@ diseñar, implementar y evaluar un sistema de detección de
 cadenas de ataque en \textit{Kubernetes} que complemente los enfoques de análisis
 estático por manifiesto individual con el contexto estructural del clúster, mediante
 la combinación de aprendizaje automático clásico y aprendizaje sobre grafos, operando
-principalmente sobre manifiestos \ac{YAML} estáticos, si bien incorpora opcionalmente
+principalmente sobre manifiestos \acs{YAML} estáticos, si bien incorpora opcionalmente
 una vía de consulta directa a un clúster activo (Capítulo~\ref{cap:objetivos}).
 
 \section{Estructura del trabajo}
