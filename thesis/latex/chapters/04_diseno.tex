@@ -106,6 +106,13 @@ del grafo de entrada de la Capa~2.
 \label{sec:construccion_dataset}
 % -----------------------------------------------------------
 
+La construcción del conjunto de datos parte de la recolección de manifiestos
+\ac{YAML} procedentes de fuentes públicas heterogéneas y avanza hasta la
+extracción de las características que alimentan la Capa~1. Esta sección describe
+primero el origen y la composición de los manifiestos recopilados y, a
+continuación, el proceso de extracción de características que transforma cada
+manifiesto en un vector estructurado.
+
 \subsection{Fuentes de datos}
 \label{sec:fuentes_datos}
 
@@ -279,6 +286,13 @@ nodos del clúster.
 \label{sec:capa1_diseno}
 % -----------------------------------------------------------
 
+La Capa~1 clasifica cada manifiesto de forma individual a partir de las
+características descritas en la sección anterior. Se entrenan dos modelos
+independientes sobre el mismo conjunto de características: un clasificador
+binario que distingue manifiestos seguros de mal configurados, y un modelo de
+severidad que estima el grado de gravedad de la configuración incorrecta
+detectada. A continuación se describe el diseño de cada uno.
+
 \subsection{Modelo binario}
 
 Se entrena un \textit{RandomForestClassifier} \citep{Breiman2001} de \textit{scikit-learn}
@@ -307,6 +321,12 @@ grafo; se incluye como salida adicional de la Capa~1.
 \section{Capa 2: Graph Attention Network}
 \label{sec:capa2_diseno}
 % -----------------------------------------------------------
+
+La Capa~2 opera sobre el grafo de clúster construido en la sección anterior y
+clasifica el clúster completo según el riesgo de cadena de ataque que presenta.
+Esta sección describe la arquitectura del modelo \acs{GAT}, el procedimiento de
+entrenamiento empleado y la estrategia de aumentación de datos aplicada para
+mitigar la escasez de clústeres con cadena de ataque confirmada.
 
 \subsection{Arquitectura}
 

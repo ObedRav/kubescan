@@ -14,6 +14,11 @@ métricas empleadas se justifican en detalle en la Sección~\ref{sec:metricas}.
 \section{Resultados de la Capa 1: Random Forest}
 % -----------------------------------------------------------
 
+Esta sección presenta los resultados de los dos modelos de la Capa~1 descritos en
+el Capítulo~\ref{cap:diseno}: el clasificador binario y el modelo de severidad. Se
+reportan primero las métricas de clasificación binaria y la importancia de las
+características, y a continuación los resultados del modelo de severidad.
+
 \subsection{Clasificación binaria}
 
 La Tabla~\ref{tab:rf_results} resume los resultados del modelo binario mediante
@@ -151,6 +156,13 @@ manifiesto, complementando el \textit{risk\_score} numérico del modelo binario.
 \section{Resultados de la Capa 2: \acs{GNN}}
 \label{sec:layer2}
 % -----------------------------------------------------------
+
+Esta sección presenta los resultados de la Capa~2 en el orden en que fueron
+obtenidos durante el desarrollo experimental: la evolución de las métricas a lo
+largo de las fases de mejora del modelo, el análisis de Precisión@5, los
+resultados por pliegue de la configuración final, la ablación de la función de
+pérdida y del criterio de selección, y la robustez frente a la semilla de
+entrenamiento.
 
 \subsection{Evolución por fase experimental}
 
