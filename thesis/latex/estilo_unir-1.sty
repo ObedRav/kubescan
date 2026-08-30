@@ -13,25 +13,29 @@
 \usepackage[utf8]{inputenc} %descomentar esta línea si se trabaja en linux
 %\usepackage[latin1]{inputenc} %comentar esta línea si se trabaja en linux
 
-%--- Tipografía exigida por la plantilla UNIR: Calibri.
-%    Carlito es el clon métrico libre de Calibri, compatible con pdfLaTeX,
-%    y se usa para todo el cuerpo del documento y los Títulos 2-4.
+%--- Tipografía exigida por la plantilla UNIR: Calibri Light en todo el
+%    documento (cuerpo, títulos, portada, cabeceras). Se carga la Calibri
+%    Light instalada localmente (viene con Microsoft Office); requiere
+%    compilar con XeLaTeX o LuaLaTeX. No existe un peso "Light Bold": el
+%    texto en negrita (\textbf, Título 3) usa Calibri Bold normal, que es
+%    la sustitución habitual cuando una familia Light carece de negrita
+%    propia.
 \usepackage[T1]{fontenc}
-\usepackage{carlito}
-\renewcommand{\familydefault}{\sfdefault}
-
-%--- Título 1 (N1) de la plantilla exige Calibri Light, un peso que Carlito no
-%    define. Se carga la Calibri Light instalada localmente (viene con
-%    Microsoft Office) sólo para ese uso puntual; requiere compilar con
-%    XeLaTeX o LuaLaTeX. Si el paquete de fuente no está disponible en la
-%    máquina de compilación, sustituir \calibrilight por \mdseries más abajo.
 \usepackage{fontspec}
-\newfontfamily\calibrilight[
+\setsansfont{Calibri Light}[
   Path = /Applications/Microsoft Word.app/Contents/Resources/DFonts/,
   Extension = .ttf,
   UprightFont = calibril,
   ItalicFont = calibrili,
-]{Calibri Light}
+  BoldFont = Calibrib,
+  BoldItalicFont = Calibriz,
+]
+\renewcommand{\familydefault}{\sfdefault}
+
+%--- Alias retrocompatible: los \titleformat de Título 1/2 invocan
+%    \calibrilight explícitamente; con Calibri Light ya como familia por
+%    defecto, basta con reseleccionar la familia sans actual.
+\newcommand{\calibrilight}{\sffamily\selectfont}
 
 
 %simbolos
