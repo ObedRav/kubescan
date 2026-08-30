@@ -42,14 +42,14 @@ cadenas de ataque, infraestructura como código.
 
 This work presents \textit{kubescan}, an automatic attack-chain detection system
 for \textit{Kubernetes} infrastructures that combines a Random Forest classifier
-(Layer~1) with a Graph Attention Network (\ac{GAT}) (Layer~2) and Genetic Algorithm
+(Layer~1) with a Graph Attention Network (\acs{GAT}) (Layer~2) and Genetic Algorithm
 ensemble weight optimisation (Layer~3).
 
 From 2,827 Kubernetes manifests drawn from five complementary public sources, 599
 original cluster graphs are built (1,154 after data augmentation), with edges
 representing privilege-escalation, lateral-movement, proximity, namespace, and
-\ac{RBAC} relationships. Layer~1 achieves macro-F1\,=\,0.9946, \ac{AUC}\,=\,0.9986,
-and zero false negatives on the test set. Layer~2, a 3-layer \ac{GAT} with 4
+\acs{RBAC} relationships. Layer~1 achieves macro-F1\,=\,0.9946, \acs{AUC}\,=\,0.9986,
+and zero false negatives on the test set. Layer~2, a 3-layer \acs{GAT} with 4
 attention heads, edge-type embeddings and graph augmentation, achieves
 macro-F1\,=\,0.803\,\(\pm\)\,0.137 and Precision@5\,=\,0.720\,\(\pm\)\,0.160 under a
 5-fold cross-validation protocol that is group- and template-family-aware (no
@@ -61,7 +61,7 @@ constraint (a single-manifest cluster cannot host a multi-hop chain), achieves
 Precision@1\,=\,1.00 and Precision@3\,=\,1.00, recovers 4 of the 5~attack chains
 within the top-5 ranking (Precision@5\,=\,0.80), and produces no false positives
 on clean clusters (FPR\_clean\,=\,0). A usability evaluation with three expert
-users yields a mean \ac{SUS} score of 88.3 (``excellent'' rating). The work
+users yields a mean \acs{SUS} score of 88.3 (``excellent'' rating). The work
 additionally contributes a methodological finding: the detection and correction
 of template-family information leakage that inflated earlier evaluation metrics,
 together with the ablation that explains and reverses the regression associated

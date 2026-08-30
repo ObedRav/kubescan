@@ -29,7 +29,7 @@ en entornos de contenedores. Entre los riesgos más temidos, las vulnerabilidade
 representan el 33\,\% de las preocupaciones de los equipos, mientras que las
 misconfiguraciones y exposiciones alcanzan el 27\,\%.
 
-Su modelo declarativo, basado en ficheros \ac{YAML} que especifican el estado deseado del
+Su modelo declarativo, basado en ficheros \acs{YAML} que especifican el estado deseado del
 clúster, ofrece grandes ventajas en reproducibilidad y automatización, pero también
 introduce una amplia superficie de ataque: un fichero mal configurado desplegado en
 producción puede conceder privilegios excesivos a un contenedor o exponer secretos
@@ -99,7 +99,7 @@ evalúa recursos de forma independiente y no construye ningún modelo del clúst
 estructura relacional.
 
 La noción de \textit{Unified Misconfiguration Index} (\acs{UMI}), propuesta por
-\citeauthor{Malul2024} \citeyear{Malul2024} en \textit{GenKubeSec}, normaliza y
+\citeauthor{Malul2024} (\citeyear{Malul2024}) en \textit{GenKubeSec}, normaliza y
 unifica las etiquetas de múltiples herramientas de análisis basadas en reglas para
 poder compararlas, un problema afín al de generar un \textit{risk\_score} unificado
 como el de la Capa~1 del presente sistema. Su propuesta, que incorpora un modelo de
@@ -148,8 +148,9 @@ apropiadas dado que las características son binarias, y la interpolación linea
 entre muestras binarias puede generar vectores fuera del espacio semántico válido.
 
 Trabajos más recientes han explorado el uso de modelos de lenguaje de gran escala
-(\ac{LLM}s) para la detección y remediación de misconfiguraciones en \textit{Kubernetes}
-\citep{Malul2024}. Si bien los \ac{LLM}s ofrecen capacidades de razonamiento semántico
+(\acs{LLM}) para la detección y remediación de misconfiguraciones en
+\textit{Kubernetes} \citep{Malul2024}. Si bien los \acs{LLM}s ofrecen
+capacidades de razonamiento semántico
 superiores, requieren recursos computacionales sustancialmente mayores, producen
 salidas no deterministas y son más opacos que los clasificadores clásicos, lo que
 dificulta su interpretación en auditorías de seguridad donde la trazabilidad de las
@@ -222,9 +223,9 @@ seguridad, motivaron su adopción como componente de Capa~1 de \textit{kubescan}
 \section{Redes neuronales de grafos}
 % -----------------------------------------------------------
 
-Las redes neuronales de grafos (\ac{GNN}s) han emergido como la herramienta principal para
+Las redes neuronales de grafos (\acs{GNN}) han emergido como la herramienta principal para
 aprendizaje en datos con estructura relacional \citep{Zhou2020, Hamilton2020}. A
-diferencia de los clasificadores tabulares clásicos, las \ac{GNN}s operan directamente
+diferencia de los clasificadores tabulares clásicos, las \acs{GNN}s operan directamente
 sobre la topología del grafo, propagando información entre vecinos mediante operaciones
 de paso de mensajes (\textit{message passing}). Formalmente, en una capa \ac{GNN} la
 representación del nodo \(v\) se actualiza como:
@@ -256,7 +257,7 @@ modelo a grafos no vistos durante el entrenamiento, relevante en escenarios dond
 aparecen nuevos clústeres en producción. La inducción se logra aprendiendo funciones
 de agregación en lugar de \textit{embeddings} fijos.
 
-\textbf{Graph Attention Networks (\ac{GAT})} \citep{Velickovic2018}: sustituyen la
+\textbf{Graph Attention Networks (\acs{GAT})} \citep{Velickovic2018}: sustituyen la
 normalización fija de \ac{GCN} por coeficientes de atención aprendidos. Para cada par
 de nodos \((v, u)\) el coeficiente de atención es:
 
@@ -278,8 +279,8 @@ donde \(\mathbf{a}\) es un vector de parámetros de atención y \(\|\) denota
 concatenación. Este diseño es especialmente apropiado para grafos de clúster
 \textit{Kubernetes}, donde una arista de privilegio (\textit{privilege\_reach})
 debe pesar más que una arista de proximidad de directorio (\textit{dir\_proximity}).
-El modelo \textit{How Powerful are \ac{GNN}s?} de \citeauthor{Xu2019} \citeyear{Xu2019}
-establece que la capacidad discriminativa de las \ac{GNN}s está acotada por el test de
+El modelo \textit{How Powerful are \acs{GNN}s?} de \citeauthor{Xu2019} (\citeyear{Xu2019})
+establece que la capacidad discriminativa de las \acs{GNN}s está acotada por el test de
 isomorfismo de Weisfeiler-Lehman, y que la suma de vecinos maximiza el poder
 expresivo frente a la media o el máximo. En este trabajo se adopta un
 \textit{pooling} combinado de media y máximo por su robustez ante grafos de tamaño
@@ -289,8 +290,8 @@ muy variable, aceptando explícitamente ese compromiso de expresividad.
 \section{\acs{GNN}s aplicadas a ciberseguridad}
 % -----------------------------------------------------------
 
-La aplicación de \ac{GNN}s a la detección de amenazas es un campo emergente con rápido
-crecimiento. \citeauthor{Bilot2023} \citeyear{Bilot2023} proporcionan una
+La aplicación de \acs{GNN}s a la detección de amenazas es un campo emergente con rápido
+crecimiento. \citeauthor{Bilot2023} (\citeyear{Bilot2023}) proporcionan una
 revisión exhaustiva de los enfoques basados en \ac{GNN} para la detección de
 intrusiones en red, organizada en torno a enfoques basados en red (grafos de flujo) y
 basados en host (grafos de procedencia). Una segunda revisión publicada
@@ -307,7 +308,7 @@ grafo de amenaza. Una diferencia clave es que \textit{E-GraphSAGE} modela flujos
 tráfico en tiempo real, mientras que este trabajo modela configuraciones declarativas
 estáticas, lo que permite operar antes del despliegue.
 
-\citeauthor{Li2022} \citeyear{Li2022} construyen grafos de conocimiento de técnicas
+\citeauthor{Li2022} (\citeyear{Li2022}) construyen grafos de conocimiento de técnicas
 de ataque a partir de informes de inteligencia de amenazas (\acs{CTI}) y demuestran que el
 razonamiento estructural sobre relaciones entre técnicas mejora la predicción de
 campañas de ataque. Este enfoque comparte con el presente trabajo la intuición central
@@ -319,7 +320,7 @@ del presente sistema.
 
 Una limitación reconocida en la literatura es la escasez de conjuntos de datos de
 grafos etiquetados de alta calidad para ciberseguridad. Tanto \citeauthor{Bilot2023}
-\citeyear{Bilot2023} como \citeauthor{GNNSurvey2024} \citeyear{GNNSurvey2024}
+(\citeyear{Bilot2023}) como \citeauthor{GNNSurvey2024} (\citeyear{GNNSurvey2024})
 señalan la escasez de conjuntos de datos etiquetados y de benchmarks estandarizados
 entre los principales obstáculos para el avance del área, lo que refuerza la contribución del presente trabajo al
 generar un conjunto de datos original de 599 grafos de clúster (1.154 tras
@@ -330,7 +331,7 @@ aumentación de datos) con etiquetas de cadena de ataque.
 % -----------------------------------------------------------
 
 La noción de cadena de ataque (\textit{kill chain}) fue formalizada originalmente
-por \citeauthor{Hutchins2011} \citeyear{Hutchins2011} para describir las fases
+por \citeauthor{Hutchins2011} (\citeyear{Hutchins2011}) para describir las fases
 secuenciales de una intrusión avanzada: reconocimiento, weaponización, entrega,
 explotación, instalación, comando y control, y acción. En el contexto de
 \textit{Kubernetes}, esta cadena se concreta de forma más compacta: requiere como
@@ -360,12 +361,12 @@ rutas desde cualquier identidad de bajo privilegio hasta \textit{cluster-admin}.
 La diferencia fundamental entre estas herramientas y \textit{kubescan} es de
 paradigma: KubeHound e IceKube operan sobre un \textbf{clúster activo}, requiriendo
 acceso con privilegios elevados a \texttt{kubectl}. \textit{kubescan}, en cambio,
-opera sobre \textbf{manifiestos \ac{YAML} estáticos} antes del despliegue, integrándose
+opera sobre \textbf{manifiestos \acs{YAML} estáticos} antes del despliegue, integrándose
 en el pipeline \acs{CICD} como un control de seguridad \textit{shift-left}. Además, ambas
 herramientas utilizan búsqueda de rutas mediante consultas ad-hoc en bases de datos
 de grafos, sin componente de aprendizaje automático supervisado; \textit{kubescan}
 es el primer sistema, según la revisión bibliográfica realizada en este trabajo (Sección~\ref{sec:sintesis}), que combina análisis estático
-de manifiestos con \ac{GNN}s para la predicción de cadenas de ataque como tarea de
+de manifiestos con \acs{GNN}s para la predicción de cadenas de ataque como tarea de
 clasificación supervisada.
 
 % -----------------------------------------------------------
@@ -417,7 +418,7 @@ semánticamente significativos para el dominio \textit{Kubernetes}, combina el a
 estático (Capa~1) con el razonamiento estructural (Capa~2) en un \textit{ensemble}
 optimizado (Capa~3), y contribuye un conjunto de datos de 599~grafos de clúster
 originales con etiquetas de cadena de ataque derivadas de reglas de seguridad
-explícitas y auditables. Al operar sobre manifiestos \ac{YAML} sin requerir acceso
+explícitas y auditables. Al operar sobre manifiestos \acs{YAML} sin requerir acceso
 al clúster, \textit{kubescan} se posiciona como un control preventivo integrable en
 pipelines \acs{CICD}, complementario a —y no sustituto de— las herramientas de
 análisis de clúster activo como KubeHound.

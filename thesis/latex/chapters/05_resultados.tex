@@ -14,6 +14,11 @@ métricas empleadas se justifican en detalle en la Sección~\ref{sec:metricas}.
 \section{Resultados de la Capa 1: Random Forest}
 % -----------------------------------------------------------
 
+Esta sección presenta los resultados de los dos modelos de la Capa~1 descritos en
+el Capítulo~\ref{cap:diseno}: el clasificador binario y el modelo de severidad. Se
+reportan primero las métricas de clasificación binaria y la importancia de las
+características, y a continuación los resultados del modelo de severidad.
+
 \subsection{Clasificación binaria}
 
 La Tabla~\ref{tab:rf_results} resume los resultados del modelo binario mediante
@@ -152,6 +157,13 @@ manifiesto, complementando el \textit{risk\_score} numérico del modelo binario.
 \label{sec:layer2}
 % -----------------------------------------------------------
 
+Esta sección presenta los resultados de la Capa~2 en el orden en que fueron
+obtenidos durante el desarrollo experimental: la evolución de las métricas a lo
+largo de las fases de mejora del modelo, el análisis de Precisión@5, los
+resultados por pliegue de la configuración final, la ablación de la función de
+pérdida y del criterio de selección, y la robustez frente a la semilla de
+entrenamiento.
+
 \subsection{Evolución por fase experimental}
 
 La Tabla~\ref{tab:gnn_evolution} muestra la evolución de los resultados de la \ac{GAT}
@@ -186,7 +198,7 @@ no interpolación entre casi duplicados.
 
 \begin{table}[htbp]
 \centering\small
-\caption{Evolución de resultados de la Capa~2 (\ac{GAT}, 5-fold \ac{CV})}
+\caption{Evolución de resultados de la Capa~2 (\acs{GAT}, 5-fold \acs{CV})}
 \label{tab:gnn_evolution}
 \begin{tabular}{@{}p{4.3cm}rrrrc@{}}
 \toprule
@@ -327,7 +339,7 @@ conserva el \textit{checkpoint} de la configuración finalmente desplegada.}
 \label{tab:loss_ablation}
 \begin{tabular}{@{}llrr@{}}
 \toprule
-Pérdida & Selección & P@5 (\ac{CV}) & F1 macro (\ac{CV}) \\
+Pérdida & Selección & P@5 (\acs{CV}) & F1 macro (\acs{CV}) \\
 \midrule
 \textit{Focal} (\(\gamma\)=2) & F1 macro & 0,480 \(\pm\) 0,271 & 0,823 \(\pm\) 0,097 \\
 Entropía cruzada pond. & F1 macro & 0,600 \(\pm\) 0,283 & 0,859 \(\pm\) 0,103 \\
@@ -382,7 +394,7 @@ aplican la restricción de viabilidad estructural
 \label{tab:multiseed}
 \begin{tabular}{@{}crrc@{}}
 \toprule
-Semilla & P@5 (\ac{CV}) & F1 macro (\ac{CV}) & Test P@1/P@3/P@5 \\
+Semilla & P@5 (\acs{CV}) & F1 macro (\acs{CV}) & Test P@1/P@3/P@5 \\
 \midrule
 42 (desplegada) & 0,720 \(\pm\) 0,160 & 0,803 & 1,00 / 1,00 / 0,80 \\
 7   & 0,640 \(\pm\) 0,265 & 0,853 & 1,00 / 1,00 / 0,80 \\
@@ -595,7 +607,7 @@ el que ordena los repositorios reales. Esta observación motiva el trabajo futur
 TF3 (análisis semántico de \ac{RBAC} completo).
 
 En cuanto a la elección arquitectónica de \ac{GAT} sobre alternativas más simples, la
-literatura sobre \ac{GNN}s aplicadas a grafos pequeños heterogéneos documenta de forma
+literatura sobre \acs{GNN}s aplicadas a grafos pequeños heterogéneos documenta de forma
 consistente que los mecanismos de atención mejoran la precisión cuando los tipos de
 arista tienen importancias desiguales \citep{Velickovic2018}. En el grafo de clúster
 \textit{Kubernetes}, las aristas de \textit{privilege\_reach} (tipo~1) son
@@ -647,7 +659,7 @@ como trabajo futuro (TF6).
 % -----------------------------------------------------------
 
 Como validación cruzada, se ejecutó \textit{Checkov} \citep{Checkov2021} sobre
-los 1.175~manifiestos cuyo \ac{YAML} descargado resultó analizable por la
+los 1.175~manifiestos cuyo \acs{YAML} descargado resultó analizable por la
 herramienta. Para esta validación, el índice \ac{UMI} se calcula como la
 proporción de comprobaciones de \textit{Checkov} que fallan sobre el total
 evaluado por manifiesto (\(\in [0,1]\); valores más altos indican mayor densidad
@@ -829,7 +841,7 @@ típicamente alcanzan F1 macro entre 0,85 y 0,93.
 
 El \ac{AUC}-\ac{ROC} de 0,9986 indica que el clasificador separa casi perfectamente las dos
 clases a cualquier umbral de decisión. Este resultado es consistente con la naturaleza
-del problema: las misconfiguraciones en manifiestos \ac{YAML} son mayoritariamente discretas
+del problema: las misconfiguraciones en manifiestos \acs{YAML} son mayoritariamente discretas
 y acumulativas (más flags activas implica mayor riesgo), lo que hace que el espacio de
 características sea relativamente separable una vez que se dispone de un conjunto de
 datos suficientemente representativo.
@@ -840,8 +852,8 @@ El resultado final de la Capa~2 (F1~macro\,=\,0,803, P@5\,=\,0,720, sobre el
 corpus completo de Rahman et~al.\ con particionado por familias) es difícil de
 comparar directamente con la literatura, ya que no existe ningún trabajo previo
 que aborde la clasificación supervisada de cadenas de ataque en clústeres
-\textit{Kubernetes} mediante \ac{GNN}s. Las referencias más cercanas son los
-trabajos de \ac{GNN}s para \ac{IDS} en red, como \textit{E-GraphSAGE}
+\textit{Kubernetes} mediante \acs{GNN}s. Las referencias más cercanas son los
+trabajos de \acs{GNN}s para \ac{IDS} en red, como \textit{E-GraphSAGE}
 \citep{Lo2022}, que reporta mejoras del 2--8\,\% en F1 sobre clasificadores
 tabulares en el dataset UNSW-NB15. En este trabajo la ventaja del componente
 estructural es mayor y se observa sobre el conjunto de test genuinamente no
@@ -854,7 +866,7 @@ La varianza entre pliegues (\(\sigma\)\,=\,0,160 para P@5 en la fase final) es
 coherente con lo reportado en la literatura para conjuntos de grafos pequeños
 (n\,<\,200): trabajos como los revisados en \citeauthor{GNNSurvey2024}
 \citeyear{GNNSurvey2024} identifican la escasez de datos como el principal
-factor de variabilidad en \ac{GNN}s para ciberseguridad, y recomiendan
+factor de variabilidad en \acs{GNN}s para ciberseguridad, y recomiendan
 validación cruzada estratificada como el estándar de evaluación para conjuntos
 de este tamaño, que es precisamente la metodología adoptada. En este trabajo la
 varianza tiene además una causa estructural identificada: el particionado por
