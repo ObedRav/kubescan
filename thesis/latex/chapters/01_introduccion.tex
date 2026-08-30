@@ -35,12 +35,10 @@ clúster activo mediante acceso de lectura amplio a su servidor \acs{API} de
 \textit{Kubernetes}, lo que limita su aplicabilidad como control
 preventivo en el proceso de \ac{CICD}, conforme al principio conocido como
 \textit{shift-left security}, que consiste en adelantar los controles de seguridad a
-las etapas más tempranas del desarrollo.
-
-Este trabajo aborda ese vacío: construir un sistema capaz de razonar sobre la
-\emph{estructura} del clúster a partir de manifiestos \ac{YAML} estáticos, sin requerir
-un clúster activo, para identificar automáticamente cadenas de ataque potenciales
-antes de que sean desplegadas.
+las etapas más tempranas del desarrollo. Este trabajo aborda ese vacío: construir
+un sistema capaz de razonar sobre la \emph{estructura} del clúster a partir de
+manifiestos \ac{YAML} estáticos, sin requerir un clúster activo, para identificar
+automáticamente cadenas de ataque potenciales antes de que sean desplegadas.
 
 \section{Planteamiento del trabajo}
 
@@ -64,9 +62,8 @@ Formalmente, dado un conjunto de manifiestos \ac{YAML} que describen un clúster
 La capacidad de operar sobre manifiestos \ac{YAML} estáticos —sin requerir acceso al
 clúster activo— es un requisito de diseño explícito que diferencia el presente trabajo
 de las soluciones de grafo de ataque existentes y lo posiciona como un control de
-seguridad integrable en pipelines \acs{CICD}.
-
-En términos generales, el objetivo es diseñar, implementar y evaluar un sistema de detección de
+seguridad integrable en pipelines \acs{CICD}. En términos generales, el objetivo es
+diseñar, implementar y evaluar un sistema de detección de
 cadenas de ataque en \textit{Kubernetes} que complemente los enfoques de análisis
 estático por manifiesto individual con el contexto estructural del clúster, mediante
 la combinación de aprendizaje automático clásico y aprendizaje sobre grafos, operando
