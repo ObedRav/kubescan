@@ -373,11 +373,11 @@ fig, ax = plt.subplots(figsize=(4.5, 3.2))
 bars = ax.bar(['P@1', 'P@3', 'P@5'], [1.00, 1.00, 0.80],
               color=['#27ae60','#f39c12','#2980b9'], edgecolor='white', width=0.5)
 ax.axhline(y=0.70, color='#e74c3c', linestyle='--', linewidth=1.5, label='Objetivo P@5 = 0.70')
-ax.set_ylim(0, 1.15); ax.set_ylabel('Precision@k')
+ax.set_ylim(0, 1.32); ax.set_ylabel('Precision@k')
 for bar, val in zip(bars, [1.00, 1.00, 0.80]):
     ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.02,
             f'{val:.2f}', ha='center', va='bottom', fontsize=11, fontweight='bold')
-ax.legend(fontsize=9)
+ax.legend(fontsize=9, loc='upper right')
 ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
 plt.tight_layout()
 plt.savefig(os.path.join(OUT, 'fig_ensemble_pat_k.pdf'), bbox_inches='tight')
@@ -579,7 +579,7 @@ for bars, vals in ((b1, _ungated), (b2, _gated)):
     for bar, v in zip(bars, vals):
         ax.text(bar.get_x() + bar.get_width()/2, v + 0.015, f'{v:.2f}',
                 ha='center', va='bottom', fontsize=8.5)
-ax.set_xticks(x); ax.set_xticklabels(_metrics); ax.set_ylim(0, 1.12)
+ax.set_xticks(x); ax.set_xticklabels(_metrics); ax.set_ylim(0, 1.32)
 ax.set_ylabel('Precision (conjunto de test)')
 ax.legend(fontsize=8, loc='upper left')
 ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
