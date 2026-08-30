@@ -57,7 +57,7 @@ def box(ax, x, y, w, h, label, sublabel, color, fs=9.5):
                 fontsize=fs, fontweight='bold', color='white', zorder=4)
     if sublabel:
         ax.text(x + w/2, y + 0.10, sublabel, ha='center', va='center',
-                fontsize=7.3, color='#ecf0f1', zorder=4)
+                fontsize=9, color='#ecf0f1', zorder=4)
 
 
 def file_stack(ax, x, y, color, n=3, scale=0.55):
@@ -106,9 +106,9 @@ def hexagon(ax, cx, cy, r, label, sublabel, color):
     hexpatch = RegularPolygon((cx, cy), numVertices=6, radius=r, orientation=np.pi/6,
                                facecolor=color, edgecolor=_A_DARK, linewidth=1.8, zorder=5)
     ax.add_patch(hexpatch)
-    ax.text(cx, cy + 0.16, label, ha='center', va='center', fontsize=10,
+    ax.text(cx, cy + 0.16, label, ha='center', va='center', fontsize=10.5,
             fontweight='bold', color='white', zorder=6)
-    ax.text(cx, cy - 0.20, sublabel, ha='center', va='center', fontsize=7.6,
+    ax.text(cx, cy - 0.20, sublabel, ha='center', va='center', fontsize=9,
             color='#ecf0f1', zorder=6)
 
 
@@ -121,9 +121,9 @@ def range_bar(ax, x, y, w, h, color, label):
     grad = np.linspace(0.15, 1.0, 256).reshape(1, -1)
     ax.imshow(grad, extent=(x, x+w, y, y+h), aspect='auto', cmap=_range_bar_cmap(color), zorder=3)
     ax.add_patch(Rectangle((x, y), w, h, facecolor='none', edgecolor=_A_DARK, linewidth=1.1, zorder=5))
-    ax.text(x, y - 0.16, '0', ha='center', va='top', fontsize=6.5, color='white', zorder=6)
-    ax.text(x + w, y - 0.16, '1', ha='center', va='top', fontsize=6.5, color='white', zorder=6)
-    ax.text(x + w/2, y + h + 0.16, label, ha='center', va='bottom', fontsize=7.4,
+    ax.text(x, y - 0.16, '0', ha='center', va='top', fontsize=8.5, color='white', zorder=6)
+    ax.text(x + w, y - 0.16, '1', ha='center', va='top', fontsize=8.5, color='white', zorder=6)
+    ax.text(x + w/2, y + h + 0.16, label, ha='center', va='bottom', fontsize=9,
             color='white', style='italic', fontweight='bold', zorder=6)
 
 
@@ -131,15 +131,15 @@ def pill(ax, x, y, w, h, text, color):
     rect = FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.03,rounding_size=0.12",
                            facecolor=color, edgecolor=_A_DARK, linewidth=1.1, zorder=4)
     ax.add_patch(rect)
-    ax.text(x + w/2, y + h/2, text, ha='center', va='center', fontsize=7.6,
+    ax.text(x + w/2, y + h/2, text, ha='center', va='center', fontsize=9,
             fontweight='bold', color='white', zorder=5)
 
 
 # 1. input
 file_stack(ax, 0.35, 2.55, _A_GRAY, n=3, scale=0.7)
-ax.text(1.05, 2.15, 'YAML\nManifiestos', ha='center', va='top', fontsize=8.3,
+ax.text(1.05, 2.15, 'YAML\nManifiestos', ha='center', va='top', fontsize=9.5,
         fontweight='bold', color=_A_GRAY)
-ax.text(1.05, 1.75, 'Directorio local\n/ kubectl', ha='center', va='top', fontsize=7, color=_A_GRAY)
+ax.text(1.05, 1.75, 'Directorio local\n/ kubectl', ha='center', va='top', fontsize=9, color=_A_GRAY)
 arrow(ax, 1.75, 2.9, 2.2)
 
 # 2. Capa 1 (RF)
@@ -147,7 +147,7 @@ box(ax, 2.2, 1.15, 1.75, 3.5, None, None, _A_BLUE)
 ax.text(3.075, 4.35, 'CAPA 1', ha='center', fontsize=9.5, fontweight='bold', color='white', zorder=4)
 tree_glyph(ax, 3.075, 3.55, _A_BLUE)
 ax.text(3.075, 2.55, 'Random Forest\n500 árboles\n25 features', ha='center', va='center',
-        fontsize=7.4, color='#ecf0f1', zorder=4)
+        fontsize=9, color='#ecf0f1', zorder=4)
 range_bar(ax, 2.55, 1.35, 1.05, 0.16, _A_BLUE, 'risk_score')
 arrow(ax, 3.95, 2.9, 4.4)
 
@@ -156,7 +156,7 @@ box(ax, 4.4, 2.05, 1.7, 1.7, None, None, _A_PURPLE)
 ax.text(5.25, 3.45, 'Grafo de\nClúster', ha='center', fontsize=8.6, fontweight='bold',
         color='white', zorder=4)
 mini_graph(ax, 5.25, 2.65, _A_PURPLE)
-ax.text(5.25, 1.78, 'G = (V, E)  ·  5 tipos de arista', ha='center', fontsize=6.8,
+ax.text(5.25, 1.78, 'G = (V, E)  ·  5 tipos de arista', ha='center', fontsize=8.5,
         color=_A_PURPLE, style='italic')
 arrow(ax, 6.1, 2.9, 6.55)
 
@@ -165,7 +165,7 @@ box(ax, 6.55, 1.15, 1.75, 3.5, None, None, _A_GREEN)
 ax.text(7.425, 4.35, 'CAPA 2', ha='center', fontsize=9.5, fontweight='bold', color='white', zorder=4)
 mini_graph(ax, 7.425, 3.55, _A_GREEN, attention=True)
 ax.text(7.425, 2.55, 'GAT\n3 capas, 4 heads\npooling mean+max', ha='center', va='center',
-        fontsize=7.4, color='#ecf0f1', zorder=4)
+        fontsize=9, color='#ecf0f1', zorder=4)
 range_bar(ax, 6.9, 1.35, 1.05, 0.16, _A_GREEN, 'p_chain')
 arrow(ax, 8.3, 2.9, 8.75)
 
@@ -185,7 +185,7 @@ _ly = 0.55
 for i, (code, name, c) in enumerate(_edge_types):
     _cx0 = _lo + _slot * i + 0.08
     ax.plot([_cx0, _cx0 + 0.18], [_ly, _ly], color=c, lw=2.2, zorder=4)
-    ax.text(_cx0 + 0.24, _ly, f'({code}) {name}', ha='left', va='center', fontsize=6.6,
+    ax.text(_cx0 + 0.24, _ly, f'({code}) {name}', ha='left', va='center', fontsize=8,
             color='#444', zorder=4)
 
 plt.tight_layout()
@@ -201,7 +201,7 @@ _g_boundary = FancyBboxPatch((-0.35, -0.05), 3.75, 3.15, boxstyle="round,pad=0.0
                               facecolor='#f7f9fa', edgecolor='#95a5a6', linewidth=1.4,
                               linestyle=(0, (5, 3)), zorder=1)
 ax.add_patch(_g_boundary)
-ax.text(-0.28, 2.98, 'Clúster Kubernetes', ha='left', va='top', fontsize=8, color='#7f8c8d',
+ax.text(-0.28, 2.98, 'Clúster Kubernetes', ha='left', va='top', fontsize=9, color='#7f8c8d',
         style='italic', zorder=2)
 
 nodes = {
@@ -220,9 +220,9 @@ def pod_icon(ax, cx, cy, color, label, sublabel, r=0.36):
     for dx in (-0.15, 0.0, 0.15):
         ax.add_patch(Rectangle((cx + dx - bar_w / 2, cy + 0.06), bar_w, bar_h,
                                 facecolor='white', edgecolor='none', alpha=0.9, zorder=4))
-    ax.text(cx, cy - 0.17, label, ha='center', va='center', fontsize=7.8,
+    ax.text(cx, cy - 0.17, label, ha='center', va='center', fontsize=9,
             fontweight='bold', color='white', zorder=5)
-    ax.text(cx, cy - 0.32, sublabel, ha='center', va='center', fontsize=6.6,
+    ax.text(cx, cy - 0.32, sublabel, ha='center', va='center', fontsize=8,
             color='white', zorder=5)
 
 
@@ -237,9 +237,9 @@ def shield_icon(ax, cx, cy, color, label, sublabel, s=0.38):
                             edgecolor='none', zorder=4))
     ax.add_patch(mpatches.Arc((cx, cy + 0.34), 0.14, 0.18, theta1=0, theta2=180,
                                color='white', lw=1.7, zorder=4))
-    ax.text(cx, cy - 0.03, label, ha='center', va='center', fontsize=7.6,
+    ax.text(cx, cy - 0.03, label, ha='center', va='center', fontsize=9,
             fontweight='bold', color='white', zorder=5)
-    ax.text(cx, cy - 0.18, sublabel, ha='center', va='center', fontsize=6.6,
+    ax.text(cx, cy - 0.18, sublabel, ha='center', va='center', fontsize=8,
             color='white', zorder=5)
 
 
@@ -257,7 +257,7 @@ def edge(ax, p1, p2, color, style, label, rad=0.1, lx=None, ly=None):
                                 shrinkA=16, shrinkB=16))
     mx = lx if lx is not None else (x1 + x2) / 2
     my = ly if ly is not None else (y1 + y2) / 2 + 0.15
-    ax.text(mx, my, label, ha='center', va='center', fontsize=7.2, color=color,
+    ax.text(mx, my, label, ha='center', va='center', fontsize=9, color=color,
             fontweight='bold',
             bbox=dict(boxstyle='round,pad=0.12', facecolor='white', edgecolor=color,
                       linewidth=0.7, alpha=0.92), zorder=6)
@@ -268,7 +268,7 @@ edge(ax, (0.5, 2.5), (0.5, 0.8), '#c0392b', 'solid', '(1) priv', rad=-0.18, lx=0
 edge(ax, (2.5, 2.5), (2.5, 0.8), '#e67e22', 'dashed', '(2) lateral', rad=0.32, lx=3.05, ly=1.65)
 # co-namespace: routed as a low arc well clear of the Role shield
 edge(ax, (0.5, 0.8), (2.5, 0.8), '#2980b9', 'dotted', '', rad=0.62)
-ax.text(1.5, 0.02, '(3) co-ns', ha='center', va='center', fontsize=7.2, color='#2980b9',
+ax.text(1.5, 0.02, '(3) co-ns', ha='center', va='center', fontsize=9, color='#2980b9',
         fontweight='bold',
         bbox=dict(boxstyle='round,pad=0.12', facecolor='white', edgecolor='#2980b9',
                   linewidth=0.7, alpha=0.92), zorder=6)
@@ -280,7 +280,7 @@ legend_items = [
     mpatches.Patch(color='#27ae60', label='Nodo limpio'),
     mpatches.Patch(color='#8e44ad', label='Rol privilegiado'),
 ]
-ax.legend(handles=legend_items, fontsize=7.5, loc='lower left',
+ax.legend(handles=legend_items, fontsize=9, loc='lower left',
           bbox_to_anchor=(0.0, -0.02), framealpha=0.95, ncol=2)
 plt.tight_layout()
 plt.savefig(os.path.join(OUT, 'fig_grafo_cluster.pdf'), bbox_inches='tight')
@@ -403,7 +403,7 @@ def _diag_arrow(ax, x1, y1, x2, y2, color=DARK, lw=1.6, label=None, label_dx=0.0
                 arrowprops=dict(arrowstyle='-|>', color=color, lw=lw, mutation_scale=12))
     if label:
         mx, my = (x1 + x2) / 2 + label_dx, (y1 + y2) / 2
-        ax.text(mx, my, label, ha='center', va='center', fontsize=7.3, color=color,
+        ax.text(mx, my, label, ha='center', va='center', fontsize=9, color=color,
                 fontweight='bold',
                 bbox=dict(boxstyle='round,pad=0.12', facecolor='white',
                           edgecolor=color, linewidth=0.8, alpha=0.95), zorder=6)
@@ -417,7 +417,7 @@ def _box(ax, x, y, w, h, label, sublabel, color, fs=9):
             fontsize=fs, fontweight='bold', color='white', zorder=4)
     if sublabel:
         ax.text(x + w / 2, y + h / 2 - 0.16, sublabel, ha='center', va='center',
-                fontsize=7.2, color='#ecf0f1', zorder=4)
+                fontsize=8.5, color='#ecf0f1', zorder=4)
 
 
 def _terminal_bar(ax, x, y, w, h, text):
@@ -447,7 +447,7 @@ def _file_stack(ax, x, y, color, n=3, label=None):
     if label:
         cy = y + (n - 1) * 0.055 + 0.5
         ax.text(x + (n - 1) * 0.11 + 1.0, cy, label, ha='left', va='center',
-                fontsize=7.8, color=color, fontweight='bold')
+                fontsize=9, color=color, fontweight='bold')
 
 
 def _hexagon(ax, cx, cy, r, label, sublabel, color):
@@ -456,7 +456,7 @@ def _hexagon(ax, cx, cy, r, label, sublabel, color):
     ax.add_patch(hexpatch)
     ax.text(cx, cy + 0.13, label, ha='center', va='center', fontsize=9.5,
             fontweight='bold', color='white', zorder=6)
-    ax.text(cx, cy - 0.19, sublabel, ha='center', va='center', fontsize=7.4,
+    ax.text(cx, cy - 0.19, sublabel, ha='center', va='center', fontsize=9,
             color='#ecf0f1', zorder=6)
 
 
@@ -468,14 +468,14 @@ def _gauge(ax, x, y, w, h, score, t1=0.30, t2=0.60):
                             linewidth=1.3, zorder=5))
     for t, lbl in [(0, '0'), (t1, '0,30'), (t2, '0,60'), (1.0, '1')]:
         ax.plot([x + t * w, x + t * w], [y, y - 0.08], color=DARK, lw=1.0, zorder=5)
-        ax.text(x + t * w, y - 0.22, lbl, ha='center', va='top', fontsize=7, color=DARK)
+        ax.text(x + t * w, y - 0.22, lbl, ha='center', va='top', fontsize=8.5, color=DARK)
     mx = x + score * w
     ax.plot([mx, mx], [y - 0.05, y + h + 0.05], color='white', lw=2.6, zorder=6)
     ax.plot([mx, mx], [y - 0.05, y + h + 0.05], color=DARK, lw=1.1, zorder=7)
     ax.plot(mx, y + h + 0.22, marker='v', color=DARK, markersize=8, zorder=7)
     score_str = f'{score:.3f}'.replace('.', ',')
     ax.text(mx, y + h + 0.42, f'ensemble_score = {score_str}', ha='center', va='bottom',
-            fontsize=7.6, color=DARK, fontweight='bold')
+            fontsize=9, color=DARK, fontweight='bold')
 
 
 fig, ax = plt.subplots(figsize=(7.6, 9.3))
@@ -490,26 +490,26 @@ _file_stack(ax, 6.1, 9.55, GRAY, n=3, label='N manifiestos\nYAML')
 ax.plot([5.0, 6.1], [9.95, 9.95], color=GRAY, lw=1.2, linestyle=(0, (2, 1.5)), zorder=2)
 
 _box(ax, 3.4, 7.85, 3.2, 0.9, 'extract_cluster_features()',
-     'yaml_parser.py  ·  26 features/nodo', GRAY, fs=8.3)
+     'yaml_parser.py  ·  26 features/nodo', GRAY, fs=9.5)
 _varrow(ax, 5.0, 7.85, 6.95)
 
 _box(ax, 3.4, 6.05, 3.2, 0.9, 'build_cluster_graph()',
-     'graph_builder.py  ·  G = (V, E)', PURPLE, fs=8.3)
+     'graph_builder.py  ·  G = (V, E)', PURPLE, fs=9.5)
 
 y_branch = 4.35
 _diag_arrow(ax, 4.2, 6.05, 1.6, y_branch + 0.9, color=BLUE)
 _diag_arrow(ax, 5.0, 6.05, 5.0, y_branch + 0.9, color=GREEN)
 _diag_arrow(ax, 5.8, 6.05, 8.4, y_branch + 0.9, color=RED)
 
-_box(ax, 0.5, y_branch, 2.2, 0.9, 'Capa 1 · RF', 'predict_risk_scores()', BLUE, fs=8.3)
-_box(ax, 3.9, y_branch, 2.2, 0.9, 'Capa 2 · GAT', 'run_gnn_ensemble()', GREEN, fs=8.3)
-_box(ax, 7.3, y_branch, 2.2, 0.9, 'Señal de escape', 'compute_escape_signal()', RED, fs=8.3)
+_box(ax, 0.5, y_branch, 2.2, 0.9, 'Capa 1 · RF', 'predict_risk_scores()', BLUE, fs=9.5)
+_box(ax, 3.9, y_branch, 2.2, 0.9, 'Capa 2 · GAT', 'run_gnn_ensemble()', GREEN, fs=9.5)
+_box(ax, 7.3, y_branch, 2.2, 0.9, 'Señal de escape', 'compute_escape_signal()', RED, fs=9.5)
 
-ax.text(1.6, y_branch - 0.26, 'mean_rf_risk = 0,996', ha='center', fontsize=7.3,
+ax.text(1.6, y_branch - 0.26, 'mean_rf_risk = 0,996', ha='center', fontsize=9,
         color=BLUE, style='italic')
-ax.text(5.0, y_branch - 0.26, 'chain_probability = 0,710', ha='center', fontsize=7.3,
+ax.text(5.0, y_branch - 0.26, 'chain_probability = 0,710', ha='center', fontsize=9,
         color=GREEN, style='italic')
-ax.text(8.4, y_branch - 0.26, 'escape_signal = 1,0', ha='center', fontsize=7.3,
+ax.text(8.4, y_branch - 0.26, 'escape_signal = 1,0', ha='center', fontsize=9,
         color=RED, style='italic')
 
 fx, fy = 5.0, 1.75
