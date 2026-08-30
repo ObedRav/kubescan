@@ -67,14 +67,16 @@ que refleja la densidad de misconfiguraciones del manifiesto.
 
 \begin{figure}[htbp]
   \centering
-  \caption{Matriz de confusión del modelo Random Forest en el conjunto de test
-           (566 muestras). Los 3~falsos positivos son manifiestos seguros con alta
-           densidad de características de riesgo; no existe ningún falso negativo.}
+  \caption{Matriz de confusión del Random Forest en el conjunto de test}
   \label{fig:rf_confusion}
   \includegraphics[width=0.52\textwidth]{fig_rf_confusion}
-  
+
   \fuentepropia
 \end{figure}
+
+En la matriz de la Figura~\ref{fig:rf_confusion} (566~muestras), los 3~falsos
+positivos son manifiestos seguros con alta densidad de características de riesgo;
+no existe ningún falso negativo.
 
 \subsection{Importancia de características}
 \label{sec:rf_importance}
@@ -89,14 +91,15 @@ como confirma la ausencia de falsos negativos en la clasificación binaria.
 
 \begin{figure}[htbp]
   \centering
-  \caption{Importancia de las 10 características más relevantes del clasificador
-           Random Forest. Las dos primeras (en rojo) concentran el 48\,\% de la
-           capacidad discriminativa total del modelo.}
+  \caption{Importancia de características del clasificador Random Forest}
   \label{fig:rf_importance}
   \includegraphics[width=\textwidth]{fig_rf_importance}
-  
+
   \fuentepropia
 \end{figure}
+
+Las dos primeras características de la Figura~\ref{fig:rf_importance} (en rojo)
+concentran el 48\,\% de la capacidad discriminativa total del modelo.
 
 Un estudio de ablación eliminando \texttt{total\_misconfigs} produce F1 idéntico
 y la misma matriz de confusión, confirmando que el modelo no depende de esta
@@ -185,12 +188,7 @@ no interpolación entre casi duplicados.
 
 \begin{table}[htbp]
 \centering\small
-\caption{Evolución de resultados de la Capa~2 (\ac{GAT}, 5-fold \ac{CV}).
-         Las fases 1--4 emplean el protocolo de particionado preliminar (con fuga
-         por variantes aumentadas) y se reportan como registro histórico; la
-         fase~5 introduce el protocolo \textit{group-aware} sobre el corpus
-         preliminar; la fase~6 es el resultado final, con protocolo
-         \textit{group-aware} sobre el corpus completo.}
+\caption{Evolución de resultados de la Capa~2 (\ac{GAT}, 5-fold \ac{CV})}
 \label{tab:gnn_evolution}
 \begin{tabular}{@{}p{4.3cm}rrrrc@{}}
 \toprule
@@ -210,6 +208,11 @@ Corpus completo + familias de plantilla (final)
 \fuentepropia
 \end{table}
 
+En la Tabla~\ref{tab:gnn_evolution}, las fases 1--4 emplean el protocolo de
+particionado preliminar (con fuga por variantes aumentadas) y se reportan como
+registro histórico; la fase~5 introduce el protocolo \textit{group-aware} sobre el
+corpus preliminar; la fase~6 es el resultado final, con protocolo
+\textit{group-aware} sobre el corpus completo.
 La columna «Cobert.\ techo» indica en cuántos de los 5~pliegues el modelo alcanza
 el \emph{techo teórico} de P@5: el valor máximo de P@5 posible dado el número de
 cadenas de ataque presentes en ese pliegue, que se alcanza cuando todas ellas
@@ -219,15 +222,15 @@ y el pliegue~0 lo alcanza.
 
 \begin{figure}[htbp]
   \centering
-  \caption{Evolución de F1 macro y Precisión@5 de la Capa~2 a lo largo de las
-           cuatro primeras fases experimentales (protocolo preliminar).}
+  \caption{Evolución de F1 macro y Precisión@5 de la Capa~2}
   \label{fig:gnn_evolution}
   \includegraphics[width=\textwidth]{fig_gnn_evolution}
   
   \fuentepropia
 \end{figure}
 
-Como se observa en la Figura~\ref{fig:gnn_evolution}, las líneas de puntos indican
+La Figura~\ref{fig:gnn_evolution} recorre las cuatro primeras fases experimentales
+(protocolo preliminar). Las líneas de puntos indican
 el objetivo de diseño de ranking (P@5\,>\,0,70) y, como referencia, el umbral de
 F1 fijado para la Capa~1 (0,85); las barras de error
 representan la desviación estándar entre los 5~pliegues de validación cruzada. La
@@ -267,9 +270,7 @@ familias independientes, como se detalla a continuación.
 
 \begin{table}[htbp]
 \centering
-\caption{Resultados por pliegue — Capa~2, fase final (particionado consciente de
-         familias sobre el corpus completo; los pliegues particionan 513~grafos
-         originales, 32~cadenas; test excluido)}
+\caption{Resultados por pliegue — Capa~2, fase final}
 \label{tab:gnn_folds}
 \begin{tabular}{@{}crr@{}}
 \toprule
@@ -288,6 +289,9 @@ Pliegue & F1 macro & P@5 \\
 \fuentepropia
 \end{table}
 
+La Tabla~\ref{tab:gnn_folds} corresponde al particionado consciente de familias
+sobre el corpus completo: los pliegues particionan 513~grafos originales con
+32~cadenas, con el conjunto de test excluido.
 La dispersión entre pliegues es consecuencia directa del particionado por
 familias: al mantener cada familia de plantilla como unidad atómica, las cadenas
 de validación de cada pliegue quedan concentradas en pocas familias
@@ -321,9 +325,7 @@ conserva el \textit{checkpoint} de la configuración finalmente desplegada.}
 
 \begin{table}[htbp]
 \centering
-\caption{Ablación 2\(\times\)2 de función de pérdida \(\times\) criterio de
-         selección de \textit{checkpoints} (5-fold \ac{CV}, corpus completo,
-         particionado por familias, semilla~42)}
+\caption{Ablación de función de pérdida y criterio de selección}
 \label{tab:loss_ablation}
 \begin{tabular}{@{}llrr@{}}
 \toprule
@@ -338,6 +340,8 @@ Entropía cruzada pond. & P@5 & \textbf{0,720 \(\pm\) 0,160} & 0,803 \(\pm\) 0,1
 \fuentepropia
 \end{table}
 
+Las cuatro configuraciones de la Tabla~\ref{tab:loss_ablation} se evaluaron con
+5-fold \ac{CV} sobre el corpus completo, particionado por familias y semilla~42.
 Los dos efectos principales son independientes y aproximadamente aditivos:
 sustituir \textit{focal loss} por entropía cruzada ponderada aporta
 +0,12~puntos de P@5 con selección por F1 (y +0,04 con selección por P@5), y
@@ -351,15 +355,16 @@ selección por Precisión@5 (Figura~\ref{fig:loss_ablation}).
 
 \begin{figure}[htbp]
   \centering
-  \caption{Ablación 2\(\times\)2 de función de pérdida \(\times\) criterio de
-           selección de \textit{checkpoints} (Precisión@5 de validación cruzada,
-           \(\pm\)\(\sigma\)). Solo la configuración desplegada —entropía cruzada
-           ponderada con selección por Precisión@5— supera el objetivo de diseño.}
+  \caption{Precisión@5 de la ablación de pérdida y selección}
   \label{fig:loss_ablation}
   \includegraphics[width=0.82\textwidth]{fig_loss_ablation}
-  
+
   \fuentepropia
 \end{figure}
+
+La Figura~\ref{fig:loss_ablation} representa la Precisión@5 de validación cruzada
+(\(\pm\)\(\sigma\)) de las cuatro configuraciones; solo la desplegada —entropía
+cruzada ponderada con selección por Precisión@5— supera el objetivo de diseño.
 
 \subsection{Robustez frente a la semilla de entrenamiento}
 \label{sec:multisemilla}
@@ -369,13 +374,13 @@ configuración final se reentrenó con tres semillas (7, 42, 123; Tabla~\ref{tab
 y Figura~\ref{fig:multiseed_folds}) manteniendo fijo
 el particionado (semilla~42): re-sortear también las particiones confundiría la
 varianza del modelo con la asignación de familias a pliegues, que la
-Sección~\ref{sec:layer2} muestra dominante.
+Sección~\ref{sec:layer2} muestra dominante. Las métricas de test de la tabla
+aplican la restricción de viabilidad estructural
+(Sección~\ref{sec:gate_estructural}).
 
 \begin{table}[htbp]
 \centering
-\caption{Robustez multi-semilla de la configuración final (particionado fijo;
-         test con restricción de viabilidad estructural,
-         Sección~\ref{sec:gate_estructural})}
+\caption{Robustez multi-semilla de la configuración final}
 \label{tab:multiseed}
 \begin{tabular}{@{}crrc@{}}
 \toprule
@@ -402,10 +407,7 @@ comportamiento observable del sistema sobre repositorios reales no vistos.
 
 \begin{figure}[htbp]
   \centering
-  \caption{Precisión@5 por pliegue con tres semillas de entrenamiento
-           (particionado fijo). Cuatro de los cinco pliegues puntúan de forma
-           idéntica; la varianza entre semillas se concentra íntegramente en el
-           pliegue de la familia \texttt{badpods\_*}.}
+  \caption{Precisión@5 por pliegue con tres semillas de entrenamiento}
   \label{fig:multiseed_folds}
   \includegraphics[width=0.85\textwidth]{fig_multiseed_folds}
   
@@ -493,15 +495,16 @@ con 3 de las 5~cadenas correctamente clasificadas).
 
 \begin{figure}[htbp]
   \centering
-  \caption{Efecto de la restricción de viabilidad estructural sobre las métricas
-           de ranking del conjunto de test. Descartar los clústeres de un solo
-           nodo del \textit{ranking} eleva P@1 de 0,00 a 1,00 y P@5 de 0,60 a
-           0,80.}
+  \caption{Efecto de la restricción de viabilidad estructural}
   \label{fig:structural_gate}
   \includegraphics[width=0.82\textwidth]{fig_structural_gate}
-  
+
   \fuentepropia
 \end{figure}
+
+La Figura~\ref{fig:structural_gate} compara las métricas de ranking del conjunto
+de test con y sin la restricción: descartar los clústeres de un solo nodo del
+\textit{ranking} eleva P@1 de 0,00 a 1,00 y P@5 de 0,60 a 0,80.
 
 Dado el tamaño del conjunto de test, estas estimaciones llevan asociados
 intervalos de confianza amplios (bootstrap de 10\,000 remuestreos, 95\,\%):
@@ -514,8 +517,7 @@ tres métricas de ranking del ensemble sobre el conjunto de test.
 
 \begin{figure}[htbp]
   \centering
-  \caption{Precisión@k del ensemble sobre el conjunto de test (86~grafos,
-           5~cadenas, restricción de viabilidad estructural).}
+  \caption{Precisión@k del ensemble sobre el conjunto de test}
   \label{fig:ensemble_patk}
   \includegraphics[width=0.6\textwidth]{fig_ensemble_pat_k}
   
@@ -523,7 +525,8 @@ tres métricas de ranking del ensemble sobre el conjunto de test.
 \end{figure}
 
 La Tabla~\ref{tab:ensemble_ablation} desglosa la contribución de cada componente
-sobre el conjunto de test, con la restricción de viabilidad estructural aplicada
+sobre el conjunto de test (86~grafos, 5~cadenas, techo P@5\,=\,1,00), con la
+restricción de viabilidad estructural aplicada
 en todas las configuraciones. Tres observaciones: (i)~la configuración RF-sólo
 degrada gravemente el ranking (P@1\,=\,0,00, P@5\,=\,0,40): el \textit{risk
 score} medio de los repositorios reales de cadena es \(\approx\)0, de modo que
@@ -539,9 +542,7 @@ test y que se retoma como limitación en el Capítulo~\ref{cap:conclusiones}.
 
 \begin{table}[htbp]
 \centering
-\caption{Ablación de componentes del ensemble en el conjunto de test
-         (86~grafos, 5~cadenas, techo P@5\,=\,1,00; restricción de viabilidad
-         estructural aplicada en todas las configuraciones)}
+\caption{Ablación de componentes del ensemble en el conjunto de test}
 \label{tab:ensemble_ablation}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
@@ -565,16 +566,16 @@ Solo señal de escape                    & 0,00 & 0,67 & 0,80 & 0,00 \\
 
 La Tabla~\ref{tab:gnn_folds} reporta las métricas agregadas (F1 macro y P@5) para
 los cinco pliegues de validación cruzada. En el conjunto de test, la matriz de
-confusión del ensemble de pliegues (Figura~\ref{fig:gnn_confusion}) muestra el
+confusión del ensemble de pliegues (Figura~\ref{fig:gnn_confusion}, clasificación
+\textit{argmax}) muestra el
 mismo patrón de error que los pliegues de validación: los dos falsos negativos de
 cadena se clasifican como \textit{isolated}, nunca como \textit{clean} — el
-sistema degrada hacia la clase intermedia, no hacia la omisión total.
+sistema degrada hacia la clase intermedia, no hacia la omisión total. Los errores
+caen en la frontera cadena/aislado; ninguna cadena se degrada a limpio.
 
 \begin{figure}[htbp]
   \centering
-  \caption{Matriz de confusión del ensemble de pliegues sobre el conjunto de
-           test (clasificación \textit{argmax}). Los errores caen en la frontera
-           cadena/aislado; ninguna cadena se degrada a limpio.}
+  \caption{Matriz de confusión del ensemble de pliegues en test}
   \label{fig:gnn_confusion}
   \includegraphics[width=0.55\textwidth]{fig_gnn_confusion}
   
@@ -616,8 +617,7 @@ directamente comparables entre sí y con el resultado final (Tabla~\ref{tab:arch
 
 \begin{table}[htbp]
 \centering
-\caption{Ablación de arquitectura — Capa~2 (5-fold \ac{CV}, corpus completo,
-         particionado por familias, misma configuración que la fase final)}
+\caption{Ablación de arquitectura — Capa~2}
 \label{tab:arch_ablation}
 \begin{tabular}{@{}lrr@{}}
 \toprule
