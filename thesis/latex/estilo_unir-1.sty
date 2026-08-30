@@ -42,12 +42,13 @@
 \usepackage{vmargin}
 %--- Márgenes exigidos por la plantilla UNIR: izq 3,0 cm, der 2,0 cm, sup/inf 2,5 cm.
 \setpapersize{A4}
-\setmarginsrb{3cm}{0.9cm}{2cm}{2.5cm}{40pt}{12pt}{0pt}{24pt}
+%--- Cabecera a 1,25 cm del borde; el cuerpo comienza a 2,5 cm
+%    (1,25 cm + altura de cabecera 24pt + separación 11pt ≈ 2,5 cm).
+\setmarginsrb{3cm}{1.25cm}{2cm}{2.5cm}{24pt}{11pt}{0pt}{24pt}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
-\fancyhfoffset{20pt}
 \renewcommand{\headrulewidth}{0.0pt}
-\setlength{\headheight}{40pt}%
+\setlength{\headheight}{24pt}%
 
 %--- Formato de párrafo de la plantilla: sin sangría, 6 pt de separación.
 \setlength{\parindent}{0pt}
@@ -56,7 +57,7 @@
 %--- Títulos de tablas y figuras (arriba), fuente al pie: número en negrita,
 %    nombre en cursiva, según la plantilla UNIR.
 \usepackage{caption}
-\captionsetup{labelfont=bf,textfont=it,labelsep=period,justification=justified,font=small}
+\captionsetup{labelfont=bf,textfont=it,labelsep=period,justification=justified,font=footnotesize}
 \captionsetup[table]{position=above,skip=6pt}
 \captionsetup[figure]{position=above,skip=6pt}
 
@@ -78,18 +79,37 @@
 %
 %
 %
-\definecolor{azulunir}{rgb}{0,0.59,0.80}
+%--- Azul corporativo UNIR de la plantilla 2026: #0098CD.
+\definecolor{azulunir}{rgb}{0,0.596,0.804}
 
 \newcommand\director[1]{\def\@director{#1}}
 \newcommand\nombreciudad[1]{\def\@nombreciudad{#1}}
 \newcommand\titulacion[1]{\def\@titulacion{#1}}
+\newcommand\tipotrabajo[1]{\def\@tipotrabajo{#1}}
 \director{}
 \nombreciudad{}
+\tipotrabajo{}
 
-\titleformat{\chapter}[hang]{\vspace{-4cm}\Huge\bfseries\color{azulunir}}{\thechapter. }{0pt}{\Huge\bfseries}
-% Títulos de nivel 2 y 3 en azul, según la plantilla UNIR (Título 2/Título 3).
-\titleformat{\section}{\Large\bfseries\color{azulunir}}{\thesection.}{0.5em}{}
-\titleformat{\subsection}{\large\bfseries\color{azulunir}}{\thesubsection.}{0.5em}{}
+%--- Jerarquía de títulos de la plantilla UNIR 2026:
+%    Título 1: 18 pt, regular, MAYÚSCULAS, azul  (numeración «1.»)
+%    Título 2: 14 pt, regular, MAYÚSCULAS, azul  (numeración «1.1.»)
+%    Título 3: 12 pt, negrita, redonda, negro    (numeración «1.1.1.»)
+%    Título 4: 12 pt, regular, negro             (numeración «1.1.1.1.»)
+\titleformat{\chapter}[hang]{\fontsize{18pt}{22pt}\selectfont\mdseries\color{azulunir}}{\thechapter.}{0.5em}{\MakeUppercase}
+\titleformat{name=\chapter,numberless}[hang]{\fontsize{18pt}{22pt}\selectfont\mdseries\color{azulunir}}{}{0pt}{}
+%--- El título de capítulo comienza en el margen superior del cuerpo (2,5 cm),
+%    sin el hueco de 50 pt que el estilo book añade por defecto.
+\titlespacing*{\chapter}{0pt}{0pt}{18pt}
+\titlespacing*{name=\chapter,numberless}{0pt}{0pt}{18pt}
+\titleformat{\section}{\fontsize{14pt}{17pt}\selectfont\mdseries\color{azulunir}}{\thesection.}{0.5em}{\MakeUppercase}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\mdseries}{\thesubsubsection.}{0.5em}{}
+\setcounter{secnumdepth}{3}
+
+%--- Anexos: «Anexo A. Título», sin mayúsculas forzadas (estilo «Anexo»).
+\newcommand{\activaformatoanexo}{%
+  \titleformat{\chapter}[hang]{\fontsize{18pt}{22pt}\selectfont\mdseries\color{azulunir}}{\appendixname~\thechapter.}{0.5em}{}%
+}
 
 
 
@@ -139,31 +159,32 @@
 
 
 
-\newcommand{\creaportada}{\begingroup  
+%--- Portada según la plantilla UNIR 2026: logo, líneas centradas
+%    (universidad 24 pt, escuela 20 pt, titulación 18 pt azul, título 26 pt azul)
+%    y tabla con bordes: presentado por / tipo de trabajo / director/a / fecha.
+\newcommand{\creaportada}{\begingroup
 \thispagestyle{empty}
-\includegraphics[width= 0.8\textwidth]{logo_unir}
+\begin{center}
+\includegraphics[width=0.55\textwidth]{logo_unir}
 
 \vspace{1cm}
-\centering{
-\begin{tabular}{!{\color{azulunir}\vrule width 2pt}p{12cm}}
-{\Large {\bf Universidad Internacional de la Rioja (UNIR)}} \\ \vspace{0.1cm}
-{ \huge {\bf Escuela Superior de Ingeniería y Tecnología}} \\ \vspace{0.1cm}
-{ \Large {\bf \@titulacion}}\\ \vspace{1cm}
-{\Huge {\bf {\color{azulunir}{\thetitle} }  }  }
-\end{tabular}
-}
+{\fontsize{24pt}{29pt}\selectfont Universidad Internacional de La Rioja}\\[0.4cm]
+{\fontsize{20pt}{24pt}\selectfont Escuela Superior de Ingeniería y Tecnología}\\[0.8cm]
+{\fontsize{18pt}{22pt}\selectfont\color{azulunir}\@titulacion}\\[1.2cm]
+{\fontsize{26pt}{31pt}\selectfont\color{azulunir}\thetitle}
+\end{center}
 \vfill
 
-\noindent
-\flushleft{
-{\bf Trabajo Fin de Estudios}\\  \vspace{0.3cm}
-{\bf presentado por:} \theauthor\\  \vspace{0.3cm}
-{\bf Dirigido por:} \@director %\thedirector
-}
-\vspace{3cm}
-
-{\color{azulunir}{Ciudad:}}\@nombreciudad\\
-{\color{azulunir}{Fecha:}} \thedate
+\begin{center}
+\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{|p{5.5cm}|p{8cm}|}
+\hline
+Trabajo fin de estudio presentado por: & \theauthor \\ \hline
+Tipo de trabajo: & \@tipotrabajo \\ \hline
+Director/a: & \@director \\ \hline
+Fecha: & \thedate \\ \hline
+\end{tabular}
+\end{center}
 \newpage
 \thispagestyle{empty}
 \endgroup}
@@ -175,12 +196,22 @@
 %---------------------------
 %cabecera del trabajo
 %---------------------------
+%--- Cabecera de la plantilla 2026: dos líneas a la derecha, 10 pt, redonda
+%    (nombre del estudiante / título del trabajo). Pie: número de página a la derecha.
 \lhead{}
-\rhead{\footnotesize\theauthor\\\itshape\@title}
-%\lfoot{\thetitle}
+\rhead{\footnotesize\theauthor\\\@title}
 \rfoot{\thepage}
 \cfoot[]{}
 \chead[]{}
+%--- Las páginas de inicio de capítulo llevan la misma cabecera y pie
+%    que el resto (la plantilla no distingue primeras páginas).
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \lhead{}%
+  \rhead{\footnotesize\theauthor\\\@title}%
+  \rfoot{\thepage}%
+}
 
 
 
