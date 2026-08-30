@@ -19,9 +19,9 @@ del clúster o, en casos extremos, hasta la infraestructura subyacente completa
 
 Los enfoques de análisis estático tradicionales —herramientas como \textit{Checkov}
 \citep{Checkov2021} o \textit{kube-linter} \citep{KubeLinter2021}— detectan
-misconfiguraciones aisladas en manifiestos individuales, pero no modelan las relaciones
-entre recursos del clúster. Una única flag de privilegio en un pod no es suficiente
-para determinar si existe una cadena de ataque viable; es la combinación de nodos de
+configuraciones incorrectas aisladas en manifiestos individuales, pero no modelan las
+relaciones entre recursos del clúster. Un único indicador de privilegio en un pod no es
+suficiente para determinar si existe una cadena de ataque viable; es la combinación de nodos de
 escape con recursos de movimiento lateral la que habilita rutas de explotación
 completas, siguiendo la lógica de encadenamiento de etapas del modelo de
 \textit{kill chain} de \citeauthor{Hutchins2011} \citeyear{Hutchins2011}; las
@@ -33,8 +33,8 @@ Herramientas más recientes como \textit{KubeHound} \citep{KubeHound2023} e
 ataque sobre clústeres activos. Sin embargo, requieren recolectar el estado de un
 clúster activo mediante acceso de lectura amplio a su servidor \acs{API} de
 \textit{Kubernetes}, lo que limita su aplicabilidad como control
-preventivo en el pipeline de \ac{CICD} —un principio
-conocido como \textit{shift-left security}: adelantar los controles de seguridad a
+preventivo en el proceso de \ac{CICD}, conforme al principio conocido como
+\textit{shift-left security}, que consiste en adelantar los controles de seguridad a
 las etapas más tempranas del desarrollo.
 
 Este trabajo aborda ese vacío: construir un sistema capaz de razonar sobre la
