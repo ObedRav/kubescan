@@ -13,29 +13,36 @@
 \usepackage[utf8]{inputenc} %descomentar esta línea si se trabaja en linux
 %\usepackage[latin1]{inputenc} %comentar esta línea si se trabaja en linux
 
-%--- Tipografía exigida por la plantilla UNIR: Calibri Light en todo el
-%    documento (cuerpo, títulos, portada, cabeceras). Se carga la Calibri
-%    Light instalada localmente (viene con Microsoft Office); requiere
-%    compilar con XeLaTeX o LuaLaTeX. No existe un peso "Light Bold": el
-%    texto en negrita (\textbf, Título 3) usa Calibri Bold normal, que es
-%    la sustitución habitual cuando una familia Light carece de negrita
-%    propia.
+%--- Tipografía exigida por la plantilla UNIR: Calibri regular para todo el
+%    cuerpo (párrafos, listas, cabeceras, leyendas y fuentes de
+%    tablas/figuras) y Calibri Light sólo para los Títulos 1-3. Ambas se
+%    cargan desde la Calibri instalada localmente (viene con Microsoft
+%    Office); requiere compilar con XeLaTeX o LuaLaTeX. No existe un peso
+%    "Light Bold": el Título 3 (negrita) y el \textbf del cuerpo usan
+%    Calibri Bold normal, la sustitución habitual cuando una familia Light
+%    carece de negrita propia.
 \usepackage[T1]{fontenc}
 \usepackage{fontspec}
-\setsansfont{Calibri Light}[
+\setsansfont{Calibri}[
+  Path = /Applications/Microsoft Word.app/Contents/Resources/DFonts/,
+  Extension = .ttf,
+  UprightFont = Calibri,
+  ItalicFont = Calibrii,
+  BoldFont = Calibrib,
+  BoldItalicFont = Calibriz,
+]
+\renewcommand{\familydefault}{\sfdefault}
+
+%--- Familia de los Títulos 1-3: Calibri Light, con Calibri Bold normal
+%    como sustituto para el Título 3 (negrita).
+\newfontfamily\calibrilight[
   Path = /Applications/Microsoft Word.app/Contents/Resources/DFonts/,
   Extension = .ttf,
   UprightFont = calibril,
   ItalicFont = calibrili,
   BoldFont = Calibrib,
   BoldItalicFont = Calibriz,
-]
-\renewcommand{\familydefault}{\sfdefault}
-
-%--- Alias retrocompatible: los \titleformat de Título 1/2 invocan
-%    \calibrilight explícitamente; con Calibri Light ya como familia por
-%    defecto, basta con reseleccionar la familia sans actual.
-\newcommand{\calibrilight}{\sffamily\selectfont}
+]{Calibri Light}
 
 
 %simbolos
@@ -123,7 +130,7 @@
 \titlespacing*{\chapter}{0pt}{0pt}{18pt}
 \titlespacing*{name=\chapter,numberless}{0pt}{0pt}{18pt}
 \titleformat{\section}{\fontsize{14pt}{17pt}\selectfont\calibrilight\color{azulunir}}{\thesection.}{0.5em}{\MakeUppercase}
-\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsection}{\normalsize\calibrilight\bfseries}{\thesubsection.}{0.5em}{}
 \titleformat{\subsubsection}{\normalsize\mdseries}{\thesubsubsection.}{0.5em}{}
 \setcounter{secnumdepth}{3}
 
