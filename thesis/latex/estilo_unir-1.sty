@@ -55,6 +55,11 @@
 \usepackage{titling}
 \usepackage{titlesec}
 
+%--- Las listas (enumerate/itemize/description) no deben añadir su propio
+%    salto por encima del \parskip de 12 pt entre párrafos.
+\usepackage{enumitem}
+\setlist{topsep=0pt, partopsep=0pt}
+
 %imagenes
 \usepackage[dvips]{epsfig}
 \usepackage{graphicx}
@@ -62,6 +67,16 @@
 
 %colores en tablas
 \usepackage{colortbl}
+
+%--- Identificadores monoespaciados largos con guion bajo (p.ej. TRUE_HOST_PID)
+%    no tienen puntos de corte propios; en párrafos justificados fuerzan huecos
+%    enormes entre palabras. \identcode permite partir tras cada guion bajo
+%    (se usa igual que \texttt, escribiendo el guion bajo como \_).
+\newcommand{\identcode}[1]{\begingroup
+  \let\oldunderscore\_%
+  \renewcommand{\_}{\oldunderscore\allowbreak}%
+  \texttt{#1}%
+\endgroup}
 
 %cabeceras y pies de página
 \usepackage{vmargin}
@@ -119,19 +134,25 @@
 \tipotrabajo{}
 
 %--- Jerarquía de títulos de la plantilla UNIR 2026:
-%    Título 1: 18 pt, regular, MAYÚSCULAS, azul  (numeración «1.»)
-%    Título 2: 14 pt, regular, MAYÚSCULAS, azul  (numeración «1.1.»)
+%    Título 1: 18 pt, regular, azul  (numeración «1.»)
+%    Título 2: 14 pt, regular, azul  (numeración «1.1.»)
 %    Título 3: 12 pt, negrita, redonda, negro    (numeración «1.1.1.»)
 %    Título 4: 12 pt, regular, negro             (numeración «1.1.1.1.»)
-\titleformat{\chapter}[hang]{\fontsize{18pt}{22pt}\selectfont\calibrilight\color{azulunir}}{\thechapter.}{0.5em}{\MakeUppercase}
+\titleformat{\chapter}[hang]{\fontsize{18pt}{22pt}\selectfont\calibrilight\color{azulunir}}{\thechapter.}{0.5em}{}
 \titleformat{name=\chapter,numberless}[hang]{\fontsize{18pt}{22pt}\selectfont\calibrilight\color{azulunir}}{}{0pt}{}
 %--- El título de capítulo comienza en el margen superior del cuerpo (2,5 cm),
 %    sin el hueco de 50 pt que el estilo book añade por defecto.
 \titlespacing*{\chapter}{0pt}{0pt}{18pt}
 \titlespacing*{name=\chapter,numberless}{0pt}{0pt}{18pt}
-\titleformat{\section}{\fontsize{14pt}{17pt}\selectfont\calibrilight\color{azulunir}}{\thesection.}{0.5em}{\MakeUppercase}
+\titleformat{\section}{\fontsize{14pt}{17pt}\selectfont\calibrilight\color{azulunir}}{\thesection.}{0.5em}{}
 \titleformat{\subsection}{\normalsize\calibrilight\bfseries}{\thesubsection.}{0.5em}{}
 \titleformat{\subsubsection}{\normalsize\mdseries}{\thesubsubsection.}{0.5em}{}
+%--- Espaciado de la plantilla Word (6 pt antes/después de cada título): sin
+%    esto, titlesec usa sus valores por defecto (varias veces mayores), que se
+%    suman al \parskip de los párrafos vecinos en lugar de sustituirlo.
+\titlespacing*{\section}{0pt}{6pt}{6pt}
+\titlespacing*{\subsection}{0pt}{6pt}{6pt}
+\titlespacing*{\subsubsection}{0pt}{6pt}{6pt}
 \setcounter{secnumdepth}{3}
 
 %--- Anexos: «Anexo A. Título», sin mayúsculas forzadas (estilo «Anexo»).

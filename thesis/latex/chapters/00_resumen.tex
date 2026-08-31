@@ -3,9 +3,8 @@
 
 Este trabajo presenta \textit{kubescan}, un sistema de detección automática de
 cadenas de ataque en infraestructuras \textit{Kubernetes} que combina un clasificador
-\textit{Random Forest} (Capa~1) con una Red Neuronal de Grafos de Atención —
-\textit{Graph Attention Network} (\acs{GAT}) — (Capa~2) y optimización de pesos mediante
-Algoritmo Genético (Capa~3).
+\textit{Random Forest} (Capa~1) con una \textit{Graph Attention Network}
+(\acs{GAT}) (Capa~2) y optimización de pesos mediante Algoritmo Genético (Capa~3).
 
 A partir de 2.827 manifiestos de \textit{Kubernetes} procedentes de cinco fuentes
 públicas complementarias, se construyen 599 grafos de clúster originales (1.154
@@ -13,21 +12,26 @@ tras aumentación de datos) con aristas que representan relaciones de privilegio
 movimiento lateral, proximidad, espacio de nombres y \acs{RBAC}. La Capa~1
 alcanza una F1 macro de 0,9946 en la clasificación de manifiestos individuales, con
 \acs{AUC}\,=\,0,9986 y cero falsos negativos en el conjunto de test. La Capa~2,
-basada en \acs{GAT} de 3 capas con 4 cabezas de atención, \textit{embedding} de
-tipos de arista y aumentación de grafos, logra F1~macro\,=\,0,803\,\(\pm\)\,0,137
+basada en \acs{GAT} de 3 capas con \textit{embedding} de tipos de arista, logra
+F1~macro\,=\,0,803\,\(\pm\)\,0,137
 y Precisión@5\,=\,0,720\,\(\pm\)\,0,160 en validación cruzada de 5~pliegues con un
 protocolo de particionado consciente de grupos y de familias de plantilla,
-superando el objetivo de diseño de P@5\,>\,0,70. En el conjunto de test
-independiente —86~grafos con 5~cadenas de ataque de repositorios reales— el
-sistema completo de tres capas, combinado con una
+superando el objetivo de diseño de P@5\,>\,0,70.
+
+En el conjunto de test independiente —86~grafos con 5~cadenas de ataque de
+repositorios reales— el sistema completo, con una
 restricción de viabilidad estructural, alcanza Precisión@1\,=\,1,00 y
 Precisión@3\,=\,1,00, recupera 4 de las 5~cadenas en las primeras 5~posiciones
 (Precisión@5\,=\,0,80) y no produce falsos positivos de clústeres limpios
-(\acs{FPR}\_clean\,=\,0\,\%). Una evaluación de usabilidad con tres usuarios
-expertos otorga a la herramienta una puntuación \acs{SUS} media de 88,3
-(«excelente»). El trabajo aporta además una contribución metodológica: la
-detección y corrección de una fuga de información por familias de plantilla,
-junto con la ablación que explica la regresión asociada.
+(\acs{FPR}\_clean\,=\,0\,\%). Una evaluación de usabilidad con tres expertos
+otorga una puntuación \acs{SUS} media de 88,3 («excelente»).
+
+El trabajo aporta además una contribución metodológica: la detección y
+corrección de una fuga de información por familias de plantilla, junto con la
+ablación que la explica. Esta corrección documenta un riesgo relevante para
+trabajos futuros con datasets de variantes casi duplicadas. Los resultados
+confirman la viabilidad de \textit{kubescan} como control de seguridad
+preventivo integrable en \acs{CICD}.
 
 \medskip
 \noindent\textbf{Palabras clave:} Kubernetes, Graph Neural Networks, Random Forest,
@@ -39,27 +43,34 @@ cadenas de ataque, infraestructura como código.
 
 This work presents \textit{kubescan}, an automatic attack-chain detection system
 for \textit{Kubernetes} infrastructures that combines a Random Forest classifier
-(Layer~1) with a Graph Attention Network (\acs{GAT}) (Layer~2) and Genetic Algorithm
-ensemble weight optimisation (Layer~3).
+(Layer~1) with a \textit{Graph Attention Network} (\acs{GAT}) (Layer~2) and
+Genetic Algorithm ensemble weight optimisation (Layer~3).
 
 From 2,827 Kubernetes manifests drawn from five complementary public sources, 599
 original cluster graphs are built (1,154 after data augmentation), with edges
 representing privilege-escalation, lateral-movement, proximity, namespace, and
 \acs{RBAC} relationships. Layer~1 achieves macro-F1\,=\,0.9946, \acs{AUC}\,=\,0.9986,
-and zero false negatives on the test set. Layer~2, a 3-layer \acs{GAT} with 4
-attention heads, edge-type embeddings and graph augmentation, achieves
+and zero false negatives on the test set. Layer~2, a 3-layer \acs{GAT} with
+edge-type embeddings, achieves
 macro-F1\,=\,0.803\,\(\pm\)\,0.137 and Precision@5\,=\,0.720\,\(\pm\)\,0.160 under a
 5-fold cross-validation protocol that is group- and template-family-aware,
-exceeding the P@5\,>\,0.70 design target. On the independent test set —
+exceeding the P@5\,>\,0.70 design target.
+
+On the independent test set —
 86~graphs containing 5~attack chains from real-world repositories — the full
-three-layer system, combined with a structural feasibility constraint,
+system, with a structural feasibility constraint,
 achieves Precision@1\,=\,1.00 and Precision@3\,=\,1.00, recovers 4 of the
 5~attack chains within the top-5 ranking (Precision@5\,=\,0.80), and produces
 no false positives on clean clusters (FPR\_clean\,=\,0). A usability
-evaluation with three expert users yields a mean \acs{SUS} score of 88.3
-(``excellent'' rating). The work additionally contributes a methodological
+evaluation with three experts yields a mean \acs{SUS} score of 88.3
+(``excellent'' rating).
+
+The work additionally contributes a methodological
 finding: the detection and correction of template-family information leakage,
-together with the ablation that explains the associated regression.
+together with the ablation that explains it. This
+correction documents a risk relevant to future work with datasets of
+near-duplicate variants. The results confirm the viability of \textit{kubescan}
+as a preventive security control integrable into \acs{CICD}.
 
 \medskip
 \noindent\textbf{Keywords:} Kubernetes, Graph Neural Networks, Random Forest,
