@@ -79,17 +79,22 @@ seguida para alcanzarlos, se detallan en el Capítulo~\ref{cap:objetivos}.
 
 \section{Estructura del trabajo}
 
-El trabajo se organiza como sigue. El Capítulo~\ref{cap:estado} revisa el estado del
-arte en seguridad de \textit{Kubernetes}, herramientas de análisis estático y grafos
-de ataque, redes neuronales de grafos y detección de cadenas de ataque; incluye una
-tabla comparativa de las herramientas más relevantes y un análisis del posicionamiento
-de \textit{kubescan}. El Capítulo~\ref{cap:objetivos} define los objetivos específicos
-y la metodología de cinco fases. El Capítulo~\ref{cap:diseno} describe el diseño e
-implementación del sistema, incluyendo el análisis de requisitos, la arquitectura de
-tres capas, la construcción del dataset y el grafo, y la tabla completa de las
-28~características del clasificador. El Capítulo~\ref{cap:resultados} presenta los
-resultados experimentales de cada capa, la validación cruzada con una
-herramienta de auditoría externa (\textit{Checkov}) y la evaluación funcional de
-la herramienta. El
-Capítulo~\ref{cap:conclusiones} recoge las conclusiones vinculadas a cada objetivo,
-las limitaciones, las consideraciones éticas y las líneas de trabajo futuro.
+El trabajo se organiza en siete capítulos. El Capítulo~\ref{cap:estado} revisa el
+estado del arte en seguridad de \textit{Kubernetes}, herramientas de análisis
+estático y grafos de ataque, redes neuronales de grafos y detección de cadenas
+de ataque; incluye una tabla comparativa de las herramientas más relevantes y un
+análisis del posicionamiento de \textit{kubescan}. El
+Capítulo~\ref{cap:objetivos} define los objetivos específicos y la metodología
+de seis fases. El Capítulo~\ref{cap:requisitos} identifica y justifica los
+requisitos funcionales y no funcionales del sistema, delimita su alcance y
+describe la estrategia de partición de datos y las métricas de evaluación que
+esos requisitos determinan. El Capítulo~\ref{cap:herramienta} describe la
+herramienta desarrollada: la arquitectura de tres capas, la construcción del
+dataset y el grafo, el diseño de cada capa y la tabla completa de las
+28~características del clasificador. El Capítulo~\ref{cap:evaluacion} evalúa el
+sistema frente a una línea de base del estado del arte, reporta los resultados
+de cada capa, sintetiza la métrica de proceso completo y verifica el
+cumplimiento de los requisitos, incluida la evaluación de usabilidad con
+usuarios expertos. El Capítulo~\ref{cap:conclusiones} recoge las conclusiones
+vinculadas a cada objetivo, las limitaciones, las consideraciones éticas y las
+líneas de trabajo futuro.

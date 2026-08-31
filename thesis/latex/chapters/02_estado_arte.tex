@@ -68,6 +68,7 @@ la industria.
 
 % -----------------------------------------------------------
 \section{Análisis estático de IaC}
+\label{sec:iac}
 % -----------------------------------------------------------
 
 El análisis estático de manifiestos \ac{IaC} cuenta con una larga trayectoria en la
@@ -126,7 +127,7 @@ implementación en \textit{scikit-learn} \citep{Pedregosa2011}. El ajuste de
 hiperparámetros suele realizarse mediante búsqueda en rejilla (\textit{grid search})
 con validación cruzada estratificada sobre parámetros como \texttt{n\_estimators},
 \texttt{max\_depth} y \texttt{min\_samples\_leaf}; los valores concretos explorados en
-este trabajo se detallan en el Capítulo~\ref{cap:diseno}.
+este trabajo se detallan en el Capítulo~\ref{cap:herramienta}.
 
 En el dominio de la detección de intrusiones en red, el conjunto de datos UNSW-NB15
 \citep{Moustafa2015} se ha convertido en un referente de evaluación para clasificadores
@@ -377,7 +378,7 @@ modelo supervisado que razone sobre las relaciones que habilitan dichas cadenas.
 seguridad de \textit{Kubernetes} son escasos, de pequeño tamaño y desequilibrados
 hacia las clases de riesgo bajo, lo que dificulta el entrenamiento de clasificadores
 de clúster: el análisis del corpus de manifiestos reales recopilado en este trabajo
-(Capítulo~\ref{cap:diseno}) confirma que \texttt{TRUE\_HOST\_PID} —la flag de escape
+(Capítulo~\ref{cap:herramienta}) confirma que \texttt{TRUE\_HOST\_PID} —la flag de escape
 más peligrosa— aparece en sólo el 0,3\,\% de las filas antes de incorporar fuentes
 especializadas. En tercer lugar, las herramientas de grafo de
 ataque más avanzadas (KubeHound, IceKube) requieren un clúster activo, lo que impide

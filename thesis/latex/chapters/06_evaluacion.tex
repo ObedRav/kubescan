@@ -1,21 +1,86 @@
 % ============================================================
-\chapter{Resultados y evaluación}
-\label{cap:resultados}
+\chapter{Evaluación}
+\label{cap:evaluacion}
 % ============================================================
 
-Este capítulo presenta y analiza los resultados obtenidos en cada una de las tres
-capas del sistema \textit{kubescan}, seguidos de una validación cruzada con
-herramientas de análisis estático externas y de una evaluación funcional de la
-herramienta como software distribuible. Los resultados se organizan en el mismo
-orden que las fases de entrenamiento descritas en el Capítulo~\ref{cap:diseno}. Las
-métricas empleadas se justifican en detalle en la Sección~\ref{sec:metricas}.
+Este capítulo evalúa el sistema \textit{kubescan} completo. Se parte de una
+línea de base tomada del estado del arte, frente a la cual se contrastan los
+resultados de cada capa; a continuación se reportan dichos resultados en el
+mismo orden que las fases de entrenamiento descritas en el
+Capítulo~\ref{cap:herramienta}, se sintetiza una métrica de proceso completo que
+resume el comportamiento extremo a extremo del sistema, y se verifica el
+cumplimiento de los requisitos funcionales y no funcionales definidos en el
+Capítulo~\ref{cap:requisitos}, requisito a requisito. Las métricas empleadas se
+justifican en detalle en la Sección~\ref{sec:metricas}.
+
+% -----------------------------------------------------------
+\section{Línea de base del estado del arte}
+\label{sec:comparacion}
+% -----------------------------------------------------------
+
+Antes de reportar los resultados propios, esta sección fija la línea de base
+frente a la que se contrastan: los trabajos revisados en el
+Capítulo~\ref{cap:estado} que abordan un problema comparable al de cada capa. La
+comparación se organiza por capa, dado que la Capa~1 dispone de referencias
+directas en la literatura de clasificación de \textit{IaC}, mientras que la
+Capa~2 carece de trabajos previos estrictamente comparables. En ambos casos se
+prioriza la comparación con resultados obtenidos sobre conjuntos de datos de
+tamaño y naturaleza similares; los resultados propios que superan o contrastan
+con esta línea de base se presentan en las secciones siguientes.
+
+\subsection{Capa 1 en contexto}
+
+La F1 macro de 0,9946 del clasificador \textit{Random Forest} supera las cifras
+reportadas en trabajos de clasificación de código \ac{IaC} de propósito general. Rahman
+et~al.\ \citep{Rahman2022}, cuyos datos forman la base del presente trabajo, no
+reportan modelos de clasificación supervisada sobre el mismo conjunto; el objetivo
+de su trabajo era la construcción del dataset y el análisis de la densidad de
+misconfiguraciones, no la predicción. El umbral objetivo F1\,>\,0,85 adoptado en
+este trabajo se alinea con los estándares de la literatura de \acs{IDS} sobre UNSW-NB15
+\citep{Moustafa2015}, donde clasificadores basados en \textit{Random Forest}
+típicamente alcanzan F1 macro entre 0,85 y 0,93.
+El \ac{AUC}-\ac{ROC} de 0,9986 indica que el clasificador separa casi perfectamente las dos
+clases a cualquier umbral de decisión. Este resultado es consistente con la naturaleza
+del problema: las misconfiguraciones en manifiestos \acs{YAML} son mayoritariamente discretas
+y acumulativas (más flags activas implica mayor riesgo), lo que hace que el espacio de
+características sea relativamente separable una vez que se dispone de un conjunto de
+datos suficientemente representativo.
+
+\subsection{Capa 2 en contexto}
+
+El resultado final de la Capa~2 (F1~macro\,=\,0,803, P@5\,=\,0,720, sobre el
+corpus completo de Rahman et~al.\ con particionado por familias) es difícil de
+comparar directamente con la literatura, ya que no existe ningún trabajo previo
+que aborde la clasificación supervisada de cadenas de ataque en clústeres
+\textit{Kubernetes} mediante \acs{GNN}s. Las referencias más cercanas son los
+trabajos de \acs{GNN}s para \ac{IDS} en red, como \textit{E-GraphSAGE}
+\citep{Lo2022}, que reporta mejoras del 2--8\,\% en F1 sobre clasificadores
+tabulares en el dataset UNSW-NB15. En este trabajo la ventaja del componente
+estructural es mayor y se observa sobre el conjunto de test genuinamente no
+visto: P@5 pasa de 0,40 (\ac{RF}-sólo) a 0,80 (configuraciones con \ac{GNN}) y
+P@1 de 0,00 a 1,00 (Tabla~\ref{tab:ensemble_ablation}), lo que indica que la
+información estructural del grafo es decisiva para identificar cadenas de
+ataque reales.
+La varianza entre pliegues (\(\sigma\)\,=\,0,160 para P@5 en la fase final) es
+coherente con lo reportado en la literatura para conjuntos de grafos pequeños
+(n\,<\,200): trabajos como los revisados en \citeauthor{GNNSurvey2024}
+\citeyear{GNNSurvey2024} identifican la escasez de datos como el principal
+factor de variabilidad en \acs{GNN}s para ciberseguridad, y recomiendan
+validación cruzada estratificada como el estándar de evaluación para conjuntos
+de este tamaño, que es precisamente la metodología adoptada. En este trabajo la
+varianza tiene además una causa estructural identificada: el particionado por
+familias concentra las cadenas de validación de cada pliegue en 1--3 familias
+independientes (Sección~\ref{sec:layer2}), de modo que la desviación estándar
+entre pliegues mide en gran parte la dispersión de dificultad entre familias y
+no inestabilidad del modelo, como confirma el análisis multi-semilla
+(Sección~\ref{sec:multisemilla}).
 
 % -----------------------------------------------------------
 \section{Resultados de la Capa 1: Random Forest}
 % -----------------------------------------------------------
 
 Esta sección presenta los resultados de los dos modelos de la Capa~1 descritos en
-el Capítulo~\ref{cap:diseno}: el clasificador binario y el modelo de severidad. Se
+el Capítulo~\ref{cap:herramienta}: el clasificador binario y el modelo de severidad. Se
 reportan primero las métricas de clasificación binaria y la importancia de las
 características, y a continuación los resultados del modelo de severidad. Ambos
 modelos comparten el mismo conjunto de 28~características extraídas por
@@ -178,13 +243,13 @@ complementaria. La quinta fase corrige el protocolo de particionado: las fases~1
 incluían en el entrenamiento variantes aumentadas derivadas de los
 clústeres de validación y test (fuga de datos por casi-duplicados), por lo que sus
 métricas están infladas de forma optimista. Esa quinta fase aplica el protocolo
-\textit{group-aware} descrito en el Capítulo~\ref{cap:diseno} (las variantes acompañan a su
+\textit{group-aware} descrito en el Capítulo~\ref{cap:herramienta} (las variantes acompañan a su
 clúster base y los clústeres de test quedan fuera de los pliegues) e incorpora el
 \textit{embedding} de tipos de arista; sus métricas son metodológicamente válidas
 pero corresponden todavía al corpus preliminar de 471~grafos. La sexta y última
 fase incorpora el corpus completo de Rahman et~al.\ (599~grafos originales,
 37~cadenas; Sección~\ref{sec:construccion_dataset}) y extiende el protocolo de
-particionado a las \textbf{familias de plantilla} (Capítulo~\ref{cap:diseno}):
+particionado a las \textbf{familias de plantilla} (Capítulo~\ref{cap:herramienta}):
 durante esta fase se detectó que los casi duplicados de una misma plantilla
 (ocho \texttt{badpods\_*}, nueve \texttt{datadog\_*}, ocho
 \texttt{simulator\_*}, doce \texttt{kubernetes\_goat\_*}) quedaban repartidos
@@ -238,7 +303,7 @@ y el pliegue~0 lo alcanza.
   \caption{Evolución de F1 macro y Precisión@5 de la Capa~2}
   \label{fig:gnn_evolution}
   \includegraphics[width=\textwidth]{fig_gnn_evolution}
-  
+
   \fuentepropia
 \end{figure}
 
@@ -426,7 +491,7 @@ comportamiento observable del sistema sobre repositorios reales no vistos.
   \caption{Precisión@5 por pliegue con tres semillas de entrenamiento}
   \label{fig:multiseed_folds}
   \includegraphics[width=0.85\textwidth]{fig_multiseed_folds}
-  
+
   \fuentepropia
 \end{figure}
 
@@ -535,7 +600,7 @@ tres métricas de ranking del ensemble sobre el conjunto de test.
   \caption{Precisión@k del ensemble sobre el conjunto de test}
   \label{fig:ensemble_patk}
   \includegraphics[width=0.6\textwidth]{fig_ensemble_pat_k}
-  
+
   \fuentepropia
 \end{figure}
 
@@ -573,7 +638,6 @@ Solo señal de escape                    & 0,00 & 0,67 & 0,80 & 0,00 \\
 \fuentepropia
 \end{table}
 
-
 % -----------------------------------------------------------
 \section{Análisis de la clasificación por clases: \acs{GNN}}
 \label{sec:gnn_por_clase}
@@ -593,7 +657,7 @@ caen en la frontera cadena/aislado; ninguna cadena se degrada a limpio.
   \caption{Matriz de confusión del ensemble de pliegues en test}
   \label{fig:gnn_confusion}
   \includegraphics[width=0.55\textwidth]{fig_gnn_confusion}
-  
+
   \fuentepropia
 \end{figure}
 
@@ -678,17 +742,70 @@ modelo y los de una herramienta de auditoría independiente refuerza la validez 
 predicciones.
 
 % -----------------------------------------------------------
-\section{Evaluación funcional de la herramienta}
-\label{sec:evaluacion_funcional}
+\section{Métrica global del proceso completo}
+\label{sec:metrica_global}
 % -----------------------------------------------------------
 
-Además de la evaluación cuantitativa sobre los conjuntos de datos etiquetados, se
-realizó una evaluación funcional de \textit{kubescan} como herramienta de software
-distribuible, atendiendo a los requisitos no funcionales definidos en la
-Sección~\ref{sec:requisitos}. Esta evaluación complementa las métricas de las
-capas 1--3, que miden capacidad predictiva, con evidencia de que el sistema es
-efectivamente utilizable como herramienta de línea de comandos. Los cuatro
-requisitos no funcionales se verifican de forma independiente a continuación.
+Las secciones anteriores evalúan cada capa por separado; esta sección destaca la
+métrica que resume el comportamiento del sistema completo de extremo a extremo,
+tal como lo experimenta un operador que confía en el \textit{ranking} final. Esa
+métrica es el conjunto Precisión@k / \ac{FPR}\_clean del \textit{ensemble} sobre
+el conjunto de test, ya reportado en la Sección~\ref{sec:layer3} y resumido en
+la Figura~\ref{fig:ensemble_patk}: P@1\,=\,1,00, P@3\,=\,1,00, P@5\,=\,0,80 y
+\ac{FPR}\_clean\,=\,0,00 sobre 86~grafos con 5~cadenas de ataque de repositorios
+reales, genuinamente no vistos durante el desarrollo.
+
+Esta cifra es la bondad global de la herramienta porque integra las tres capas
+en un único indicador operacional: un P@1 y un P@3 perfectos significan que las
+dos y las tres primeras posiciones del \textit{ranking} son siempre cadenas de
+ataque reales cuando existen, mientras que un \ac{FPR}\_clean nulo significa que
+ningún clúster limpio compite nunca por la atención del operador de seguridad.
+La combinación de ambos valores es lo que hace viable el caso de uso definido en
+RF-5 (Sección~\ref{sec:requisitos}): priorizar un número reducido de alertas de
+forma que la revisión manual de un equipo de seguridad se concentre
+exclusivamente en riesgo real. Los intervalos de confianza de esta cifra, dado
+el tamaño del conjunto de test, se reportan junto con la métrica en la
+Sección~\ref{sec:layer3}.
+
+% -----------------------------------------------------------
+\section{Verificación de cumplimiento de requisitos}
+\label{sec:verificacion_requisitos}
+% -----------------------------------------------------------
+
+Esta sección verifica, requisito a requisito, el cumplimiento de los requisitos
+funcionales y no funcionales definidos en el Capítulo~\ref{cap:requisitos}.
+Complementa las métricas predictivas de las secciones anteriores con evidencia
+de que el sistema es efectivamente utilizable como herramienta de línea de
+comandos, y cierra con la evaluación de usabilidad y aplicabilidad realizada con
+usuarios expertos.
+
+\subsection{Requisitos funcionales}
+
+RF-1 y RF-2 (detección de misconfiguraciones individuales y de cadenas de
+ataque) quedan verificados por los resultados de las Capas~1 y~2 reportados en
+las Secciones~\ref{sec:layer2} y anteriores, y se confirman además mediante un
+test de integración de extremo a extremo: dado un directorio de manifiestos de
+prueba con flags de escape conocidas, la salida del comando
+\texttt{kubescan scan} produce el veredicto esperado (\texttt{ATTACK\_CHAIN})
+con \textit{ensemble\_score} por encima del umbral de clasificación
+(Sección~\ref{sec:calidad}). RF-5 (priorización de riesgos) queda verificado por
+la métrica global de la Sección~\ref{sec:metrica_global}. RF-3 y RF-4 (interfaz
+de línea de comandos y formatos de salida) no admiten una métrica cuantitativa
+dedicada y se verifican operacionalmente a continuación.
+
+\paragraph{RF-3 — Interfaz de línea de comandos.} Los dos comandos definidos en
+la Sección~\ref{sec:implementacion} (\texttt{kubescan scan <dir>} y
+\texttt{kubescan live}) se ejercitaron exitosamente sobre los casos de uso
+documentados en el Apéndice~\ref{ap:guia_uso}, incluyendo el análisis de un
+directorio de manifiestos y la consulta directa a un clúster en ejecución.
+
+\paragraph{RF-4 — Formatos de salida.} El comando \texttt{kubescan scan} produce
+tanto el informe en texto legible como la salida \acs{JSON} estructurada; el
+campo \texttt{flags} de esta última, verificado en RNF-1 a continuación, es la
+evidencia de que el formato estructurado expone la información necesaria para
+su consumo automatizado.
+
+\subsection{Requisitos no funcionales}
 
 \paragraph{Instalabilidad (RNF-3).} El paquete se instaló satisfactoriamente en
 entornos Python 3.10 y 3.11 mediante \texttt{pip install -e kubescan/} en sistemas
@@ -713,12 +830,10 @@ campo \texttt{escape\_capable} indica qué nodos tienen capacidad de escape. Est
 permite al operador de seguridad comprender y auditar las razones concretas de la
 clasificación de riesgo producida por el modelo.
 
-% -----------------------------------------------------------
-\section{Evaluación de usabilidad y aplicabilidad con usuarios expertos}
+\subsection{Evaluación de usabilidad y aplicabilidad con usuarios expertos}
 \label{sec:usabilidad}
-% -----------------------------------------------------------
 
-Además de la evaluación cuantitativa del modelo, se realizó una evaluación de
+Además de la verificación de requisitos anterior, se realizó una evaluación de
 usabilidad y aplicabilidad de la herramienta con \textbf{usuarios expertos},
 siguiendo el protocolo descrito en el repositorio (Anexo~\ref{ap:repositorio}).
 Participaron \textbf{tres profesionales} con experiencia en \textit{Kubernetes} y
@@ -731,7 +846,7 @@ explícitamente como amenaza a la validez (Sección~\ref{sec:usab_amenazas}); au
 así, tres participantes cubren una fracción sustancial de los problemas de
 usabilidad en pruebas formativas \citep{Nielsen2000}.
 
-\subsection{Perfil de los participantes}
+\subsubsection{Perfil de los participantes}
 
 La Tabla~\ref{tab:usab_perfil} resume el perfil de los tres participantes expertos,
 seleccionados por su experiencia operando \textit{Kubernetes} y en seguridad de
@@ -753,7 +868,7 @@ P3 & Desarrollo/IA & 3--5 & Habitual & Media \\
 \fuentepropia
 \end{table}
 
-\subsection{Éxito por tarea}
+\subsubsection{Éxito por tarea}
 
 Cada participante ejecutó cinco tareas: instalar la herramienta (T1), realizar un
 escaneo básico e identificar el veredicto (T2), interpretar el informe con
@@ -783,7 +898,7 @@ ayuda en dos casos. La tasa de éxito global del 90\,\% (Tabla~\ref{tab:usab_tar
 refleja, por tanto, un flujo de trabajo principal robusto con puntos de fricción
 concentrados en tareas secundarias u opcionales.
 
-\subsection{Usabilidad percibida (SUS)}
+\subsubsection{Usabilidad percibida (SUS)}
 
 La usabilidad se midió con la escala \textbf{SUS} (\textit{System Usability
 Scale}) de diez ítems \citep{Brooke1996}, que produce una puntuación en el rango
@@ -793,7 +908,7 @@ sector (68) y dentro de la banda de valoración cualitativa «excelente» (A) se
 la escala de adjetivos de \citet{Bangor2009}. Debe interpretarse como indicativo
 dado el tamaño de la muestra.
 
-\subsection{Aplicabilidad y análisis cualitativo}
+\subsubsection{Aplicabilidad y análisis cualitativo}
 
 Los participantes valoraron cuatro afirmaciones de aplicabilidad (escala 1--5):
 integración en CI/CD o auditoría (A1), ajuste de la priorización de riesgo a su
@@ -817,7 +932,7 @@ remediación) en el Capítulo~\ref{cap:conclusiones}. Los casos de uso propuesto
 auditoría de clústeres— coinciden con el paradigma \textit{shift-left} que motiva
 el trabajo.
 
-\subsection{Amenazas a la validez de la evaluación}
+\subsubsection{Amenazas a la validez de la evaluación}
 \label{sec:usab_amenazas}
 
 El tamaño de la muestra (\(n=3\)) limita la precisión de las estimaciones
@@ -827,62 +942,3 @@ DevOps/SRE pero no un rol de \ac{QA} de \ac{IaC} puro, lo que acota la
 generalización. Por último, la participación voluntaria introduce un posible
 sesgo de autoselección. Ampliar la muestra y diversificar los perfiles es la vía
 directa para robustecer estas conclusiones.
-
-% -----------------------------------------------------------
-\section{Comparación con el estado del arte}
-\label{sec:comparacion}
-% -----------------------------------------------------------
-
-Esta sección contextualiza los resultados de \textit{kubescan} respecto a los
-trabajos revisados en el Capítulo~\ref{cap:estado}. La comparación se organiza
-por capa, dado que la Capa~1 dispone de referencias directas en la literatura de
-clasificación de \textit{IaC}, mientras que la Capa~2 carece de trabajos previos
-estrictamente comparables. En ambos casos se prioriza la comparación con
-resultados obtenidos sobre conjuntos de datos de tamaño y naturaleza similares.
-
-\subsection{Capa 1 en contexto}
-
-La F1 macro de 0,9946 del clasificador \textit{Random Forest} supera las cifras
-reportadas en trabajos de clasificación de código \ac{IaC} de propósito general. Rahman
-et~al.\ \citep{Rahman2022}, cuyos datos forman la base del presente trabajo, no
-reportan modelos de clasificación supervisada sobre el mismo conjunto; el objetivo
-de su trabajo era la construcción del dataset y el análisis de la densidad de
-misconfiguraciones, no la predicción. El umbral objetivo F1\,>\,0,85 adoptado en
-este trabajo se alinea con los estándares de la literatura de \acs{IDS} sobre UNSW-NB15
-\citep{Moustafa2015}, donde clasificadores basados en \textit{Random Forest}
-típicamente alcanzan F1 macro entre 0,85 y 0,93.
-El \ac{AUC}-\ac{ROC} de 0,9986 indica que el clasificador separa casi perfectamente las dos
-clases a cualquier umbral de decisión. Este resultado es consistente con la naturaleza
-del problema: las misconfiguraciones en manifiestos \acs{YAML} son mayoritariamente discretas
-y acumulativas (más flags activas implica mayor riesgo), lo que hace que el espacio de
-características sea relativamente separable una vez que se dispone de un conjunto de
-datos suficientemente representativo.
-
-\subsection{Capa 2 en contexto}
-
-El resultado final de la Capa~2 (F1~macro\,=\,0,803, P@5\,=\,0,720, sobre el
-corpus completo de Rahman et~al.\ con particionado por familias) es difícil de
-comparar directamente con la literatura, ya que no existe ningún trabajo previo
-que aborde la clasificación supervisada de cadenas de ataque en clústeres
-\textit{Kubernetes} mediante \acs{GNN}s. Las referencias más cercanas son los
-trabajos de \acs{GNN}s para \ac{IDS} en red, como \textit{E-GraphSAGE}
-\citep{Lo2022}, que reporta mejoras del 2--8\,\% en F1 sobre clasificadores
-tabulares en el dataset UNSW-NB15. En este trabajo la ventaja del componente
-estructural es mayor y se observa sobre el conjunto de test genuinamente no
-visto: P@5 pasa de 0,40 (\ac{RF}-sólo) a 0,80 (configuraciones con \ac{GNN}) y
-P@1 de 0,00 a 1,00 (Tabla~\ref{tab:ensemble_ablation}), lo que indica que la
-información estructural del grafo es decisiva para identificar cadenas de
-ataque reales.
-La varianza entre pliegues (\(\sigma\)\,=\,0,160 para P@5 en la fase final) es
-coherente con lo reportado en la literatura para conjuntos de grafos pequeños
-(n\,<\,200): trabajos como los revisados en \citeauthor{GNNSurvey2024}
-\citeyear{GNNSurvey2024} identifican la escasez de datos como el principal
-factor de variabilidad en \acs{GNN}s para ciberseguridad, y recomiendan
-validación cruzada estratificada como el estándar de evaluación para conjuntos
-de este tamaño, que es precisamente la metodología adoptada. En este trabajo la
-varianza tiene además una causa estructural identificada: el particionado por
-familias concentra las cadenas de validación de cada pliegue en 1--3 familias
-independientes (Sección~\ref{sec:layer2}), de modo que la desviación estándar
-entre pliegues mide en gran parte la dispersión de dificultad entre familias y
-no inestabilidad del modelo, como confirma el análisis multi-semilla
-(Sección~\ref{sec:multisemilla}).
