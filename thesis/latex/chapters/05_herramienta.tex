@@ -713,10 +713,19 @@ tamaño máximo de los ficheros añadidos), mientras que \textit{mypy},
 de GitHub Actions sobre cada \textit{push} y cada \textit{pull request}.
 
 {\raggedright
-La suite de tests cubre el parser de \acs{YAML}
-(\texttt{utils/yaml\_parser.py}), la construcción del
-grafo de clúster (\texttt{utils/graph\_builder.py}), el clasificador \ac{RF}
-(\texttt{model/rf\_classifier.py}) y el ensamblador \ac{GA}
-(\texttt{model/ga\_ensemble.py}); la verificación funcional de extremo a extremo
-que estos tests de integración realizan se reporta como evidencia de los
-requisitos RF-1 y RF-2 en la Sección~\ref{sec:verificacion_requisitos}.\par}
+La suite comprende siete módulos unitarios —analizador \acs{YAML}, constructor
+del grafo, codificador \ac{GAT}, clasificador \ac{RF}, ensamblador \ac{GA},
+utilidades de dispositivo y un módulo de pruebas basadas en propiedades con
+\textit{Hypothesis}— y un módulo de integración de extremo a extremo, cuya
+verificación funcional se reporta como evidencia de RF-1 y RF-2 en la
+Sección~\ref{sec:verificacion_requisitos}. La integración continua ejecuta la
+suite con medición de cobertura (\texttt{-{}-cov}). Tres decisiones de diseño
+sostienen la reproducibilidad y la seguridad de la carga: \texttt{set\_global\_seed}
+centraliza las semillas de \texttt{random}, \textit{NumPy} y \textit{PyTorch};
+\texttt{resolve\_device} fija de forma determinista el \textit{backend} de
+cómputo; y la carga del clasificador valida los tipos declarados por el fichero
+\textit{skops} contra una lista blanca restringida a \textit{scikit-learn} y
+\textit{NumPy}, de modo que un \textit{checkpoint} manipulado no pueda introducir
+tipos arbitrarios. En el lado de investigación, cada \acs{JSON} de resultados
+incorpora un bloque de procedencia con el \textit{commit}, las semillas y las
+versiones de los paquetes que lo produjeron.\par}

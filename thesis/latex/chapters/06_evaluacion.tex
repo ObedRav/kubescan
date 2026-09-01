@@ -899,11 +899,15 @@ verificado por la métrica global de la Sección~\ref{sec:metrica_global}. RF-3 
 RF-4 (interfaz de línea de comandos y formatos de salida) no admiten una
 métrica cuantitativa dedicada y se verifican operacionalmente a continuación.
 
-\paragraph{RF-3 — Interfaz de línea de comandos.} Los dos comandos definidos en
-la Sección~\ref{sec:implementacion} (\texttt{kubescan scan <dir>} y
-\texttt{kubescan live}) se ejercitaron exitosamente sobre los casos de uso
-documentados en el Apéndice~\ref{ap:guia_uso}, incluyendo el análisis de un
-directorio de manifiestos y la consulta directa a un clúster en ejecución.
+\paragraph{RF-3 — Interfaz de línea de comandos.} El comando
+\texttt{kubescan scan <dir>} se ejercitó sobre los casos de uso documentados en el
+Anexo~\ref{ap:guia_uso}, con las dos variantes de salida y las opciones recogidas
+en la Tabla~\ref{tab:cli_options}. El comando \texttt{kubescan live} comparte con
+él la ruta de análisis —difiere únicamente en el origen de los manifiestos, que
+vuelca del clúster a un directorio temporal— y su invocación queda documentada en
+el mismo anexo, si bien no se aporta una transcripción de ejecución sobre un
+clúster activo: la verificación de RF-3 se sustenta, por tanto, en la vía de
+análisis sobre manifiestos estáticos.
 
 \paragraph{RF-4 — Formatos de salida.} El comando \texttt{kubescan scan} produce
 tanto el informe en texto legible como la salida \acs{JSON} estructurada; el
