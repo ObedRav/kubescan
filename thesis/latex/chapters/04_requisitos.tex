@@ -28,9 +28,16 @@ justificación concreta de cada uno.
 \subsection{Requisitos funcionales}
 
 \begin{description}
-  \item[RF-1 — Detección de misconfiguraciones individuales.] El sistema debe clasificar
-    cada manifiesto \acs{YAML} como seguro o \textit{misconfigured}, produciendo además un
-    índice de severidad en tres niveles (limpio, bajo\,--\,medio, alto\,--\,crítico).
+  \item[RF-1 — Detección de misconfiguraciones individuales.] El sistema debe cumplir
+    dos obligaciones separables sobre cada manifiesto \acs{YAML}. La primera es
+    clasificarlo como seguro o \textit{misconfigured}. La segunda es producir un
+    índice de severidad en tres niveles (limpio, bajo\,--\,medio, alto\,--\,crítico)
+    que ordene las misconfiguraciones detectadas por gravedad.
+    \textit{Criterio de aceptación:} ambas obligaciones se consideran satisfechas
+    cuando cada una de las dos clasificaciones alcanza F1 macro superior a 0,85
+    sobre el conjunto de test reservado, umbral adoptado de OE2
+    (Capítulo~\ref{cap:objetivos}) y aplicado también al índice de severidad por
+    tratarse del mismo clasificador sobre el mismo corpus.
     \textit{Justificación:} las herramientas de análisis estático existentes
     (\textit{Checkov}, \textit{kube-linter}) ya cubren esta capacidad a nivel de
     manifiesto individual (Sección~\ref{sec:iac}); el sistema debe igualarla como
@@ -40,10 +47,20 @@ justificación concreta de cada uno.
     de manifiestos que describe un clúster en una de tres categorías: \textit{clean},
     \textit{isolated} (misconfiguraciones sin cadena viable) o
     \textit{attack\_chain} (ruta de escalada de privilegios hasta movimiento lateral).
+    \textit{Criterio de aceptación:} toda ejecución debe emitir exactamente una de
+    esas tres categorías por clúster analizado, expuesta en la salida \acs{JSON}, y
+    las cadenas de ataque del conjunto de test reservado deben quedar situadas en
+    las primeras posiciones del \textit{ranking} de riesgo con arreglo al umbral
+    fijado en RF-5. La proporción de cadenas clasificadas correctamente por
+    \textit{argmax} se reporta como métrica descriptiva del comportamiento del
+    modelo y no constituye por sí sola condición de aceptación, dado que el caso
+    de uso operativo del sistema es la priorización y no el etiquetado exacto.
     \textit{Justificación:} es la carencia central identificada en el estado del arte
     (Sección~\ref{sec:sintesis}): ninguna herramienta de análisis estático por
-    manifiesto individual modela las relaciones entre recursos necesarias para
-    detectar una cadena.
+    manifiesto individual emplea un modelo supervisado que razone sobre las
+    relaciones entre recursos que habilitan una cadena, y las comprobaciones de
+    grafo basadas en reglas declarativas que incorpora \textit{Checkov} se limitan
+    a dependencias conocidas de antemano.
   \item[RF-3 — Interfaz de línea de comandos.] El sistema debe exponer un comando
     \texttt{kubescan scan <dir>} para análisis de directorios locales y un comando
     \texttt{kubescan live} para análisis de clústeres activos mediante \textit{kubectl}.
@@ -57,12 +74,20 @@ justificación concreta de cada uno.
     operador, mientras que el formato \acs{JSON} permite el consumo automatizado
     del veredicto por otras herramientas del \textit{pipeline} de \acs{CICD}.
   \item[RF-5 — Priorización de riesgos.] El sistema debe producir una clasificación
-    ordenada de clústeres por puntuación de riesgo con Precisión@5 superior a
-    0,70 (umbral adoptado de OE4, Capítulo~\ref{cap:objetivos}, aunque allí se
-    define como media de validación cruzada de 5~pliegues de la Capa~2 y aquí
-    se aplica al ranking del sistema desplegado sobre el conjunto de test), de
-    modo que las cadenas de ataque reales queden situadas en las primeras
-    posiciones.
+    ordenada de clústeres por puntuación de riesgo, de modo que las cadenas de
+    ataque reales queden situadas en las primeras posiciones.
+    \textit{Criterio de aceptación:} Precisión@5 superior a 0,70 sobre el
+    \textit{ranking} del sistema desplegado en el conjunto de test reservado.
+    \textit{Alcance del umbral:} la cifra de 0,70 se adopta de OE4
+    (Capítulo~\ref{cap:objetivos}), donde se define como media de validación
+    cruzada de 5~pliegues de la Capa~2; el presente requisito la traslada al
+    \textit{ranking} del sistema completo, de manera que ambas medidas comparten
+    umbral pero no protocolo de cálculo.
+    \textit{Precisión estadística:} el tamaño del conjunto de test reservado
+    (86~grafos, 5~cadenas) hace que el intervalo de confianza \textit{bootstrap}
+    al 95\,\% de la Precisión@5 abarque \([0{,}60,\ 1{,}00]\) y por tanto contenga
+    el propio umbral, de modo que la superación del criterio debe leerse como
+    consistente con el objetivo de diseño y no como una garantía estadística.
     \textit{Justificación:} un equipo de seguridad revisa manualmente un número
     reducido de alertas por jornada; un ranking que sitúe las cadenas reales en
     las primeras posiciones hace viable esa revisión sobre un volumen de
@@ -75,27 +100,91 @@ justificación concreta de cada uno.
   \item[RNF-1 — Trazabilidad.] Todas las reglas de detección de nodos de escape y
     movimiento lateral deben ser explícitas, auditables y derivadas de fuentes
     normativas documentadas \citep{NSA2022,BishopFox2021}.
+    \textit{Criterio de aceptación:} cada veredicto debe poder rastrearse a las
+    banderas concretas que lo originan, expuestas en la salida \acs{JSON} junto a
+    la identificación de los nodos con capacidad de escape, y cada regla debe
+    remitir a una fuente normativa citable.
     \textit{Justificación:} un sistema que informa decisiones de seguridad debe
     permitir que su veredicto sea auditado y cuestionado; basar cada regla en una
     fuente pública evita además introducir vectores de ataque no documentados.
   \item[RNF-2 — Reproducibilidad.] Los modelos entrenados deben almacenarse como
-    \textit{checkpoints} e incluirse en el paquete, de forma que el análisis sea
-    idempotente dado el mismo directorio de entrada.
+    \textit{checkpoints} que el paquete pueda localizar sin intervención del
+    usuario y que se distribuyan junto al repositorio del proyecto, de forma que
+    el análisis sea idempotente dado el mismo directorio de entrada.
+    \textit{Criterio de aceptación:} el requisito se descompone en dos condiciones
+    comprobables por separado. La primera es de disponibilidad: los pesos deben
+    resolverse mediante la cadena documentada de resolución de \textit{checkpoints}
+    —opción explícita de línea de comandos, variable de entorno y ubicación por
+    defecto dentro del paquete— y quedar publicados en el repositorio distribuido,
+    sin descarga adicional por parte del usuario. La segunda es de determinismo:
+    dos ejecuciones consecutivas sobre el mismo directorio de manifiestos y el
+    mismo conjunto de pesos deben producir informes \acs{JSON} idénticos.
     \textit{Justificación:} un control de seguridad con salidas no deterministas
     no es fiable como \textit{gate} de \acs{CICD}, donde el mismo manifiesto debe
     producir siempre el mismo veredicto.
   \item[RNF-3 — Instalabilidad.] El sistema debe ser instalable mediante
     \texttt{pip install -e kubescan/} sin dependencias de compiladores externos.
+    \textit{Criterio de aceptación:} la instalación debe completarse sin error en
+    intérpretes Python 3.10 o superior, cota declarada en OE6
+    (Capítulo~\ref{cap:objetivos}) y en los metadatos de empaquetado, resolviendo
+    todas las dependencias sin invocar un compilador del sistema.
     \textit{Justificación:} reduce la fricción de adopción por un equipo de
     seguridad que no necesariamente dispone de un entorno de compilación
     preparado para dependencias nativas.
   \item[RNF-4 — Latencia.] El análisis de un clúster de hasta 500 manifiestos debe
     completarse en menos de 60 segundos en hardware de gama media (CPU).
+    \textit{Criterio de aceptación:} la cota de 500~manifiestos se formula como
+    límite de diseño y no como tamaño de un caso de prueba disponible, ya que el
+    mayor clúster del corpus recopilado no alcanza esa dimensión. La verificación
+    consiste, por tanto, en medir el tiempo de análisis sobre clústeres de tamaño
+    creciente y comprobar que el coste por manifiesto observado mantiene el tiempo
+    proyectado a 500~manifiestos por debajo del límite de 60~segundos.
     \textit{Justificación:} un tiempo de análisis del orden de segundos es
     condición necesaria para que el sistema pueda operar como control preventivo
     dentro de un \textit{pipeline} de \acs{CICD} sin introducir un cuello de
     botella perceptible.
 \end{description}
+
+\subsection{Trazabilidad de los requisitos}
+
+Cada requisito se materializa en una decisión de diseño concreta y se contrasta
+después con una evidencia experimental u operacional determinada. La
+Tabla~\ref{tab:trazabilidad} recoge esa correspondencia, indicando para cada
+identificador la sección del Capítulo~\ref{cap:herramienta} que describe el
+componente encargado de satisfacerlo y la sección del
+Capítulo~\ref{cap:evaluacion} que aporta la evidencia de su cumplimiento. Los
+requisitos que no admiten una métrica predictiva dedicada, como los de interfaz,
+formatos de salida y propiedades no funcionales, se concentran en la
+verificación operacional de la Sección~\ref{sec:verificacion_requisitos}.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Trazabilidad de requisitos}
+\label{tab:trazabilidad}
+\begin{tabular}{@{}lp{5.1cm}ll@{}}
+\toprule
+ID & Requisito & Diseño & Verificación \\
+\midrule
+RF-1  & Misconfiguraciones individuales & \ref{sec:capa1_diseno}  & \ref{sec:layer1} \\
+RF-2  & Cadenas de ataque               & \ref{sec:capa2_diseno}  & \ref{sec:layer2} \\
+RF-3  & Interfaz de línea de comandos   & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
+RF-4  & Formatos de salida              & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
+RF-5  & Priorización de riesgos         & \ref{sec:capa3_diseno}  & \ref{sec:metrica_global} \\
+RNF-1 & Trazabilidad                    & \ref{sec:features_table} & \ref{sec:verificacion_requisitos} \\
+RNF-2 & Reproducibilidad                & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
+RNF-3 & Instalabilidad                  & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
+RNF-4 & Latencia                        & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
+\bottomrule
+\end{tabular}
+\fuentepropia
+\end{table}
+
+El índice de severidad exigido por RF-1 se verifica de forma diferenciada
+respecto de la clasificación binaria, mediante los resultados por clase de la
+Tabla~\ref{tab:severity_f1}. La restricción de viabilidad estructural que
+condiciona el \textit{ranking} evaluado en RF-5 se describe en la
+Sección~\ref{sec:gate_estructural} y su efecto se cuantifica en la
+Sección~\ref{sec:layer3}.
 
 % -----------------------------------------------------------
 \section{Justificación del alcance}
@@ -108,9 +197,10 @@ consulta directa al clúster mediante \texttt{kubescan live}. La elección del
 análisis estático como vía principal responde al principio \textit{shift-left
 security}: detectar una cadena de ataque antes del despliegue evita el coste de
 remediarla en producción, mientras que las herramientas de grafo de ataque sobre
-clúster activo (\textit{KubeHound}, \textit{IceKube}) solo pueden operar
-\textit{a posteriori} del despliegue y requieren credenciales de lectura amplia
-sobre el \acs{API} de \textit{Kubernetes}. La vía de consulta directa se mantiene
+clúster activo (\textit{KubeHound} \citep{KubeHound2023}, \textit{IceKube}
+\citep{IceKube2023}) solo pueden operar \textit{a posteriori} del despliegue y
+requieren acceso con privilegios elevados a \texttt{kubectl} sobre un clúster ya
+en ejecución. La vía de consulta directa se mantiene
 como capacidad complementaria para auditorías puntuales sobre clústeres ya
 desplegados, no como sustituto de la vía preventiva.
 
@@ -123,47 +213,84 @@ sí sola satisface el conjunto completo de requisitos funcionales: un clasificad
 de manifiesto individual no puede expresar una relación entre dos recursos, y un
 modelo de grafo sin las características de nodo de la Capa~1 pierde la señal de
 riesgo específica de cada manifiesto. La elección de \textit{Random Forest} para
-la Capa~1 está además condicionada por las propiedades del conjunto de
-características —binarias, escasas y desequilibradas— frente a otros algoritmos
-candidatos, según la comparativa de la Tabla~\ref{tab:ml_comparison}.
+la Capa~1 está además condicionada por tres propiedades que la
+Tabla~\ref{tab:ml_comparison} contrasta entre algoritmos candidatos: su
+independencia respecto de la normalización de escala de las entradas, su
+tolerancia al desequilibrio de clases y la granularidad de la puntuación continua
+que produce, requisito este último derivado de que dicha salida se emplea como
+característica de nodo en la Capa~2.
+
+A las tres capas se añade una cuarta componente arquitectónica: la restricción
+de viabilidad estructural descrita en la Sección~\ref{sec:gate_estructural}, que
+excluye del \textit{ranking} de riesgo aquellos clústeres cuya topología no
+puede albergar una cadena de ataque, como los compuestos por un único recurso.
+Su inclusión no responde a una preferencia de diseño sino a una necesidad
+verificada empíricamente: sin ella, la Precisión@1 sobre el conjunto de test
+reservado cae a 0,00 y la Precisión@5 a 0,60, valor este último situado por
+debajo del umbral que el propio RF-5 fija como criterio de aceptación. La
+restricción actúa así como condición previa de admisibilidad al \textit{ranking},
+complementaria a las señales aprendidas por los tres modelos y no sustitutiva de
+ninguna de ellas.
 
 Quedan explícitamente fuera del alcance del sistema: la explotación activa de las
 cadenas de ataque detectadas (el sistema identifica rutas potenciales, no las
 verifica mediante ataque controlado); la remediación automática de las
 misconfiguraciones encontradas; y el análisis de vulnerabilidades a nivel de
 imagen de contenedor (\textit{CVE scanning}), cubierto por herramientas
-especializadas como \textit{Trivy} y complementario, no sustitutivo, del análisis
-estructural que aporta \textit{kubescan}.
+especializadas de escaneo de imágenes y complementario, no sustitutivo, del
+análisis estructural que aporta \textit{kubescan}.
 
 % -----------------------------------------------------------
 \section{Estrategia de partición y validación de datos}
+\label{sec:particion}
 % -----------------------------------------------------------
 
 La estrategia de partición de datos difiere entre la Capa~1 (datos tabulares) y la
-Capa~2 (datos de grafos), dado que sus tamaños y distribuciones son distintos. El
-tamaño final de cada conjunto depende del proceso de adquisición y construcción
-descrito en las Secciones~\ref{sec:construccion_dataset} y~\ref{sec:construccion_grafo}
-del Capítulo~\ref{cap:herramienta}. A continuación se describe la partición seguida en
-cada capa por separado.
+Capa~2 (datos de grafos), dado que sus tamaños y distribuciones son distintos. Esta
+estrategia condiciona directamente la comprobabilidad de RF-1 y RF-2, cuyos
+criterios de aceptación se formulan sobre un conjunto de test reservado, y de
+RF-5, cuyo umbral de Precisión@5 se mide sobre el \textit{ranking} producido para
+ese mismo conjunto. El tamaño final de cada partición depende del proceso de
+adquisición y construcción descrito en las
+Secciones~\ref{sec:construccion_dataset} y~\ref{sec:construccion_grafo} del
+Capítulo~\ref{cap:herramienta}.
 
 Para la Capa~1, el conjunto de manifiestos se divide en un conjunto de entrenamiento
 (80\,\%) y un conjunto de test (20\,\%), con estratificación por la variable objetivo
-para mantener la proporción de clases en ambos subconjuntos. La evaluación del modelo
-se realiza mediante validación cruzada de 5~pliegues sobre el conjunto de
-entrenamiento para la selección de hiperparámetros, y el conjunto de test se reserva
-exclusivamente para la evaluación final.
+para mantener la proporción de clases en ambos subconjuntos. La validación cruzada
+de 5~pliegues aplicada sobre el corpus tabular constituye un protocolo de
+estimación del rendimiento esperado, no un procedimiento de búsqueda de
+hiperparámetros: la configuración del clasificador es fija y se documenta en la
+Sección~\ref{sec:capa1_diseno}, sin que intervenga ninguna exploración de rejilla
+ni muestreo aleatorio del espacio de configuraciones. Al no existir búsqueda de
+hiperparámetros, ninguna decisión de modelado queda condicionada por el
+rendimiento observado, lo que preserva la validez del conjunto de test como
+medida final del criterio de aceptación de RF-1.
+
+Ambos protocolos difieren, no obstante, en el corpus sobre el que operan, y esa
+diferencia debe explicitarse para interpretar correctamente los resultados de la
+Capa~1. La validación cruzada de 5~pliegues se ejecuta sobre la totalidad del
+corpus tabular, es decir, sobre las mismas filas que después integran el conjunto
+de test, mientras que la columna de test procede del modelo entrenado únicamente
+sobre el 80\,\% de entrenamiento. En consecuencia, la cifra de validación cruzada
+no constituye una estimación sobre datos completamente ajenos al ajuste y debe
+leerse como indicador de estabilidad del rendimiento entre particiones del
+corpus; la única estimación sobre datos retenidos es la de la columna de test,
+que es la que sustenta la verificación de RF-1.
 
 Para la Capa~2 se reserva desde el inicio una partición de test de clústeres
 originales, y el resto se evalúa mediante validación cruzada estratificada de
 5~pliegues, con estratificación por etiqueta de clúster (\textit{clean},
 \textit{isolated}, \textit{attack\_chain}) y particionado consciente de grupos y
-de familias de plantilla (Capítulo~\ref{cap:herramienta}). En cada pliegue, la
-aumentación de datos se aplica \textbf{exclusivamente} sobre los grafos de
-entrenamiento del pliegue, nunca sobre los de validación, evitando así la fuga de
-datos. La validación cruzada complementa al conjunto de test reservado porque es
-la estrategia estándar para conjuntos de grafos pequeños \citep{Hamilton2020}: con
-pocas muestras de la clase minoritaria, una única partición de validación no sería
-representativa por sí sola.
+de familias de plantilla, cuyo procedimiento detalla la
+Sección~\ref{sec:aumentacion}. La partición global reserva 815~grafos para
+entrenamiento, 88 para validación y 86 para test, mientras que el conjunto sobre
+el que operan los pliegues de validación cruzada comprende 513~clústeres
+originales. La validación cruzada complementa al conjunto de test reservado porque
+es la estrategia estándar para conjuntos de grafos pequeños \citep{Hamilton2020}:
+con pocas muestras de la clase minoritaria, una única partición de validación no
+sería representativa por sí sola, de modo que el criterio de aceptación de RF-2
+requiere ambas evidencias.
 
 % -----------------------------------------------------------
 \section{Métricas de evaluación}
@@ -171,10 +298,19 @@ representativa por sí sola.
 % -----------------------------------------------------------
 
 La selección de métricas de evaluación responde a los requisitos operacionales del
-sistema y a las características del dataset.
+sistema y a las características del dataset. Cada métrica se corresponde con el
+criterio de aceptación de un requisito concreto: la F1 macro cuantifica el
+criterio de RF-1 y describe la clasificación por clases invocada en RF-2, la
+Precisión@5 cuantifica el criterio de RF-5, y la \ac{AUC}-\acs{ROC} y la
+\ac{FPR}\_clean caracterizan el margen operativo con el que ambos criterios se
+satisfacen. Todas ellas se calculan sobre las particiones definidas en la
+Sección~\ref{sec:particion}, cuyo alcance determina si el valor resultante
+constituye una estimación sobre datos retenidos. Las cuatro se definen a
+continuación junto con la razón por la que resultan preferibles a alternativas de
+uso más extendido.
 
-\textbf{F1 macro} para la Capa~1 y la clasificación por clases de la Capa~2: la
-F1 macro calcula la media no ponderada de la F1 de cada clase, otorgando igual
+\paragraph{F1 macro.} Se aplica a la Capa~1 y a la clasificación por clases de la
+Capa~2. La F1 macro calcula la media no ponderada de la F1 de cada clase, otorgando igual
 importancia a las clases minoritarias (misconfiguraciones críticas) que a las
 mayoritarias (manifiestos seguros). Esta propiedad es fundamental en datasets de
 seguridad desequilibrados, donde la exactitud (\textit{accuracy}) sería una métrica
@@ -182,20 +318,42 @@ engañosa —sobre el conjunto de test de la Capa~1 (566~muestras), un clasifica
 que predice siempre «seguro» obtendría una exactitud del 56,3\,\% pero F1 macro
 del 36,0\,\%.
 
-\textbf{\ac{AUC}-\acs{ROC}} para el modelo binario: mide la capacidad del clasificador para
+\paragraph{\ac{AUC}-\acs{ROC}.} Se aplica al modelo binario de la Capa~1 y mide
+la capacidad del clasificador para
 separar las dos clases independientemente del umbral de decisión, lo que permite
 al operador ajustar la sensibilidad según las necesidades del entorno.
 
-\textbf{Precisión@k} (P@k) para la Capa~2: en lugar de evaluar la clasificación
-por umbral, P@k mide la fracción de clústeres de cadena de ataque en las primeras
-\(k\) posiciones del ranking por puntuación de riesgo. Esta métrica está directamente
+\paragraph{Precisión@k.} Se aplica a la Capa~2 y al \textit{ranking} del sistema
+completo. En lugar de evaluar la clasificación por umbral, P@k cuenta los
+clústeres de cadena de ataque situados en las primeras \(k\) posiciones del
+\textit{ranking} por puntuación de riesgo y normaliza ese recuento por
+\(\min(k,\, n_{\text{pos}})\), siendo \(n_{\text{pos}}\) el número de cadenas
+presentes en el conjunto evaluado:
+
+\begin{equation}
+  \text{P@}k \;=\;
+  \frac{\left|\left\{\, i \in \text{top-}k \;:\; y_i = \textit{attack\_chain} \,\right\}\right|}
+       {\min(k,\, n_{\text{pos}})}
+  \label{eq:precision_at_k}
+\end{equation}
+
+Esta definición coincide con la fracción convencional sobre \(k\) únicamente
+cuando el conjunto evaluado contiene al menos \(k\) cadenas; cuando contiene
+menos, el denominador pasa a ser \(n_{\text{pos}}\) y la métrica alcanza el valor
+1 si y solo si todas las cadenas existentes ocupan posiciones dentro del top-\(k\).
+La forma normalizada es la que dota de sentido al techo teórico de la métrica
+analizado en la Sección~\ref{sec:layer2}: sin ella, un conjunto con menos de
+\(k\) cadenas tendría un máximo alcanzable inferior a la unidad por construcción
+y no por deficiencia del modelo. Esta métrica está directamente
 alineada con el caso de uso operacional: un equipo de seguridad que audita los
 \(k\) clústeres de mayor riesgo en su infraestructura quiere que todos sean cadenas
 de ataque reales, no falsas alarmas. La elección de \(k=5\) refleja la capacidad
-de revisión manual típica de un equipo de seguridad reducido en una jornada laboral.
+de revisión manual típica de un equipo de seguridad reducido en una jornada
+laboral, valor de \(k\) que coincide con el fijado en el criterio de aceptación
+de RF-5.
 
-\textbf{\ac{FPR}\_clean} (tasa de falsos positivos sobre clústeres limpios): mide la
-fracción de clústeres limpios entre los \(k\) primeros del \textit{ranking} de
+\paragraph{\ac{FPR}\_clean.} Esta tasa de falsos positivos sobre clústeres
+limpios mide la fracción de clústeres limpios entre los \(k\) primeros del \textit{ranking} de
 riesgo\footnote{Operacionalmente es una tasa de limpios en el top-\(k\), no una
 tasa de falsos positivos en sentido estricto (que normalizaría por el total de
 clústeres limpios); se mantiene la denominación \ac{FPR}\_clean por coherencia con

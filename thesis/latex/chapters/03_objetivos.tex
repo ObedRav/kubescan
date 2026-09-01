@@ -6,8 +6,11 @@
 Este capítulo define los objetivos del trabajo y describe la metodología seguida
 para alcanzarlos. En primer lugar se formula el objetivo general y los objetivos
 específicos; los de naturaleza cuantificable incorporan criterios de éxito
-medibles. A continuación se describen las seis fases del proceso de desarrollo
-que estructuran el resto del trabajo.
+medibles. A continuación se describen las seis etapas del proceso de trabajo
+que estructuran el resto del documento. Estas etapas son independientes de las
+fases experimentales de entrenamiento de la Capa~2 numeradas en el
+Capítulo~\ref{cap:evaluacion}, que responden a una progresión metodológica
+distinta y no guardan correspondencia uno a uno con ellas.
 
 % -----------------------------------------------------------
 \section{Objetivo general}
@@ -28,54 +31,123 @@ numerados OE1 a OE6, se detallan a continuación.
 \section{Objetivos específicos}
 % -----------------------------------------------------------
 
+Los criterios de éxito de los objetivos específicos se expresan mediante tres
+métricas —F1 macro, Precisión@5 y \ac{FPR}\_clean— cuya definición formal y
+justificación frente a alternativas de uso más extendido se recogen en la
+Sección~\ref{sec:metricas}. Los umbrales numéricos asociados a esos criterios son
+criterios de diseño adoptados en este trabajo, no cotas tomadas de una referencia
+externa. Cada objetivo indica, junto a su criterio, la sección que aporta la
+evidencia de cumplimiento.
+
 \begin{description}
   \item[OE1.] Construir un conjunto de datos de manifiestos \textit{Kubernetes}
     etiquetados que combine múltiples fuentes públicas, contenga al menos
     2.000~manifiestos, y alcance una cobertura mínima del 2\,\% en la bandera de escape
-    \texttt{TRUE\_HOST\_PID}, superando el 0,3\,\% de los repositorios reales no
-    aumentados.
+    \texttt{TRUE\_HOST\_PID}, superando el 0,3\,\% que presentan los manifiestos
+    procedentes de repositorios reales. Ambas cifras son criterios de diseño
+    fijados en este trabajo: el
+    mínimo de 2.000~manifiestos responde al tamaño necesario para sostener una
+    validación cruzada de 5~pliegues manteniendo representación de la clase
+    minoritaria en cada partición, y el suelo del 2\,\% se estableció para
+    garantizar un número suficiente de manifiestos con capacidad de escape, dado
+    que la regla de etiquetado de grafos marca un clúster como
+    \textit{attack\_chain} en dos supuestos, ambos dependientes de la presencia de
+    nodos con capacidad de escape: cuando el clúster contiene dos o más nodos con
+    alguna bandera de escape activa —situación en la que la escalada compuesta es
+    posible sin necesidad de un salto lateral explícito— o cuando existe una ruta
+    de alcance sobre aristas de escalada que enlaza un nodo de escape con un nodo
+    de movimiento lateral. Con la cobertura del 0,3\,\% observada en los
+    repositorios reales sin aportación de fuentes intencionalmente vulnerables,
+    ninguno de los dos supuestos llega a activarse con frecuencia suficiente, de
+    modo que la clase minoritaria quedaría sin ejemplos bastantes para entrenar la
+    Capa~2. La composición final del
+    conjunto y la cobertura alcanzada se detallan en la
+    Sección~\ref{sec:construccion_dataset}.
 
   \item[OE2.] Desarrollar una Capa~1 de clasificación de manifiestos individuales
     basada en \textit{Random Forest} con F1 macro superior a 0,85, que produzca
     \textit{risk scores} continuos en el rango [0,1] para usar como características
-    de nodo en la Capa~2.
+    de nodo en la Capa~2. El umbral de 0,85 se adopta como criterio de diseño
+    propio de este trabajo, no derivado de una referencia externa: la literatura
+    de detección de intrusiones sobre conjuntos comparables no reporta rangos de
+    F1 macro para \textit{Random Forest} que puedan trasladarse a este dominio
+    (Sección~\ref{sec:ml_vulnerabilidades}). La Sección~\ref{sec:layer1} sitúa
+    además el resultado obtenido frente a una línea de base trivial calculada
+    sobre el propio corpus, que constituye la comparación informativa.
 
   \item[OE3.] Diseñar un esquema de grafo de clúster con tipos de arista
     semánticamente significativos para el dominio \textit{Kubernetes}:
     proximidad de directorio, alcance de privilegio, movimiento lateral mediante
-    cuenta de servicio, co-espacio de nombres semántico y escalada \ac{RBAC}; su
-    contribución se considera validada si la \ac{GAT} con tipos de arista iguala o
-    supera a una \ac{GCN} sin ellos en F1 macro y Precisión@5 bajo idéntico
-    protocolo de evaluación.
+    cuenta de servicio, co-espacio de nombres semántico y escalada \ac{RBAC}. El
+    criterio de éxito se formula a nivel de arquitectura: la configuración
+    adoptada —\ac{GAT} con \textit{embedding} de tipos de arista— debe igualar o
+    superar en F1 macro y Precisión@5 a una \ac{GCN} sin tipado de arista bajo
+    idéntico protocolo de evaluación. Este contraste varía simultáneamente el
+    mecanismo de agregación (atención frente a convolución) y la presencia de
+    tipado de arista, por lo que un resultado favorable acredita la configuración
+    completa pero no permite atribuir la ventaja al esquema de tipos de arista por
+    separado. Aislar esa contribución exigiría una tercera rama de ablación —\ac{GAT}
+    sin tipos de arista— que no forma parte del conjunto de configuraciones
+    entrenadas en este trabajo y queda como línea de trabajo futuro
+    (Capítulo~\ref{cap:conclusiones}). La evidencia experimental correspondiente se
+    recoge en la Tabla~\ref{tab:arch_ablation}.
 
   \item[OE4.] Desarrollar una Capa~2 de clasificación de clústeres basada en \ac{GAT}
-    que alcance Precisión@5 superior a 0,70 (media de validación cruzada de 5~pliegues)
-    en la detección de cadenas de ataque, evaluada sobre el modelo desplegado con
-    semilla fija documentada y verificada mediante análisis de robustez multi-semilla.
+    que alcance Precisión@5 superior a 0,70, medida como media de la validación
+    cruzada de 5~pliegues sobre el modelo desplegado con la semilla documentada.
+    El umbral de 0,70 es un criterio de diseño propio de este trabajo y no una cota
+    externa: con \(k=5\) equivale a que, en promedio, entre tres y cuatro de los cinco
+    clústeres priorizados sean cadenas de ataque reales, de forma que la mayor parte
+    del esfuerzo de revisión manual recaiga sobre hallazgos verdaderos.
+    El criterio se evalúa sobre esa configuración concreta y admite, por tanto,
+    resultado negativo si la media de sus pliegues queda por debajo del umbral.
+    De forma complementaria —y sin formar parte del criterio— se reporta la
+    dispersión entre semillas de entrenamiento, cuya media puede situarse por
+    debajo de 0,70 sin invalidar el objetivo; la Sección~\ref{sec:multisemilla}
+    la cuantifica y el Capítulo~\ref{cap:conclusiones} discute su alcance. El
+    resultado del modelo desplegado se reporta en la Sección~\ref{sec:layer2}.
 
   \item[OE5.] Implementar una Capa~3 que optimice mediante Algoritmo Genético una
     función objetivo combinada de Precisión@5 y falsos positivos de clústeres
     limpios sobre las predicciones \textit{out-of-fold} de la validación cruzada,
     con criterios de éxito sobre el conjunto de test reservado:
     \ac{FPR}\_clean\,=\,0 y Precisión@5 no inferior a la del mejor componente
-    individual del \textit{ensemble}.
+    individual del \textit{ensemble}. La verificación de ambos criterios se aporta
+    en la Sección~\ref{sec:layer3}.
 
   \item[OE6.] Empaquetar el sistema completo como una herramienta de línea de comandos
     (\textit{kubescan}) con soporte para análisis de directorios locales y,
     opcionalmente, consulta directa al \ac{API} de \textit{Kubernetes} mediante
-    \textit{kubectl}; instalable en entornos Python 3.10+ mediante un único
-    \texttt{pip install}.
+    \textit{kubectl}; instalable mediante un único \texttt{pip install} en entornos
+    Python 3.10 o superior, con verificación efectiva sobre las versiones 3.10 y
+    3.11. La evaluación funcional y de instalabilidad se documenta en la
+    Sección~\ref{sec:verificacion_requisitos} y la evaluación con usuarios expertos
+    en la Sección~\ref{sec:usabilidad}.
 \end{description}
+
+La correspondencia entre estos objetivos y los requisitos que los operacionalizan
+se recoge en la Tabla~\ref{tab:trazabilidad} del Capítulo~\ref{cap:requisitos}, que
+asocia cada requisito con la sección de diseño que lo materializa y con la sección
+de evaluación que aporta su evidencia. El Capítulo~\ref{cap:conclusiones} cierra el
+ciclo enunciando, para cada objetivo específico, la conclusión que lo responde.
+Ambos elementos permiten recorrer la cadena objetivo–requisito–diseño–evidencia en
+los dos sentidos.
 
 % -----------------------------------------------------------
 \section{Metodología del trabajo}
 % -----------------------------------------------------------
 
-El trabajo sigue un proceso iterativo de seis fases que combina el paradigma de
-desarrollo de \textit{software} (requisitos, diseño, implementación, prueba) con el
-proceso de ciencia de datos (adquisición, preparación, modelado, evaluación):
+El trabajo sigue un proceso iterativo de seis etapas definido específicamente para
+este proyecto, sin adoptar ninguna metodología estandarizada de referencia, que
+articula las actividades propias del desarrollo de \textit{software} (diseño,
+implementación y prueba) con las del proceso de ciencia de datos (adquisición,
+preparación, modelado y evaluación). La especificación de requisitos antecede a las
+seis etapas y se documenta de forma independiente en el
+Capítulo~\ref{cap:requisitos}, donde se fijan los requisitos funcionales y no
+funcionales junto con sus criterios de aceptación. Las etapas se enumeran a
+continuación en el orden en que se ejecutaron:
 
-\textbf{Fase~1 — Adquisición de datos.} Descarga y normalización de manifiestos
+\textbf{Etapa~1 — Adquisición de datos.} Descarga y normalización de manifiestos
 \textit{Kubernetes} de cinco fuentes públicas complementarias (agrupadas en
 cuatro categorías): el conjunto de datos
 de Rahman et~al.\ \citep{Rahman2022} (repositorios reales etiquetados), BishopFox
@@ -84,23 +156,33 @@ Goat} \citep{KubernetesGoat} (escenarios de vulnerabilidad) y repositorios de
 seguridad adicionales (CTFs, laboratorios y \textit{fixtures}). El criterio de
 inclusión de repositorios adicionales fue la presencia de al menos una bandera de escape
 activa (\texttt{HOSTPATH\_MOUNT}, \texttt{TRUE\_HOST\_PID}, etc.) en al menos un
-manifiesto del directorio.
+manifiesto del directorio. Este criterio de selección se adoptó porque los
+directorios sin ninguna bandera de escape activa no pueden originar clústeres de la
+clase \textit{attack\_chain} bajo la regla de etiquetado empleada, de modo que su
+incorporación aumentaría el volumen del conjunto sin aportar ejemplos de la clase
+minoritaria que la Capa~2 debe aprender a discriminar. La contrapartida es un sesgo
+de muestreo que se documenta como decisión de selección deliberada: los
+779~manifiestos incorporados por esta vía sobre-representan configuraciones
+vulnerables respecto de la distribución esperable en un clúster de producción, por
+lo que las tasas de prevalencia del corpus no admiten lectura como estimaciones
+poblacionales. Las fuentes de repositorios reales se incorporaron sin aplicar este
+filtro, lo que acota el sesgo a una fracción identificable del conjunto.
 
-\textbf{Fase~2 — Extracción de características y construcción del grafo.} Extracción
+\textbf{Etapa~2 — Extracción de características y construcción del grafo.} Extracción
 de 28 características por manifiesto (25 indicadores binarios y 3 agregados
 derivados) mediante análisis estático multi-herramienta
 (Sección~\ref{sec:features_table}) y construcción del grafo de
-clúster con cinco tipos de arista (Tabla~\ref{tab:edge_types}). En esta fase se
+clúster con cinco tipos de arista (Tabla~\ref{tab:edge_types}). En esta etapa se
 realizó también la validación de cobertura de la bandera \texttt{HOSTPATH\_MOUNT},
-documentada en la Sección~\ref{sec:layer2}.
+documentada en la Sección~\ref{sec:construccion_dataset}.
 
-\textbf{Fase~3 — Entrenamiento de la Capa~1.} Entrenamiento de un clasificador
+\textbf{Etapa~3 — Entrenamiento de la Capa~1.} Entrenamiento de un clasificador
 \textit{Random Forest} mediante validación cruzada de 5~pliegues para predecir la
 presencia de misconfiguraciones individuales y generar \textit{risk scores}
-calibrados, con los hiperparámetros fijos detallados en la
+continuos en el rango [0,1], con los hiperparámetros fijos detallados en la
 Sección~\ref{sec:capa1_diseno}.
 
-\textbf{Fase~4 — Entrenamiento de la Capa~2.} Entrenamiento de una \ac{GAT} de 3~capas
+\textbf{Etapa~4 — Entrenamiento de la Capa~2.} Entrenamiento de una \ac{GAT} de 3~capas
 con agrupamiento de grafos (\textit{graph pooling}) y validación cruzada estratificada
 de 5~pliegues consciente de grupos y de familias de plantilla: las variantes
 aumentadas siguen a su grafo base y las familias de plantilla con etiquetas mixtas
@@ -110,18 +192,18 @@ los grafos de entrenamiento para mitigar la escasez de ejemplos de cadena de
 ataque, y el \textit{checkpoint} de cada pliegue se selecciona por Precisión@5 de
 validación.
 
-\textbf{Fase~5 — Optimización de ensemble y evaluación.} Optimización de los pesos
+\textbf{Etapa~5 — Optimización de ensemble y evaluación.} Optimización de los pesos
 del ensemble de tres componentes (\ac{RF}, \ac{GNN}, señal de escape) mediante
 Algoritmo Genético sobre las predicciones \textit{out-of-fold} de la validación
 cruzada de la Capa~2, aplicación de una restricción de viabilidad estructural en el
 \textit{ranking} final (un grafo de un solo nodo no puede albergar una cadena de
 ataque multi-salto), y evaluación final sobre el conjunto de test reservado desde
-el inicio y no utilizado en ninguna fase de entrenamiento ni selección de
+el inicio y no utilizado en ninguna etapa de entrenamiento ni selección de
 hiperparámetros.
 
-\textbf{Fase~6 — Empaquetado y evaluación funcional y de usabilidad.} Empaquetado del
+\textbf{Etapa~6 — Empaquetado y evaluación funcional y de usabilidad.} Empaquetado del
 sistema como herramienta de línea de comandos instalable (\textit{kubescan}),
 evaluación funcional de rendimiento e integración (latencia, formatos de salida,
 resolución de \textit{checkpoints}) y estudio de usabilidad y aplicabilidad con
 usuarios expertos mediante el cuestionario \ac{SUS} y un conjunto de tareas guiadas;
-los protocolos y resultados de esta fase se detallan en el Capítulo~\ref{cap:evaluacion}.
+los protocolos y resultados de esta etapa se detallan en el Capítulo~\ref{cap:evaluacion}.

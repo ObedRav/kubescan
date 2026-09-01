@@ -40,13 +40,16 @@ research/models/checkpoints_ablation/**/*.pt
 research/models/checkpoints_seeds/**/*.pt
 research/models/checkpoints/test_results.json.bak
 
-# ── Trained model checkpoints (large binary, regenerable via train_*.py) ────────
-# Stored outside git to avoid iCloud eviction causing SIGBUS in pack-objects.
-# Reproduce: python research/models/train_rf.py && train_gnn.py && run_ga_ensemble.py
-research/models/checkpoints/*.pt
-research/models/checkpoints/*.skops
+# ── Trained model checkpoints ───────────────────────────────────────────────────
+# The .pt and .skops artefacts ARE tracked (~27 MB): RNF-2 requires that a clone
+# reproduce a scan without retraining, and the appendix points readers here.
+# Reproduce from scratch instead with:
+#   python research/models/train_rf.py && train_gnn.py && run_ga_ensemble.py
+#
+# The legacy .pkl duplicates stay out: they are superseded by the .skops files
+# (rf_classifier.py prefers .skops and warns that pickle executes arbitrary
+# bytecode on load), so shipping them would add 5.8 MB of unsafe redundancy.
 research/models/checkpoints/*.pkl
-research/models/checkpoints/gnn_best.pt
 
 # Personal thesis working notes (not part of the deliverable; some predate the
 # 2026-06 group-aware protocol correction and contain superseded numbers)
@@ -70,6 +73,9 @@ thesis/latex/*.lof
 thesis/latex/*.lot
 thesis/latex/*.loe
 thesis/latex/*.synctex.gz
+thesis/latex/*.fdb_latexmk
+thesis/latex/*.fls
+thesis/latex/*.xdv
 thesis/latex/test_fig.pdf
 
 # Internal audit / working notes — kept local, not for reviewers

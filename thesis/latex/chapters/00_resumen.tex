@@ -1,36 +1,40 @@
 % ============================================================
 \chapter{Resumen}
 
-Este trabajo presenta \textit{kubescan}, un sistema de detección automática de
-cadenas de ataque en infraestructuras \textit{Kubernetes} que combina un clasificador
-\textit{Random Forest} (Capa~1) con una \textit{Graph Attention Network}
-(\acs{GAT}) (Capa~2) y optimización de pesos mediante Algoritmo Genético (Capa~3).
+Las herramientas de análisis estático de \textit{Kubernetes} detectan
+configuraciones inseguras aisladas, pero no si se encadenan en una ruta de
+ataque viable. El objetivo de este trabajo es identificar automáticamente esas
+cadenas a partir de manifiestos estáticos, sin acceso a un clúster activo.
+\textit{kubescan} combina un clasificador \textit{Random Forest} (Capa~1), una
+red de atención sobre grafos (\textit{Graph Attention Network},
+\acs{GAT}\acused{GAT}) (Capa~2) y pesos de \textit{ensemble} optimizados por
+Algoritmo Genético (Capa~3).
 
-A partir de 2.827 manifiestos de \textit{Kubernetes} procedentes de cinco
-fuentes públicas complementarias, se construyen grafos de clúster con aristas
-de privilegio, movimiento lateral, proximidad, espacio de nombres y \acs{RBAC},
-sobre los que operan las tres capas: \textit{Random Forest} por manifiesto
-(Capa~1), \acs{GAT} por clúster (Capa~2), y un \textit{ensemble} optimizado por
-Algoritmo Genético que combina ambas señales (Capa~3). La validación de la
-Capa~2 emplea un protocolo de particionado consciente de grupos y de familias
-de plantilla, introducido tras corregir una fuga de información entre familias
-casi duplicadas que inflaba métricas de fases previas.
+El corpus reunido —2.827 manifiestos de cinco fuentes públicas
+complementarias— y su protocolo de particionado anti-fuga son la contribución
+metodológica central. Los grafos de clúster derivados incorporan aristas de
+alcance de privilegio, movimiento lateral, proximidad, espacio de nombres y
+control de acceso basado en roles (\acs{RBAC}\acused{RBAC}). El particionado,
+consciente de grupos y de familias de plantilla, elimina la fuga entre familias
+casi duplicadas.
 
-La Capa~1 alcanza F1~macro\,=\,0,9946 y \acs{AUC}\,=\,0,9986, con cero falsos
-negativos en el conjunto de test. La Capa~2 logra F1~macro\,=\,0,803\,\(\pm\)\,0,137
-y Precisión@5\,=\,0,720\,\(\pm\)\,0,160 en validación cruzada, superando el
-objetivo de diseño de P@5\,>\,0,70. Sobre el conjunto de test independiente
-(86~grafos, 5~cadenas de repositorios reales), el sistema completo con
-restricción de viabilidad estructural alcanza Precisión@1\,=\,1,00,
-Precisión@3\,=\,1,00 y Precisión@5\,=\,0,80, sin falsos positivos de clústeres
-limpios (\acs{FPR}\_clean\,=\,0\,\%). Una evaluación de usabilidad con tres
-expertos otorga una puntuación \acs{SUS} media de 88,3 («excelente»).
+La Capa~1 alcanza F1~macro\,=\,0,9946 y área bajo la curva ROC
+(\acs{AUC}\acused{AUC})\,=\,0,9986, sin falsos negativos en test. La Capa~2
+logra F1~macro\,=\,0,803\,\(\pm\)\,0,137 y
+Precisión@5\,=\,0,720\,\(\pm\)\,0,160 en validación cruzada. Sobre el test
+independiente (86~grafos, 5~cadenas reales) el sistema alcanza
+Precisión@1\,=\,1,00, Precisión@3\,=\,1,00 y Precisión@5\,=\,0,80, sin falsos
+positivos en los tres clústeres limpios del conjunto (tasa de falsos positivos,
+\acs{FPR}\acused{FPR}\_clean\,=\,0\,\%). La restricción de viabilidad
+estructural es decisiva: sin ella P@1 y P@3 caen a 0,00 y 0,33. Tres expertos
+otorgan 88,3 de media en la escala de usabilidad del sistema
+(\acs{SUS}\acused{SUS}), «excelente».
 
-Estos resultados muestran que un sistema de análisis estático, sin acceso a un
-clúster activo, puede identificar cadenas de ataque con una tasa nula de falsos
-positivos y una experiencia de uso excelente. \textit{kubescan} es viable como control de seguridad
-preventivo integrable en \acs{CICD}, aplicable
-antes de que las configuraciones de riesgo lleguen a producción.
+El análisis estático de manifiestos basta, por tanto, para situar las cadenas
+de ataque en cabeza del ranking. \textit{kubescan} es viable como control
+preventivo integrable en flujos de integración y entrega continua
+(\acs{CICD}\acused{CICD}), antes de que las configuraciones de riesgo lleguen a
+producción.
 
 \medskip
 \noindent\textbf{Palabras clave:} Kubernetes, Graph Neural Networks, Random Forest,
@@ -40,37 +44,35 @@ cadenas de ataque, infraestructura como código.
 \chapter{Abstract}
 % ============================================================
 
-This work presents \textit{kubescan}, an automatic attack-chain detection system
-for \textit{Kubernetes} infrastructures that combines a Random Forest classifier
-(Layer~1) with a \textit{Graph Attention Network} (\acs{GAT}) (Layer~2) and
-Genetic Algorithm ensemble weight optimisation (Layer~3).
+Static analysis tools for \textit{Kubernetes} detect isolated insecure settings,
+but not whether they chain into a viable attack path. The objective of this work
+is to identify such chains automatically from static manifests, without access
+to a live cluster. \textit{kubescan} combines a Random Forest classifier
+(Layer~1), a \textit{Graph Attention Network} (\acs{GAT}) (Layer~2) and
+ensemble weights optimised by a Genetic Algorithm (Layer~3).
 
-From 2,827 Kubernetes manifests drawn from five complementary public sources,
-cluster graphs are built with edges for privilege-escalation,
-lateral-movement, proximity, namespace, and \acs{RBAC}, on which the three
-layers operate: Random Forest per manifest (Layer~1), \acs{GAT} per cluster
-(Layer~2), and a Genetic Algorithm-optimised \textit{ensemble} combining both
-signals (Layer~3). Layer~2's validation uses a group- and
-template-family-aware partitioning protocol, introduced after correcting
-information leakage between near-duplicate families that had inflated earlier
-metrics.
+The corpus assembled —2,827 manifests from five complementary public sources—
+and its anti-leakage partitioning protocol are the central methodological
+contribution. The cluster graphs derived from it carry edges for
+privilege-reach, lateral-movement, proximity, namespace, and Role-Based Access
+Control (\acs{RBAC}). Partitioning is group- and template-family-aware, which
+removes the leakage between near-duplicate families.
 
-Layer~1 achieves macro-F1\,=\,0.9946 and \acs{AUC}\,=\,0.9986, with zero false
-negatives on the test set. Layer~2 achieves macro-F1\,=\,0.803\,\(\pm\)\,0.137
-and Precision@5\,=\,0.720\,\(\pm\)\,0.160 under cross-validation, exceeding the
-P@5\,>\,0.70 design target. On the independent test set (86~graphs, 5~attack
-chains from real-world repositories), the full system with a structural
-feasibility constraint achieves Precision@1\,=\,1.00, Precision@3\,=\,1.00, and
-Precision@5\,=\,0.80, with no false positives on clean clusters
-(FPR\_clean\,=\,0). A usability evaluation with three experts yields a mean
-\acs{SUS} score of 88.3 (``excellent'' rating).
+Layer~1 achieves macro-F1\,=\,0.9946 and an area under the ROC curve
+(\acs{AUC})\,=\,0.9986, with no false negatives on test. Layer~2 achieves
+macro-F1\,=\,0.803\,\(\pm\)\,0.137 and Precision@5\,=\,0.720\,\(\pm\)\,0.160
+under cross-validation. On the independent test set (86~graphs, 5~real chains)
+the system achieves Precision@1\,=\,1.00, Precision@3\,=\,1.00 and
+Precision@5\,=\,0.80, with no false positives on the three clean clusters of
+that set (false positive rate, \acs{FPR}\_clean\,=\,0\,\%). The structural
+feasibility constraint is decisive: without it P@1 and P@3 fall to 0.00 and
+0.33. Three experts award a mean System Usability Scale (\acs{SUS}) score of
+88.3, an ``excellent'' rating.
 
-These results show that a static-analysis system operating without access to a
-live cluster can identify attack chains in Kubernetes infrastructures with a
-zero false-positive rate and a usability rated as excellent.
-\textit{kubescan} is, therefore, viable as a preventive security control
-integrable into \acs{CICD} pipelines, applicable before risky configurations
-reach production.
+Static analysis of manifests therefore suffices to place attack chains at the
+top of the risk ranking. \textit{kubescan} is viable as a preventive control
+integrable into Continuous Integration / Continuous Delivery (\acs{CICD})
+pipelines, before risky configurations reach production.
 
 \medskip
 \noindent\textbf{Keywords:} Kubernetes, Graph Neural Networks, Random Forest,

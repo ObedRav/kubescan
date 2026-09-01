@@ -3,29 +3,38 @@
 \label{cap:introduccion}
 % ============================================================
 
-Este capítulo presenta el contexto y la motivación del trabajo. A
-continuación plantea el problema abordado y describe a grandes rasgos el
-sistema propuesto para resolverlo. Cierra con un resumen de la estructura
-del resto del documento, capítulo por capítulo.
+La seguridad de una infraestructura \textit{Kubernetes} queda determinada, en
+buena medida, antes de que el clúster llegue a existir: son los manifiestos
+declarativos los que fijan los privilegios de cada carga de trabajo, los
+montajes que expone al nodo anfitrión y las relaciones de acceso entre recursos.
+Esa configuración se revisa habitualmente recurso a recurso, comprobando cada
+manifiesto contra un catálogo de reglas de buenas prácticas. El resultado es una
+visión fragmentada del riesgo, porque un compromiso real rara vez depende de una
+única configuración incorrecta y sí de la manera en que varias debilidades
+menores se encadenan a través de la estructura del clúster.
 
 \section{Motivación}
 
 La adopción masiva de \textit{Kubernetes} como plataforma de orquestación de
 contenedores ha transformado la manera en que las organizaciones despliegan y gestionan
-sus aplicaciones. La \ac{CNCF} reporta que el 96\,\%
+sus aplicaciones. La encuesta anual de 2021 de la \ac{CNCF} reporta que el 96\,\%
 de las organizaciones utilizan o evalúan \textit{Kubernetes} \citep{CNCF2022}, y
-el informe sectorial \textit{State of Kubernetes Security} de Red Hat documenta que
-la mayoría de las organizaciones ha sufrido al menos un incidente de seguridad en sus
-entornos de contenedores durante el último año \citep{RedHat2024}. Sin embargo, esta proliferación ha ampliado considerablemente la
-superficie de ataque: una sola configuración insegura en un manifiesto \acs{YAML} puede habilitar
+el informe sectorial \textit{State of Kubernetes Security} de Red Hat de 2024 documenta que
+el 89\,\% de las organizaciones sufrió al menos un incidente de seguridad relacionado
+con \textit{Kubernetes} durante el último año \citep{RedHat2024}. Sin embargo, esta proliferación ha ampliado considerablemente la
+superficie de ataque: una sola configuración insegura en un manifiesto \ac{YAML} puede habilitar
 la escalada de privilegios desde un contenedor comprometido hasta el nodo anfitrión
 del clúster o, en casos extremos, hasta la infraestructura subyacente completa
 \citep{NSA2022}.
 
 Los enfoques de análisis estático tradicionales —herramientas como \textit{Checkov}
 \citep{Checkov2021} o \textit{kube-linter} \citep{KubeLinter2021}— detectan
-configuraciones incorrectas aisladas en manifiestos individuales, pero no modelan las
-relaciones entre recursos del clúster. Un único indicador de privilegio en un pod no es
+configuraciones incorrectas aisladas en manifiestos individuales. \textit{Checkov}
+incorpora además comprobaciones basadas en grafos sobre las dependencias entre recursos,
+pero se trata de reglas declarativas escritas manualmente: ninguna de estas herramientas
+dispone de un modelo aprendido de la estructura del clúster ni predice de forma
+supervisada la existencia de una cadena de ataque.
+Un único indicador de privilegio en un pod no es
 suficiente para determinar si existe una cadena de ataque viable; es la combinación de nodos de
 escape con recursos de movimiento lateral la que habilita rutas de explotación
 completas, siguiendo la lógica de encadenamiento de etapas del modelo de
@@ -38,7 +47,7 @@ Herramientas más recientes como \textit{KubeHound} \citep{KubeHound2023} e
 ataque sobre clústeres activos. Sin embargo, requieren recolectar el estado de un
 clúster activo mediante acceso de lectura amplio a su servidor \acs{API} de
 \textit{Kubernetes}, lo que limita su aplicabilidad como control
-preventivo en el proceso de \ac{CICD}, conforme al principio conocido como
+preventivo en el proceso de \acs{CICD}, conforme al principio conocido como
 \textit{shift-left security}, que consiste en adelantar los controles de seguridad a
 las etapas más tempranas del desarrollo. Este trabajo aborda ese vacío: construir
 un sistema capaz de razonar sobre la \emph{estructura} del clúster a partir de
@@ -90,8 +99,10 @@ requisitos funcionales y no funcionales del sistema, delimita su alcance y
 describe la estrategia de partición de datos y las métricas de evaluación que
 esos requisitos determinan. El Capítulo~\ref{cap:herramienta} describe la
 herramienta desarrollada: la arquitectura de tres capas, la construcción del
-dataset y el grafo, el diseño de cada capa y la tabla completa de las
-28~características del clasificador. El Capítulo~\ref{cap:evaluacion} evalúa el
+dataset y el grafo, el diseño de cada capa, la implementación de \textit{kubescan}
+como herramienta de línea de comandos, la tabla completa de las
+28~características del clasificador y la calidad de software y el proceso de
+desarrollo seguidos. El Capítulo~\ref{cap:evaluacion} evalúa el
 sistema frente a una línea de base del estado del arte, reporta los resultados
 de cada capa, sintetiza la métrica de proceso completo y verifica el
 cumplimiento de los requisitos, incluida la evaluación de usabilidad con

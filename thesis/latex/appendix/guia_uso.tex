@@ -3,10 +3,13 @@
 \label{ap:guia_uso}
 % ============================================================
 
-Este apéndice complementa la Sección~\ref{sec:implementacion} con los pasos
-concretos para instalar \textit{kubescan}, interpretar el informe que produce
-sobre un caso real, y reproducir el pipeline de entrenamiento de investigación
-descrito en el Capítulo~\ref{cap:herramienta}.
+La instalación de \textit{kubescan}, la interpretación del informe que produce
+sobre un caso real y la reproducción del \textit{pipeline} de entrenamiento de
+investigación descrito en el Capítulo~\ref{cap:herramienta} requieren los pasos
+concretos que se detallan en los apartados siguientes. Los criterios de diseño
+y las decisiones de implementación que sustentan cada uno de esos pasos se
+documentan en la Sección~\ref{sec:implementacion}. Salvo indicación en
+contrario, todos los comandos se ejecutan desde la raíz del repositorio.
 
 % -----------------------------------------------------------
 \section{Instalación}
@@ -61,16 +64,16 @@ completa de esta ejecución es la siguiente:
 
 {\footnotesize\begin{verbatim}
 $ kubescan scan /tmp/manifests-ejemplo --cluster-name produccion-web
-Scanning /tmp/manifests-ejemplo (5 GNN fold models loaded)...
+Scanning /tmp/manifests-ejemplo (5 GNN fold models loaded)…
   2 manifest(s) with workload resources found
 
 ==================================================================
-  KUBESCAN - Attack-Chain Risk Report
+  KUBESCAN  ·  Attack-Chain Risk Report
   Cluster : produccion-web
   Path    : /tmp/manifests-ejemplo
 ==================================================================
 
-  VERDICT - ATTACK_CHAIN          x  HIGH RISK - review immediately
+  VERDICT  ·  ATTACK_CHAIN          X  HIGH RISK — review immediately
 
   Ensemble score    : 0.9472
   Chain probability : 0.5445   (5-fold GNN ensemble)
@@ -84,11 +87,22 @@ Scanning /tmp/manifests-ejemplo (5 GNN fold models loaded)...
 ==================================================================
 \end{verbatim}}
 
-El indicador \texttt{--show-nodes} añade un desglose por manifiesto (\textit{risk
-score}, tipo de nodo y flags activas); \texttt{--format json} produce el mismo
-informe en formato \ac{JSON} estructurado para integración con otras
-herramientas. A continuación se muestra una versión abreviada (se omiten
-campos y valores para mayor claridad):
+En esa transcripción, el carácter \texttt{X} sustituye al símbolo
+\textit{Unicode} \texttt{U+2717} que imprime la herramienta, ausente en la
+fuente monoespaciada de esta memoria; el resto de los caracteres reproduce
+literalmente la salida de \texttt{cli.py}.
+
+El indicador \texttt{--show-nodes} añade un desglose por manifiesto con tres
+columnas: el \textit{risk score} del \ac{RF}, la columna \texttt{Type} y las
+flags activas. La columna \texttt{Type} no contiene el \textit{kind} del recurso
+de Kubernetes, sino las etiquetas de capacidad del nodo derivadas de la
+taxonomía de la Sección~\ref{sec:features_table}: \texttt{ESC} cuando el manifiesto
+activa alguna flag de escape, \texttt{LAT} cuando activa alguna flag de
+movimiento lateral, y \texttt{ESCLAT} cuando concurren ambas. El indicador
+\texttt{--format json} produce el mismo informe en formato \ac{JSON}
+estructurado para integración con otras herramientas; la salida de
+\texttt{kubescan scan} sobre \texttt{/tmp/manifests-ejemplo}, con los campos de
+detalle por manifiesto truncados mediante elipsis, es la siguiente:
 
 {\footnotesize\begin{verbatim}
 $ kubescan scan /tmp/manifests-ejemplo --cluster-name produccion-web --format json
@@ -96,7 +110,7 @@ $ kubescan scan /tmp/manifests-ejemplo --cluster-name produccion-web --format js
   "cluster": "produccion-web",
   "verdict": "ATTACK_CHAIN",
   "ensemble_score": 0.947236,
-  "chain_probability": 0.54445,
+  "chain_probability": 0.5445,
   "mean_rf_risk": 0.999711,
   "n_manifests": 2,
   "n_escape_capable": 1,
@@ -122,12 +136,28 @@ junto con el repositorio completo.
 
 El comando \texttt{kubescan live} aplica el mismo \textit{pipeline} sobre el
 estado actual de un clúster accesible mediante \textit{kubectl}, sin necesidad
-de exportar manifiestos manualmente:
+de exportar manifiestos manualmente. La herramienta invoca \textit{kubectl} para
+volcar \textit{pods}, \textit{deployments}, \textit{daemonsets},
+\textit{statefulsets}, \textit{replicasets}, \textit{jobs}, \textit{cronjobs},
+\textit{roles} y \textit{rolebindings} a un directorio temporal, y a partir de
+ahí ejecuta la misma cadena de extracción, construcción del grafo y puntuación
+del \textit{ensemble}. Las dos formas de invocación admitidas son las
+siguientes:
 
 {\footnotesize\begin{verbatim}
 kubescan live -n produccion
 kubescan live --all-namespaces --format json
 \end{verbatim}}
+
+El formato del informe resultante coincide con el de \texttt{kubescan scan},
+tanto en la variante de texto como en la variante \ac{JSON}, y difiere
+únicamente en la cabecera: el campo \texttt{Cluster} toma por defecto el
+\textit{namespace} consultado y el campo \texttt{Path} apunta al directorio
+temporal en el que se vuelca el estado del clúster. Por
+esa razón no se reproduce aquí una transcripción independiente, cuyos valores
+dependerían del clúster concreto sobre el que se ejecute. La verificación
+funcional de ambos comandos sobre un clúster en ejecución se documenta en la
+Sección~\ref{sec:verificacion_requisitos}.
 
 Este comando requiere \textit{kubectl} configurado con permisos de lectura
 sobre \textit{workloads} y recursos \ac{RBAC} en el clúster objetivo.

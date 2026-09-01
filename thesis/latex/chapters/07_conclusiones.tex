@@ -6,24 +6,33 @@
 Este capítulo cierra el trabajo recogiendo las conclusiones vinculadas a cada
 objetivo, las consideraciones éticas derivadas del uso de la herramienta, las
 limitaciones del estudio y las líneas de trabajo futuro que se desprenden de
-los resultados obtenidos. Las conclusiones se presentan en el mismo orden que
-los objetivos específicos del Capítulo~\ref{cap:objetivos}, de modo que cada una
-quede vinculada explícitamente al objetivo que responde. Las limitaciones y
-líneas de trabajo futuro se numeran de forma independiente para facilitar su
-referencia cruzada a lo largo del capítulo.
+los resultados obtenidos. Las conclusiones siguen el orden expositivo de los
+resultados del Capítulo~\ref{cap:evaluacion} —de la Capa~1 al sistema
+distribuible—, que no coincide con el orden numérico de los objetivos
+específicos del Capítulo~\ref{cap:objetivos}; cada conclusión declara
+explícitamente el objetivo que responde. Las limitaciones (L1--L9) y las líneas
+de trabajo futuro (TF1--TF8) llevan numeración propia, independiente de la de
+las conclusiones.
 
 \section{Conclusiones}
+\label{sec:conclusiones_finales}
 
 Este trabajo ha mostrado la viabilidad de un enfoque híbrido de tres capas para la
 detección automática de cadenas de ataque en infraestructuras \textit{Kubernetes}. Las
 conclusiones C1, C2, C4, C5, C6 y C7 responden, respectivamente, a los objetivos OE2,
 OE4, OE1, OE5, OE3 y OE6 definidos en el Capítulo~\ref{cap:objetivos}; C3 no cierra un
 objetivo propio, sino que aporta evidencia complementaria sobre el impacto operacional
-del resultado de C2. En conjunto, estas conclusiones cierran el objetivo general
-planteado en el Capítulo~\ref{cap:objetivos}. Las conclusiones principales son:
+del resultado de C2. En conjunto, estas conclusiones sostienen el objetivo general
+planteado en el Capítulo~\ref{cap:objetivos} —complementar el análisis estático por
+manifiesto individual con el contexto estructural del clúster—, cuya evidencia
+directa es la ablación de componentes recogida en C5: la configuración que emplea
+únicamente la señal por manifiesto de la Capa~1 desciende de P@1\,=\,1,00 a
+P@1\,=\,0,00 sobre el conjunto de test, de modo que el contexto de grafo no es un
+añadido marginal sino la componente que ordena los clústeres de cadena real. Las
+conclusiones principales son:
 
 \textbf{C1 — La Capa~1 supera ampliamente el objetivo de diseño (OE2).} El clasificador
-\textit{Random Forest} alcanza F1 macro\,=\,0,9946 y \ac{AUC}\,=\,0,9986 en test, superando
+\textit{Random Forest} alcanza F1 macro\,=\,0,9946 y \ac{AUC}-\ac{ROC}\,=\,0,9986 en test, superando
 el umbral objetivo del 0,85 en 14,5 puntos porcentuales. El modelo de severidad de
 tres clases logra F1\,macro\,=\,0,9838, con la clase \textit{high-critical} (96~muestras
 de test) en 0,9789 — el resultado más débil de los tres, aunque por encima de 0,95—;
@@ -37,8 +46,8 @@ arista, entrenada con entropía cruzada ponderada y selección de
 sobre el corpus completo de Rahman et~al.\ (599~grafos originales, 37~cadenas),
 alcanza P@5\,=\,0,720\,\(\pm\)\,0,160 y F1~macro\,=\,0,803\,\(\pm\)\,0,137
 en los 5~pliegues de validación cruzada, superando el objetivo de diseño
-P@5\,\(>\)\,0,70 con la semilla desplegada. La lectura honesta de esta cifra
-exige dos matices que este trabajo documenta explícitamente: a través de tres
+P@5\,\(>\)\,0,70 con la semilla desplegada. Dos matices acotan esta cifra: a
+través de tres
 semillas de entrenamiento la media es de 0,68\,\(\pm\)\,0,03 (objetivo dentro
 de una desviación típica, con la variación concentrada íntegramente en el
 pliegue de la familia \texttt{badpods\_*}), y alcanzar el objetivo exigió
@@ -50,7 +59,10 @@ ablación de arquitectura, repetida sobre el corpus completo con la configuraci�
 final (Tabla~\ref{tab:arch_ablation}), muestra que la atención sobre tipos de
 arista aporta +9,2~puntos de F1 y +4~puntos de P@5 frente a una \ac{GCN} sin
 tipos de arista, y que la profundidad (2 frente a 3~capas) no es el factor
-determinante del ranking — una propiedad de robustez de la arquitectura.
+determinante del ranking. Esta equivalencia en la media no debe leerse como
+robustez frente a la profundidad: las dos configuraciones difieren por pliegue
+(+0,142 en el pliegue~3 y \(-\)0,191 en el~4) y solo coinciden al promediarse
+(Sección~\ref{sec:ablacion_arquitectura}).
 
 \textbf{C3 — El \textit{ensemble} final, combinado con la restricción de
 viabilidad estructural, mantiene un desempeño operacional sólido sobre el
@@ -59,7 +71,11 @@ conjunto de test.} Sobre los 86~grafos de test (5~cadenas de repositorios reales
 sistema completo de tres capas alcanza P@1\,=\,1,00, P@3\,=\,1,00 y
 P@5\,=\,0,80, recuperando 4~de las 5~cadenas en las primeras 5~posiciones del
 ranking sin ningún falso positivo de clúster limpio
-(\ac{FPR}\_clean\,=\,0,00); P@1 y P@3 se mantienen idénticos (1,00) a través de
+(\ac{FPR}\_clean\,=\,0,00). Estas cifras no son atribuibles a la combinación de
+las tres capas: la ablación de la Tabla~\ref{tab:ensemble_ablation} muestra que
+la Capa~2 en solitario alcanza los mismos valores 1,00/1,00/0,80, de modo que el
+resultado operacional lo sostiene el componente \ac{GNN} y el \textit{ensemble}
+lo iguala sin superarlo (C5). P@1 y P@3 se mantienen idénticos (1,00) a través de
 las tres semillas de entrenamiento evaluadas, con P@5 entre 0,80 y 1,00. Parte esencial del resultado es la
 restricción de viabilidad estructural (un clúster de un solo manifiesto no puede
 albergar una cadena multi-salto, Sección~\ref{sec:gate_estructural}): sin ella
@@ -85,15 +101,17 @@ grafos base de evaluación. Segunda, y descubierta en la fase final: los casi
 duplicados de plantilla (ocho \texttt{badpods\_*}, nueve \texttt{datadog\_*})
 constituyen una segunda vía de fuga cuando se reparten entre particiones; su
 corrección hace que las cifras finales midan generalización entre familias no
-vistas, una vara de medir más exigente y más honesta que la de las fases~1--4,
-cuyas métricas estaban infladas por esta contaminación.
+vistas, una vara de medir más exigente y más honesta que la de las fases~1--5,
+cuyas métricas estaban infladas por esta contaminación —las fases~1--4 lo
+estaban además por la fuga entre variantes aumentadas, corregida en la fase~5—.
 
 \textbf{C5 — El ensemble cumple los criterios de OE5, con una salvedad
 documentada sobre el valor añadido de los pesos optimizados.} La ablación sobre
 el conjunto de test (Tabla~\ref{tab:ensemble_ablation}) confirma que el
 componente \ac{GNN} es indispensable: la configuración RF-sólo colapsa el
 ranking (P@1 de 1,00 a 0,00; P@5 de 0,80 a 0,40) porque el \textit{risk score}
-medio por manifiesto de los repositorios reales de cadena es \(\approx\)0,
+medio por clúster de los repositorios reales de cadena es \(\approx\)0 —la media
+se diluye entre manifiestos mayoritariamente benignos—,
 mientras que \ac{FPR}\_clean\,=\,0,00 se mantiene en todas las configuraciones.
 Los criterios de OE5 se cumplen: \ac{FPR}\_clean\,=\,0 y P@5 del ensemble igual
 a la del mejor componente individual (0,80). Debe señalarse que los pesos
@@ -111,23 +129,39 @@ privilegios (OE3).} El diseño del grafo de clúster incorpora el tipo de arista
 \ac{RBAC} mediante detección de roles privilegiados en dos pasadas sobre los
 manifiestos, limitando las aristas a cuentas de servicio vinculadas realmente a
 roles con permisos de escalada. Esta quinta arista está presente tanto en los
-grafos de entrenamiento como en el componente de producción de \textit{kubescan};
-sin embargo, la ablación de arquitectura (Tabla~\ref{tab:arch_ablation}) compara
-\ac{GAT} frente a \ac{GCN} y no aísla la contribución específica del tipo de arista
-\ac{RBAC} frente a los otros cuatro, por lo que su aporte incremental al ranking de
-cadenas de ataque queda como trabajo futuro (TF6).
+grafos de entrenamiento como en el componente de producción de \textit{kubescan}.
+El criterio declarado de OE3 —que la \ac{GAT} con tipos de arista iguale o supere a
+una \ac{GCN} sin ellos en F1 macro y Precisión@5 bajo idéntico protocolo— se
+considera cumplido: la configuración con tipos de arista supera a la \ac{GCN} en
++9,2~puntos de F1 macro y +4~puntos de P@5 sobre los mismos pliegues
+(Tabla~\ref{tab:arch_ablation}). El cumplimiento debe leerse con el factor de confusión que
+la propia ablación introduce: el contraste varía a la vez la arquitectura de
+agregación (atención frente a convolución) y la presencia de tipado de arista, por
+lo que la ventaja medida no puede repartirse entre ambos factores. La ablación
+tampoco aísla la contribución específica del tipo de arista \ac{RBAC} frente a los
+otros cuatro, por lo que su aporte incremental al ranking de cadenas de ataque
+queda como trabajo futuro (TF6).
 
 \textbf{C7 — kubescan es una herramienta distribuible, instalable y operacionalmente
 viable (OE6).} La evaluación funcional de la Sección~\ref{sec:verificacion_requisitos}
 confirma que el sistema se instala sin compiladores externos (\textit{pip install -e
 kubescan/}), analiza clústeres de hasta 312~manifiestos en menos de 8~segundos en
 hardware de gama media, produce salida en dos formatos (texto y \ac{JSON}) adecuados para
-integración en pipelines \acs{CICD}, e incorpora además un modo opcional de consulta
+integración en pipelines \ac{CICD}, e incorpora además un modo opcional de consulta
 directa a un clúster activo (\texttt{kubescan live}) para auditorías en caliente, sin
-que ello altere la vía principal de análisis sobre manifiestos estáticos. La inferencia
+que ello altere la vía principal de análisis sobre manifiestos estáticos. Esa misma
+verificación registra una salvedad sobre el cumplimiento del requisito RF-2: la
+Capa~2 y el \textit{ensemble} sitúan 4~de las 5~cadenas de test en el top-5 del
+\textit{ranking}, pero solo clasifican correctamente 3~de esas 5~cadenas por
+\textit{argmax} (F1~\textit{attack\_chain}\,=\,0,667), de modo que el requisito
+queda cubierto para el caso de uso de priorización y no para la clasificación
+exacta de cada clúster. La inferencia
 es reproducible sobre un mismo \textit{backend} de cómputo mediante la resolución
-determinista de \textit{checkpoints} (sujeto a la variación entre \textit{backends}
-documentada en L6). El prototipo implementado
+determinista de \textit{checkpoints}, evidenciada por el test de integración de
+extremo a extremo de la Sección~\ref{sec:verificacion_requisitos}, que obtiene el
+veredicto esperado sobre un directorio de manifiestos con \textit{flags} de escape
+conocidas. La reproducibilidad de las cifras de entrenamiento entre \textit{backends}
+de cómputo distintos es una cuestión separada, acotada en L6. El prototipo implementado
 en este
 trabajo demuestra que el paradigma \textit{shift-left} —detectar cadenas de ataque
 antes del despliegue, sin requerir acceso al clúster activo— es técnicamente factible
@@ -135,16 +169,16 @@ y operacionalmente eficiente. Complementariamente, la evaluación de usabilidad 
 aplicabilidad con usuarios expertos (Sección~\ref{sec:usabilidad}) respalda este
 objetivo desde la perspectiva del usuario: la herramienta obtiene una puntuación
 \textbf{SUS de 88,3} (valoración «excelente») y una aplicabilidad alta —integración
-en CI/CD, priorización de riesgo y confianza en el veredicto (medias de 4,3 sobre
+en \ac{CICD}, priorización de riesgo y confianza en el veredicto (medias de 4,3 sobre
 5)—, con una tasa de éxito del 100\,\% en las tareas nucleares de instalación,
 escaneo e interpretación (90\,\% global sobre las cinco tareas, incluidas la
 extracción \ac{JSON} y la tarea opcional). El principal punto de mejora señalado por
 los participantes es la
 \textbf{accionabilidad} del informe (A3\,=\,3,7): la herramienta comunica el
 riesgo pero no las acciones de remediación ni las reglas concretas tras el
-veredicto, lo que se recoge como trabajo futuro (TF8). Estos resultados deben
-interpretarse como indicativos por el tamaño de la muestra (\(n=3\),
-Sección~\ref{sec:usab_amenazas}).
+veredicto, lo que se recoge como limitación (L8) y como trabajo futuro (TF8). Estos
+resultados deben interpretarse como indicativos por el tamaño de la muestra
+(\(n=3\), Sección~\ref{sec:usab_amenazas} y limitación L8).
 
 \section{Consideraciones éticas y uso responsable}
 \label{sec:etica}
@@ -159,7 +193,8 @@ Los patrones de ataque detectados por \textit{kubescan} se basan exclusivamente 
 documentación pública —la guía \ac{NSA}/\ac{CISA} \citep{NSA2022}, el trabajo de BishopFox
 \citep{BishopFox2021} y el marco MITRE ATT\&CK for Containers \citep{MITRE2021Containers}—
 y no revelan ninguna vulnerabilidad nueva. El código fuente del sistema es de acceso
-abierto para facilitar la auditoría independiente de las reglas de detección, lo que
+abierto en el repositorio referenciado en el Anexo~\ref{ap:repositorio}, lo que
+permite la auditoría independiente de las reglas de detección, lo que
 permite a la comunidad verificar que las señales de riesgo generadas son correctas y
 no contienen sesgos perjudiciales. El uso de la herramienta sobre clústeres de terceros
 sin autorización explícita estaría fuera del ámbito previsto y podría constituir un
@@ -168,10 +203,17 @@ acceso no autorizado a sistemas informáticos según la legislación aplicable.
 \section{Limitaciones}
 \label{sec:limitaciones}
 
+Los resultados expuestos están acotados por nueve limitaciones, que abarcan la
+composición del corpus, el protocolo de evaluación, la definición de las etiquetas,
+el entorno de cómputo y el alcance de la evaluación con usuarios. Cada limitación se
+enuncia con la evidencia cuantitativa que la sustenta y con la línea de trabajo
+futuro que la atiende, cuando existe. La Sección~\ref{sec:amenazas_validez} reagrupa
+las nueve según el tipo de amenaza a la validez que representan.
+
 \textbf{L1 — Concentración por familias y varianza entre pliegues.} El
 particionado consciente de familias, al mantener cada familia de plantilla como
-unidad atómica, concentra las cadenas de validación de cada pliegue en 1--3
-familias independientes: el pliegue~0 evalúa íntegramente la familia
+unidad atómica, concentra las cadenas de validación de cada pliegue en 1, 1, 4,
+5 y 5~familias independientes respectivamente: el pliegue~0 evalúa íntegramente la familia
 \texttt{datadog\_*} (F1\,=\,1,0; P@5\,=\,1,0) y el pliegue~1 la familia
 \texttt{badpods\_*} (F1\,=\,0,58), de modo que la varianza entre pliegues
 (\(\sigma\)\,=\,0,137 para F1; 0,160 para P@5) mide en gran parte la dispersión
@@ -182,14 +224,26 @@ efectivo por pliegue (número de familias, no de cadenas) es la limitación
 subyacente, y solo puede crecer incorporando repositorios de cadena
 estructuralmente independientes (TF1).
 
-\textbf{L2 — Imputación de características extendidas.} Las 7 características
-extendidas (basadas en \textit{Checkov}) solo pueden calcularse directamente para
-el 47,4\,\% de las filas con \acs{YAML} descargado y se imputan por la mediana de
-columna para el resto, diluyendo su señal. La descarga completa de los manifiestos
-referenciados en el dataset de Rahman et~al.\ permitiría mejorar estos vectores.
-Un experimento de ablación eliminando las 7 características imputadas y
-reentrenando únicamente con las 21 restantes de alta cobertura podría cuantificar
-el impacto de esta limitación sobre la F1 macro de la Capa~1.
+\textbf{L2 — Imputación por mediana de las características extendidas.} Seis de
+las siete características extendidas —todas salvo \texttt{HOSTPATH\_MOUNT},
+poblada en las 2.827~filas— sólo toman su valor real cuando el manifiesto de
+origen ha sido escaneado con éxito. El análisis sintáctico propio las obtiene
+para el 32,6\,\% de las filas y la salida de \textit{Checkov} las cubre para otro
+41,6\,\%, de modo que las 731~filas restantes (25,9\,\% del corpus) reciben la
+mediana de columna y ven diluida la señal de esas seis características
+(Sección~\ref{sec:construccion_dataset}). Una fracción de esa carencia es
+irreducible, pues 54~manifiestos del corpus de Rahman et~al.\ resultaron
+inaccesibles en origen —33~respuestas \texttt{404} y 21~respuestas \texttt{403}—
+y no admiten recuperación;
+el resto depende de la cobertura alcanzable por las herramientas de escaneo sobre
+los manifiestos efectivamente disponibles. Un experimento de reescaneo sobre las
+filas recuperables acota el alcance de la limitación para la Capa~1: la F1 macro
+permanece inalterada (0,9946, \(\Delta\)\,=\,0,0000) y la perturbación del
+\texttt{risk\_score} por fila presenta media 0,0030 y máximo 0,1104, un orden de
+magnitud por debajo de la variabilidad entre semillas documentada para la Capa~2
+(\(\sigma\)\,=\,0,033 en P@5, Sección~\ref{sec:multisemilla}). No se ha medido,
+en cambio, el efecto sobre las salidas de las Capas~2 y~3, cuya cuantificación
+exigiría reconstruir los grafos de clúster y reentrenar el sistema completo.
 
 \textbf{L3 — Sesgo de muestreo en el dataset tabular.} Los 10 repositorios más
 representados suponen el 47,6\,\% del dataset, y \textit{gitcontroller} por sí solo
@@ -202,17 +256,27 @@ de organizaciones reales es la siguiente etapa crítica para confirmar la valide
 externa del sistema.
 
 \textbf{L5 — Etiquetado derivado de reglas sobre el mismo espacio de
-características.} Las etiquetas de grafo (clean / isolated / attack\_chain) se
+características.} Esta circularidad afecta a las dos capas de aprendizaje. Las
+etiquetas de grafo (clean / isolated / attack\_chain) se
 generan mediante una regla determinista definida sobre las mismas \textit{flags} y
-aristas que observan los modelos (Sección~\ref{sec:construccion_grafo}). El sistema aprende, por
+aristas que observan los modelos (Sección~\ref{sec:construccion_grafo}). En la
+Capa~1 la relación es aún más estrecha: sobre las 1.906~filas procedentes de
+Rahman et~al.\ la etiqueta binaria coincide exactamente con la disyunción de ocho
+de las características de entrada, de modo que reentrenar restringiéndose a esa
+fuente produce F1 macro\,=\,1,0000 (Sección~\ref{sec:rf_importance}). La F1 de
+0,9946 sobre el corpus completo mide, en consecuencia, con qué fidelidad el
+modelo recupera esa regla —y las etiquetas heterogéneas de las demás fuentes—
+bajo imputación y valores ausentes, no su capacidad de detectar
+misconfiguraciones con un criterio ajeno a ella. El sistema aprende, por
 tanto, una aproximación robusta de dicha regla bajo ruido, enmascaramiento y
 observabilidad parcial — no una noción de cadena de ataque independiente de la
 regla. Esta circularidad es común en la literatura de detección de
 misconfiguraciones, pero limita el alcance de la afirmación «predice cadenas de
 ataque». Las vías para romperla son la validación externa frente a herramientas de
-grafo de ataque sobre clústeres activos (KubeHound, IceKube), el etiquetado experto
-de una submuestra, y la confirmación mediante explotación controlada en entornos de
-laboratorio como \textit{kubernetes-goat}.
+grafo de ataque sobre clústeres activos \citep{KubeHound2023, IceKube2023}, el
+etiquetado experto de una submuestra, y la confirmación mediante explotación
+controlada en entornos de laboratorio como \textit{kubernetes-goat}
+\citep{KubernetesGoat}.
 
 \textbf{L6 — No determinismo de CUDA en las operaciones de \textit{scatter} del
 \ac{GNN} (hallazgo histórico, no reverificado sobre el corpus completo).} Durante
@@ -237,8 +301,8 @@ operaciones \texttt{scatter\_add}/\texttt{scatter\_reduce} empleadas por
 \texttt{GATConv} y por las capas de \textit{pooling} global
 (\texttt{global\_max\_pool}, \texttt{global\_mean\_pool}), que en CUDA se
 implementan mediante \texttt{atomicAdd} sin versión determinista disponible —
-confirmado por los propios mantenedores de \textit{PyTorch Geometric} en los
-\textit{issues} públicos \#2788 y \#3175 del repositorio. El orden de acumulación
+extremo confirmado por los mantenedores de \textit{PyTorch Geometric} en el
+seguimiento público de incidencias del proyecto. El orden de acumulación
 en punto flotante depende de la planificación de hilos de la GPU y, al no ser
 la suma en punto flotante asociativa, pequeñas diferencias numéricas cambian el
 \textit{ranking} sobre un conjunto de validación reducido (471~grafos, entre 4 y 5
@@ -269,15 +333,42 @@ test tienen una anchura \(\geq\)0,4) y el \textit{pool out-of-fold} contiene
 generalización a cadenas reales descansa en pocas muestras independientes, y
 ampliarlas es la vía prioritaria de trabajo futuro (TF1).
 
+\textbf{L8 — Alcance de la evaluación con usuarios y accionabilidad del informe.}
+La evaluación de usabilidad y aplicabilidad se realizó con tres participantes
+expertos (\(n=3\), Sección~\ref{sec:usab_amenazas}), muestra que permite detectar
+problemas de usabilidad en una prueba formativa pero no estimar con precisión la
+puntuación SUS de 88,3 ni las medias de aplicabilidad; los perfiles cubren
+desarrollo/IA y DevOps/SRE, sin un rol de \ac{QA} de \ac{IaC} puro, y la
+participación voluntaria admite sesgo de autoselección. Esas cifras se reportan, en
+consecuencia, como indicativas y no como estimaciones poblacionales. La propia
+evaluación identifica además una carencia funcional del sistema entregado: la
+accionabilidad del informe es la dimensión peor valorada (A3\,=\,3,7), pues la
+salida comunica el nivel de riesgo pero no las acciones de remediación ni las
+reglas concretas que sostienen el veredicto, lo que limita su utilidad para el
+operador que debe corregir la configuración (TF8).
+
+\textbf{L9 — Hiperparámetros fijados a priori.} El número de cabezas de atención,
+la tasa de aprendizaje, la anchura oculta y la estrategia de \textit{pooling}
+(\textit{mean+max}) de la Capa~2 se fijaron a priori a partir de valores habituales
+en la literatura, sin búsqueda sistemática sobre los pliegues de validación
+(Sección~\ref{sec:capa2_diseno}). Las únicas elecciones de diseño contrastadas
+empíricamente son las cubiertas por las dos ablaciones realizadas: función de
+pérdida y criterio de selección de \textit{checkpoints}
+(Sección~\ref{sec:ablacion_perdida}) y arquitectura de agregación con o sin tipos de
+arista (Tabla~\ref{tab:arch_ablation}). Las métricas reportadas corresponden, por
+tanto, a una configuración razonable pero no optimizada, y no puede descartarse que
+un barrido sistemático de hiperparámetros altere las comparaciones entre
+configuraciones sobre un conjunto de validación tan reducido (TF6).
+
 \subsection{Amenazas a la validez}
 \label{sec:amenazas_validez}
 
-Siguiendo la taxonomía de validez de constructo, interna, de conclusión y
-externa empleada en los \textit{ACM SIGSOFT Empirical Standards}, las
-limitaciones L1--L7 se organizan del siguiente modo. Esta reorganización no
-introduce limitaciones nuevas: reagrupa las ya descritas según el tipo de
-amenaza metodológica que representan, para facilitar su lectura conjunta. Cada
-categoría remite a las limitaciones L1--L7 correspondientes.
+Las limitaciones L1--L9 se clasifican a continuación en cuatro categorías de
+amenaza a la validez: de constructo, interna, de conclusión y externa. La
+clasificación no añade limitaciones a las ya enunciadas, sino que las agrupa por el
+tipo de amenaza metodológica que cada una representa. Una misma limitación puede
+aparecer en más de una categoría cuando compromete simultáneamente varios aspectos
+de la validez.
 
 \textbf{Validez de constructo} (¿miden las métricas lo que se pretende medir?):
 L6 cuestiona si las métricas reportadas en esta memoria (\textit{backend} CUDA/T4)
@@ -285,25 +376,45 @@ coinciden con las que obtendría una réplica en un \textit{backend} CPU/MPS, da
 no determinismo documentado en las operaciones de \textit{scatter}. L5 cuestiona si la etiqueta de grafo (derivada de reglas sobre
 el mismo espacio de características que observan los modelos) constituye un
 constructo de «cadena de ataque» independiente de la regla de etiquetado, o una
-aproximación circular a ella.
+aproximación circular a ella. La métrica \ac{FPR}\_clean plantea una tercera
+cuestión de constructo: mide la fracción de clústeres limpios dentro del top-\(k\)
+del \textit{ranking}, no una tasa de falsos positivos en sentido estricto —que
+normalizaría por el total de clústeres limpios—, de modo que el valor
+\ac{FPR}\_clean\,=\,0,00 invocado en C3 y C5 debe leerse como ausencia de clústeres
+limpios en la cabeza del \textit{ranking} y no como ausencia de falsas alarmas sobre
+el conjunto completo (Sección~\ref{sec:metricas}).
 
 \textbf{Validez interna} (¿las conclusiones causales están justificadas por el
 diseño experimental?): L7 impide atribuir diferencias entre fases experimentales
 al modelo, porque el protocolo de evaluación cambió entre ellas; la ablación
 factorial de la Sección~\ref{sec:ablacion_perdida} es el único contraste interno
-con protocolo constante. L2 acota la validez interna de las características
-extendidas imputadas mediante \textit{Checkov} frente a las obtenidas
-directamente del manifiesto original.
+con protocolo constante. L2 acota la validez interna de las seis
+características extendidas que se imputan por mediana en el 25,9\,\% de las
+filas frente a las obtenidas por escaneo directo del manifiesto, si bien el
+reescaneo de las filas recuperables dejó la F1 macro de la Capa~1 sin
+variación. L9 añade una restricción del mismo orden:
+al haberse fijado los hiperparámetros a priori, las comparaciones entre
+configuraciones se establecen sobre un único punto del espacio de diseño y no sobre
+el óptimo de cada alternativa.
 
 \textbf{Validez de conclusión} (¿son estadísticamente fiables las estimaciones
 puntuales reportadas?): el tamaño del conjunto de test (86~grafos, 5~cadenas) y
 del \textit{pool out-of-fold} (513~grafos, 32~cadenas) se traduce en los
 intervalos de confianza amplios reportados en la Sección~\ref{sec:layer3}
-(P@5\,\(\in\,[0{,}60,\ 1{,}00]\) al 95\,\%), que limitan la confianza que puede
+(al 95\,\%: P@5\,\(\in\,[0{,}60,\ 1{,}00]\),
+\ac{FPR}\_clean\,\(\in\,[0{,}00,\ 0{,}40]\) y F1~macro\,\(\in\,[0{,}66,\ 1{,}00]\)),
+que limitan la confianza que puede
 depositarse en cualquier comparación puntual entre configuraciones del
-\textit{ensemble} (C5). A ello se suma la concentración por familias (L1): el
+\textit{ensemble} (C5). El intervalo de \ac{FPR}\_clean merece atención
+específica: el valor puntual 0,00 invocado en C3 y C5 es compatible con tasas de
+hasta 0,40, de modo que la ausencia de clústeres limpios en la cabeza del
+\textit{ranking} de test no autoriza a afirmar que el sistema no producirá falsas
+alarmas sobre corpus mayores. A ello se suma la concentración por familias (L1): el
 tamaño muestral efectivo de la validación cruzada es el número de familias
-independientes por pliegue (1--3), no el número nominal de cadenas.
+independientes por pliegue (1, 1, 4, 5 y 5), no el número nominal de cadenas. Por su parte,
+L8 acota del mismo modo las cifras de usabilidad: con \(n=3\) participantes, la
+puntuación SUS de 88,3 y las medias de aplicabilidad son estimaciones indicativas,
+no medidas con precisión cuantificable.
 
 \textbf{Validez externa / generalización}: L3 (sesgo de muestreo por
 repositorio) y L4 (ausencia de evaluación en clústeres de producción reales)
@@ -312,16 +423,19 @@ repositorios públicos utilizados. El desplazamiento de distribución entre el
 \textit{pool} de ajuste del \ac{GA} (dominado por \textit{fixtures} sintéticas)
 y las cadenas reales de test (Sección~\ref{sec:layer3}) es una amenaza externa
 adicional identificada empíricamente: los pesos del \textit{ensemble} ajustados
-sobre cadenas sintéticas no aportan ventaja sobre cadenas reales.
+sobre cadenas sintéticas no aportan ventaja sobre cadenas reales. La composición de
+la muestra de usuarios (L8), restringida a perfiles de desarrollo/IA y DevOps/SRE y
+obtenida por participación voluntaria, acota igualmente la generalización de las
+conclusiones de usabilidad a otros roles operativos.
 
 \section{Líneas de trabajo futuro}
+\label{sec:trabajo_futuro}
 
 Los resultados de este trabajo permiten formular las siguientes recomendaciones de
-trabajo futuro, ordenadas por impacto esperado. La mayoría de ellas responde
-directamente a una limitación de las descritas en la sección anterior, por lo
-que cada recomendación indica explícitamente la limitación que atiende cuando
-corresponde. Las dos primeras (TF1 y TF2) son las que este trabajo identifica
-como de mayor impacto potencial sobre la validez de las métricas reportadas.
+trabajo futuro, ordenadas por impacto esperado. La mayoría atiende a una o varias de
+las limitaciones L1--L9 de la Sección~\ref{sec:limitaciones}, referenciadas por su
+identificador en el enunciado de cada recomendación. Las dos primeras (TF1 y TF2)
+son las de mayor impacto potencial sobre la validez de las métricas reportadas.
 
 \textbf{TF1 — Ampliar la población de cadenas reales estructuralmente
 independientes.} Las limitaciones L1 y L7 comparten la misma causa raíz: pocas
@@ -363,7 +477,7 @@ extender ese mismo protocolo controlado (mismos pliegues, mismas semillas) a la
 elección de \textit{mean+max pooling} frente a \textit{mean-only}, así como a un
 barrido más amplio de hiperparámetros del optimizador (número de cabezas de
 atención, \textit{learning rate}, anchura oculta) que en este trabajo se fijaron
-a priori sin búsqueda sistemática (Sección~\ref{sec:capa2_diseno}). Este mismo
+a priori sin búsqueda sistemática (L9, Sección~\ref{sec:capa2_diseno}). Este mismo
 protocolo debería extenderse a una ablación por tipo de arista que aísle la
 contribución incremental de la arista \ac{RBAC} frente a los otros cuatro tipos,
 cerrando la cuestión planteada en C6.
@@ -383,7 +497,7 @@ indeterminados.
 
 \textbf{TF8 — Explicabilidad y recomendaciones de remediación.} La evaluación
 con usuarios expertos (Sección~\ref{sec:usabilidad}) identificó la accionabilidad
-del informe como el principal punto de mejora: dos participantes echaron en falta
+del informe como el principal punto de mejora (L8): dos participantes echaron en falta
 que la herramienta indicara \textit{qué} corregir y expusiera las reglas concretas
 tras la puntuación de riesgo. Como trabajo futuro, el informe podría enriquecerse
 con recomendaciones de remediación por manifiesto (por ejemplo, la corrección de

@@ -154,21 +154,32 @@ def run_kube_linter(yaml_path: Path) -> int:
 def _extract_repo_relpath(path: str, source: str) -> tuple[str, str] | None:
     """
     Extract (repo_name, relative_path) from a Rahman dataset path.
-    Handles two path conventions used by different researchers in the dataset.
+    Handles the path conventions used by different researchers in the dataset.
 
     FINAL-COUNT (arahman's machine):  .../GITHUB_REPOS[_NODEPLOY]/<repo>/<relpath>
+                                      .../GITLAB_REPOS/<repo>/<relpath>
     URLS.csv    (akondrahman's machine): .../GITHUB_K8S_REPOS_RAW_UNFILTERED/<repo>/<relpath>
-    GitLab (both):                     .../GITLAB_K8S_REPOS_RAW_UNFILTERED/<repo>/<relpath>
+                                         .../GITLAB_K8S_REPOS_RAW_UNFILTERED/<repo>/<relpath>
+
+    Both prefix families must be accepted on both sides of the join: rf_dataset
+    rows use GITLAB_REPOS/ for GitLab, which was previously missing here. Its
+    absence made every GitLab row fail extraction, so none of them were ever
+    scanned and their six Checkov-backed features fell through to median
+    imputation.
     """
     if source in ("count", "rf_dataset"):
         patterns = [
             r"GITHUB_REPOS(?:_NODEPLOY)?/([^/]+)/(.+)",
+            r"GITLAB_REPOS/([^/]+)/(.+)",
+            r"GITHUB_K8S_REPOS_RAW_UNFILTERED/([^/]+)/(.+)",
             r"GITLAB_K8S_REPOS_RAW_UNFILTERED/([^/]+)/(.+)",
         ]
     else:  # urls_csv
         patterns = [
             r"GITHUB_K8S_REPOS_RAW_UNFILTERED/([^/]+)/(.+)",
             r"GITLAB_K8S_REPOS_RAW_UNFILTERED/([^/]+)/(.+)",
+            r"GITHUB_REPOS(?:_NODEPLOY)?/([^/]+)/(.+)",
+            r"GITLAB_REPOS/([^/]+)/(.+)",
         ]
     for pat in patterns:
         m = re.search(pat, path)

@@ -8,46 +8,65 @@
 % Format: \acro{KEY}[short-form]{Long form (Traducción al español)}
 % \ac{KEY} in text always shows the short form with a hyperlink to this list.
 
-% Phantom labels for acronyms never used inline (prevents hyperref warning)
+% Phantom labels for acronyms never expanded with \ac{}/\acs{} in the running
+% text. Every entry below links back to acro:KEY, and that target only exists
+% where \ac{}/\acs{} is used; without these labels the list would emit
+% "Hyper reference `acro:KEY' undefined". Keep this block in sync: adding an
+% \acro{} entry that no chapter invokes requires adding its label here.
 \phantomsection\label{acro:TFE}\phantomsection\label{acro:UNIR}
 \phantomsection\label{acro:OOF}
+\phantomsection\label{acro:BFS}\phantomsection\label{acro:CPU}
+\phantomsection\label{acro:CUDA}\phantomsection\label{acro:CVE}
+\phantomsection\label{acro:GPU}\phantomsection\label{acro:IA}
+\phantomsection\label{acro:MPS}\phantomsection\label{acro:RBF}
+\phantomsection\label{acro:SRE}\phantomsection\label{acro:UNSW}
 
 \begin{acronym}[SMOTE]
-  \acro{API}  [API]   {Application Programming Interface}
+  \acro{API}  [API]   {Application Programming Interface (Interfaz de Programación de Aplicaciones)}
   \acro{AUC}  [AUC]   {Area Under the Curve (Área Bajo la Curva ROC)}
+  \acro{BFS}  [BFS]   {Breadth-First Search (Búsqueda en Anchura)}
   \acro{CICD} [CI/CD] {Continuous Integration / Continuous Delivery (Integración y Entrega Continua)}
-  \acro{CIS}  [CIS]   {Center for Internet Security}
-  \acro{CISA} [CISA]  {Cybersecurity and Infrastructure Security Agency}
+  \acro{CIS}  [CIS]   {Center for Internet Security (Centro para la Seguridad en Internet)}
+  \acro{CISA} [CISA]  {Cybersecurity and Infrastructure Security Agency (Agencia de Ciberseguridad y Seguridad de Infraestructuras)}
   \acro{CLI}  [CLI]   {Command-Line Interface (Interfaz de Línea de Comandos)}
-  \acro{CNCF} [CNCF]  {Cloud Native Computing Foundation}
+  \acro{CNCF} [CNCF]  {Cloud Native Computing Foundation (Fundación de Computación Nativa en la Nube)}
+  \acro{CPU}  [CPU]   {Central Processing Unit (Unidad Central de Procesamiento)}
   \acro{CTI}  [CTI]   {Cyber Threat Intelligence (Inteligencia de Amenazas)}
+  \acro{CUDA} [CUDA]  {Compute Unified Device Architecture (Arquitectura Unificada de Dispositivos de Cómputo)}
   \acro{CV}   [CV]    {Cross-Validation (Validación Cruzada)}
-  \acro{ELU}  [ELU]   {Exponential Linear Unit}
+  \acro{CVE}  [CVE]   {Common Vulnerabilities and Exposures (Vulnerabilidades y Exposiciones Comunes)}
+  \acro{ELU}  [ELU]   {Exponential Linear Unit (Unidad Lineal Exponencial)}
   \acro{FPR}  [FPR]   {False Positive Rate (Tasa de Falsos Positivos)}
   \acro{GA}   [GA]    {Genetic Algorithm (Algoritmo Genético)}
   \acro{GAT}  [GAT]   {Graph Attention Network (Red de Atención sobre Grafos)}
   \acro{GCN}  [GCN]   {Graph Convolutional Network (Red Convolucional de Grafos)}
   \acro{GNN}  [GNN]   {Graph Neural Network (Red Neuronal de Grafos)}
+  \acro{GPU}  [GPU]   {Graphics Processing Unit (Unidad de Procesamiento Gráfico)}
+  \acro{IA}   [IA]    {Inteligencia Artificial (Artificial Intelligence)}
   \acro{IaC}  [IaC]   {Infrastructure as Code (Infraestructura como Código)}
   \acro{IDS}  [IDS]   {Intrusion Detection System (Sistema de Detección de Intrusiones)}
   \acro{IoT}  [IoT]   {Internet of Things (Internet de las Cosas)}
-  \acro{JSON} [JSON]  {JavaScript Object Notation}
+  \acro{JSON} [JSON]  {JavaScript Object Notation (Notación de Objetos de JavaScript)}
   \acro{LLM}  [LLM]   {Large Language Model (Modelo de Lenguaje de Gran Escala)}
   \acro{ML}   [ML]    {Machine Learning (Aprendizaje Automático)}
   \acro{MLP}  [MLP]   {Multi-Layer Perceptron (Perceptrón Multicapa)}
-  \acro{NSA}  [NSA]   {National Security Agency}
-  \acro{OOF}  [OOF]   {Out-of-Fold (predicciones fuera del pliegue de entrenamiento)}
+  \acro{MPS}  [MPS]   {Metal Performance Shaders (Motor de Cómputo Acelerado de Apple)}
+  \acro{NSA}  [NSA]   {National Security Agency (Agencia de Seguridad Nacional)}
+  \acro{OOF}  [OOF]   {Out-of-Fold (Predicciones Fuera del Pliegue de Entrenamiento)}
   \acro{QA}   [QA]    {Quality Assurance (Aseguramiento de la Calidad)}
   \acro{RBAC} [RBAC]  {Role-Based Access Control (Control de Acceso Basado en Roles)}
-  \acro{ReLU} [ReLU]  {Rectified Linear Unit}
-  \acro{RF}   [RF]    {Random Forest}
-  \acro{ROC}  [ROC]   {Receiver Operating Characteristic}
+  \acro{RBF}  [RBF]   {Radial Basis Function (Función de Base Radial)}
+  \acro{ReLU} [ReLU]  {Rectified Linear Unit (Unidad Lineal Rectificada)}
+  \acro{RF}   [RF]    {Random Forest (Bosque Aleatorio)}
+  \acro{ROC}  [ROC]   {Receiver Operating Characteristic (Característica Operativa del Receptor)}
   \acro{SA}   [SA]    {Service Account (Cuenta de Servicio de Kubernetes)}
-  \acro{SMOTE}[SMOTE] {Synthetic Minority Over-sampling Technique}
+  \acro{SMOTE}[SMOTE] {Synthetic Minority Over-sampling Technique (Técnica de Sobremuestreo Sintético de la Clase Minoritaria)}
+  \acro{SRE}  [SRE]   {Site Reliability Engineering (Ingeniería de Fiabilidad de Sistemas)}
   \acro{SUS}  [SUS]   {System Usability Scale (Escala de Usabilidad del Sistema)}
   \acro{SVM}  [SVM]   {Support Vector Machine (Máquina de Vectores Soporte)}
   \acro{TFE}  [TFE]   {Trabajo Fin de Estudios}
-  \acro{UMI}  [UMI]   {Unified Misconfiguration Index}
+  \acro{UMI}  [UMI]   {Unified Misconfiguration Index (Índice Unificado de Configuraciones Erróneas)}
   \acro{UNIR} [UNIR]  {Universidad Internacional de La Rioja}
-  \acro{YAML} [YAML]  {YAML Ain't Markup Language}
+  \acro{UNSW} [UNSW]  {University of New South Wales (Universidad de Nueva Gales del Sur)}
+  \acro{YAML} [YAML]  {YAML Ain't Markup Language (Lenguaje de Serialización de Datos Legible por Humanos)}
 \end{acronym}
