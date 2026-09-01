@@ -382,6 +382,18 @@ matriz de confusión idéntica). El resultado no permite concluir que la Capa~1 
 prescindible para la Capa~2, sino que su aportación no ha llegado a evaluarse: el
 canal previsto para transmitirla no transportaba la salida del clasificador.
 
+La Capa~3 hereda la misma discrepancia. El término \(\overline{\text{risk}}(C)\)
+de la Ecuación~\ref{eq:ensemble} se calcula, durante la optimización de los pesos,
+como media del atributo nodal~25 sobre los nodos del clúster, de modo que el
+Algoritmo Genético ajustó \(w_{\text{rf}}\) —el mayor de los tres pesos, 0,517—
+frente a una señal nula en el 86\,\% de los grafos. En el sistema distribuible ese
+mismo término se evalúa sobre la media de las probabilidades que devuelve el
+clasificador, señal de naturaleza distinta a la empleada al ajustar el peso que la
+pondera. La magnitud del efecto de esa discrepancia sobre el \textit{ranking} en
+inferencia no se ha cuantificado: establecerlo exigiría reoptimizar los pesos sobre
+predicciones \textit{out-of-fold} construidas con la salida del clasificador, tarea
+recogida en TF9.
+
 \subsection{Amenazas a la validez}
 \label{sec:amenazas_validez}
 
@@ -414,14 +426,15 @@ con protocolo constante. L2 acota la validez interna de las seis
 características extendidas que se imputan por mediana en el 25,9\,\% de las
 filas frente a las obtenidas por escaneo directo del manifiesto, si bien el
 reescaneo de las filas recuperables dejó la F1 macro de la Capa~1 sin
-variación. En la Capa~2 la imputación es a 0 y alcanza a las 1.906~filas de Rahman
-et~al., pero no depende de la cobertura de escaneo, por lo que no compromete la
-comparabilidad entre configuraciones. L10 acota en cambio la interpretación de la
-arquitectura: la contribución de la Capa~1 a la Capa~2 no está medida, porque el
-atributo nodal previsto para transmitirla está vacío en el 86\,\% de los grafos. L9 añade una restricción del mismo orden:
-al haberse fijado los hiperparámetros a priori, las comparaciones entre
-configuraciones se establecen sobre un único punto del espacio de diseño y no sobre
-el óptimo de cada alternativa.
+variación. En la Capa~2 la imputación es a 0 y alcanza a las 1.906~filas de
+Rahman et~al., pero no depende de la cobertura de escaneo, por lo que no
+compromete la comparabilidad entre configuraciones. L9 añade una restricción del
+mismo orden: al haberse fijado los hiperparámetros a priori, las comparaciones
+entre configuraciones se establecen sobre un único punto del espacio de diseño y
+no sobre el óptimo de cada alternativa. L10 acota, por último, la interpretación
+de la arquitectura: la contribución de la Capa~1 a la Capa~2 no está medida,
+porque el atributo nodal previsto para transmitirla está vacío en el 86\,\% de
+los grafos.
 
 \textbf{Validez de conclusión} (¿son estadísticamente fiables las estimaciones
 puntuales reportadas?): el tamaño del conjunto de test (86~grafos, 5~cadenas) y
@@ -536,4 +549,6 @@ atributo nodal~25 con la salida del clasificador de la Capa~1 para todas las fue
 del corpus —no sólo para el subconjunto de Rahman et~al.— y repetir la ablación de
 L10 permitiría medir por primera vez si la señal por manifiesto aporta capacidad
 predictiva a la clasificación estructural, cuestión que el diseño actual deja
-abierta.
+abierta. La misma corrección habilitaría reoptimizar los pesos del \textit{ensemble}
+sobre predicciones \textit{out-of-fold} homogéneas con las de inferencia, eliminando
+la discrepancia que L10 documenta en la Capa~3.

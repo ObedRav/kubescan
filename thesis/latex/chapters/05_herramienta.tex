@@ -58,8 +58,8 @@ vector de nodo del grafo de entrada de la Capa~2 reserva un atributo adicional
 (índice~25) para una puntuación de severidad por manifiesto, calculada como suma
 ponderada de las banderas binarias mediante \texttt{compute\_risk\_score}. En el
 corpus de entrenamiento esa puntuación es una heurística determinista, no la salida
-del clasificador \textit{Random Forest}; la Sección~\ref{sec:capa2_diseno} detalla
-su cobertura efectiva.
+del clasificador \textit{Random Forest}; la Sección~\ref{sec:construccion_grafo}
+detalla su cobertura efectiva.
 
 % -----------------------------------------------------------
 \section{Construcción del conjunto de datos}
@@ -163,9 +163,9 @@ analizador \acs{YAML}, 1.175~filas (41,6\,\%) se rellenan con la salida de
 del grafo lee las columnas de \texttt{FEATURE\_COLS} directamente del conjunto
 tabular e imputa como 0 toda celda vacía, sin consultar las columnas
 \texttt{checkov\_*}, por lo que las seis características valen 0 en el vector de
-nodo de las 1.906~filas procedentes de Rahman et~al. Ese relleno no es un
-mecanismo general aplicable a toda fila con \acs{YAML} disponible, sino específico
-de la fuente: \textit{Checkov} se ejecutó únicamente sobre el subconjunto de
+nodo de las 1.906~filas procedentes de Rahman et~al. La cobertura de
+\textit{Checkov} tampoco es un mecanismo general aplicable a toda fila con
+\acs{YAML} disponible, sino específica de la fuente: \textit{Checkov} se ejecutó únicamente sobre el subconjunto de
 GitHub —1.175 de sus 1.510~filas— y no produjo salida alguna para los
 repositorios de seguridad adicionales, GitLab, BadPods ni Kubernetes Goat, cuyas
 filas se resuelven por el analizador \acs{YAML} o por mediana. La séptima

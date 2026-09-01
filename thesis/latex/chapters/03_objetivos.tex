@@ -66,8 +66,12 @@ evidencia de cumplimiento.
 
   \item[OE2.] Desarrollar una Capa~1 de clasificación de manifiestos individuales
     basada en \textit{Random Forest} con F1 macro superior a 0,85, que produzca
-    \textit{risk scores} continuos en el rango [0,1] para usar como características
-    de nodo en la Capa~2. El umbral de 0,85 se adopta como criterio de diseño
+    \textit{risk scores} continuos en el rango [0,1] destinados a alimentar el
+    vector de nodo de la Capa~2 y el \textit{ensemble} de la Capa~3. En el sistema
+    distribuible ambos consumos se satisfacen con la predicción del clasificador;
+    en el corpus de entrenamiento, en cambio, ese canal quedó ocupado por una
+    heurística determinista, circunstancia analizada como limitación en el
+    Capítulo~\ref{cap:conclusiones}. El umbral de 0,85 se adopta como criterio de diseño
     propio de este trabajo, no derivado de una referencia externa: la literatura
     de detección de intrusiones sobre conjuntos comparables no reporta rangos de
     F1 macro para \textit{Random Forest} que puedan trasladarse a este dominio
@@ -177,10 +181,12 @@ realizó también la validación de cobertura de la bandera \texttt{HOSTPATH\_MO
 documentada en la Sección~\ref{sec:construccion_dataset}.
 
 \textbf{Etapa~3 — Entrenamiento de la Capa~1.} Entrenamiento de un clasificador
-\textit{Random Forest} mediante validación cruzada de 5~pliegues para predecir la
-presencia de misconfiguraciones individuales y generar \textit{risk scores}
-continuos en el rango [0,1], con los hiperparámetros fijos detallados en la
-Sección~\ref{sec:capa1_diseno}.
+\textit{Random Forest} para predecir la presencia de misconfiguraciones
+individuales, con los hiperparámetros fijos detallados en la
+Sección~\ref{sec:capa1_diseno} y la validación cruzada de 5~pliegues descrita en
+la Sección~\ref{sec:particion}. La puntuación por manifiesto que acompaña a cada
+fila del conjunto tabular no procede de este clasificador, sino de la heurística
+ponderada documentada en la Sección~\ref{sec:construccion_grafo}.
 
 \textbf{Etapa~4 — Entrenamiento de la Capa~2.} Entrenamiento de una \ac{GAT} de 3~capas
 con agrupamiento de grafos (\textit{graph pooling}) y validación cruzada estratificada
