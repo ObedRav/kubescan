@@ -40,7 +40,7 @@ donde clasificadores basados en \textit{Random Forest} típicamente alcanzan F1
 macro entre 0,85 y 0,93; ese rango es el que motiva el umbral objetivo
 F1\,>\,0,85 adoptado en este trabajo (OE2). Frente a esa línea de base, el
 resultado de la Capa~1 (F1 macro\,=\,0,9946, \ac{AUC}-\ac{ROC}\,=\,0,9986;
-Sección~\ref{sec:rf_importance} y siguientes) se sitúa por encima del extremo
+Sección~\ref{sec:layer1}) se sitúa por encima del extremo
 superior del rango de referencia. Esta separación casi perfecta es consistente
 con la naturaleza del problema: las misconfiguraciones en manifiestos
 \acs{YAML} son mayoritariamente discretas y acumulativas (más flags activas
@@ -798,7 +798,7 @@ verificado con una salvedad: la Capa~2 y el \textit{ensemble} recuperan 4 de las
 5~cadenas de ataque del conjunto de test dentro del top-5 del \textit{ranking}
 (Secciones~\ref{sec:layer2} y~\ref{sec:layer3}) y clasifican correctamente 3 de
 esas 5~cadenas en la matriz de confusión por \textit{argmax}
-(F1~\textit{attack\_chain}\,=\,0,667, Sección~\ref{sec:gnn_por_clase}); el
+(F1~\textit{attack\_chain}\,=\,0,667, Sección~\ref{sec:layer3}); el
 requisito se cumple para el caso de uso de priorización (RF-5) pero no de forma
 perfecta para la clasificación exacta de cada cadena. Ambos requisitos se
 confirman además mediante un test de integración de extremo a extremo: dado un
@@ -825,6 +825,10 @@ su consumo automatizado.
 
 \subsection{Requisitos no funcionales}
 
+Los cuatro requisitos no funcionales definidos en el Capítulo~\ref{cap:requisitos}
+se verifican de forma independiente a continuación, mediante evidencia operacional
+obtenida sobre la implementación descrita en el Capítulo~\ref{cap:herramienta}.
+
 \paragraph{Trazabilidad (RNF-1).} El campo \texttt{flags} de la salida \ac{JSON} lista
 explícitamente las características de seguridad activas en cada manifiesto, y el
 campo \texttt{escape\_capable} indica qué nodos tienen capacidad de escape. Esto
@@ -848,7 +852,7 @@ de prueba de diferente tamaño: 12 manifiestos (0,8\,s), 47 manifiestos (1,4\,s)
 Core i7 de octava generación sin GPU. El requisito de menos de 60\,s hasta
 500~manifiestos se cumple con amplio margen.
 
-\subsection{Evaluación de usabilidad y aplicabilidad con usuarios expertos}
+\section{Evaluación de usabilidad y aplicabilidad con usuarios expertos}
 \label{sec:usabilidad}
 
 Además de la verificación de requisitos anterior, se realizó una evaluación de
@@ -864,7 +868,7 @@ explícitamente como amenaza a la validez (Sección~\ref{sec:usab_amenazas}); au
 así, tres participantes cubren una fracción sustancial de los problemas de
 usabilidad en pruebas formativas \citep{Nielsen2000}.
 
-\subsubsection{Perfil de los participantes}
+\subsection{Perfil de los participantes}
 
 La Tabla~\ref{tab:usab_perfil} resume el perfil de los tres participantes expertos,
 seleccionados por su experiencia operando \textit{Kubernetes} y en seguridad de
@@ -886,7 +890,7 @@ P3 & Desarrollo/IA & 3--5 & Habitual & Media \\
 \fuentepropia
 \end{table}
 
-\subsubsection{Éxito por tarea}
+\subsection{Éxito por tarea}
 
 Cada participante ejecutó cinco tareas: instalar la herramienta (T1), realizar un
 escaneo básico e identificar el veredicto (T2), interpretar el informe con
@@ -916,7 +920,7 @@ ayuda en dos casos. La tasa de éxito global del 90\,\% (Tabla~\ref{tab:usab_tar
 refleja, por tanto, un flujo de trabajo principal robusto con puntos de fricción
 concentrados en tareas secundarias u opcionales.
 
-\subsubsection{Usabilidad percibida (SUS)}
+\subsection{Usabilidad percibida (SUS)}
 
 La usabilidad se midió con la escala \textbf{SUS} (\textit{System Usability
 Scale}) de diez ítems \citep{Brooke1996}, que produce una puntuación en el rango
@@ -926,7 +930,7 @@ sector (68) y dentro de la banda de valoración cualitativa «excelente» (A) se
 la escala de adjetivos de \citet{Bangor2009}. Debe interpretarse como indicativo
 dado el tamaño de la muestra.
 
-\subsubsection{Aplicabilidad y análisis cualitativo}
+\subsection{Aplicabilidad y análisis cualitativo}
 
 Los participantes valoraron cuatro afirmaciones de aplicabilidad (escala 1--5):
 integración en CI/CD o auditoría (A1), ajuste de la priorización de riesgo a su
@@ -950,7 +954,7 @@ remediación) en el Capítulo~\ref{cap:conclusiones}. Los casos de uso propuesto
 auditoría de clústeres— coinciden con el paradigma \textit{shift-left} que motiva
 el trabajo.
 
-\subsubsection{Amenazas a la validez de la evaluación}
+\subsection{Amenazas a la validez de la evaluación}
 \label{sec:usab_amenazas}
 
 El tamaño de la muestra (\(n=3\)) limita la precisión de las estimaciones
