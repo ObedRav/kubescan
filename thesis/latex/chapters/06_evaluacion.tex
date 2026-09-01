@@ -901,8 +901,8 @@ métrica cuantitativa dedicada y se verifican operacionalmente a continuación.
 
 \paragraph{RF-3 — Interfaz de línea de comandos.} El comando
 \texttt{kubescan scan <dir>} se ejercitó sobre los casos de uso documentados en el
-Anexo~\ref{ap:guia_uso}, con las dos variantes de salida y las opciones recogidas
-en la Tabla~\ref{tab:cli_options}. El comando \texttt{kubescan live} comparte con
+Anexo~\ref{ap:guia_uso}, con las dos variantes de salida y las opciones que ese
+mismo anexo recoge en la Tabla~\ref{tab:cli_options}. El comando \texttt{kubescan live} comparte con
 él la ruta de análisis —difiere únicamente en el origen de los manifiestos, que
 vuelca del clúster a un directorio temporal— y su invocación queda documentada en
 el mismo anexo, si bien no se aporta una transcripción de ejecución sobre un
@@ -971,7 +971,8 @@ usabilidad en pruebas formativas \citep{Nielsen2000}.
 
 \subsection{Perfil de los participantes}
 
-La Tabla~\ref{tab:usab_perfil} resume el perfil de los tres participantes expertos,
+La Tabla~\ref{tab:usab_perfil} del Anexo~\ref{ap:repositorio} resume el perfil de
+los tres participantes expertos,
 seleccionados por su experiencia operando \textit{Kubernetes} y en seguridad de
 contenedores.
 
@@ -980,14 +981,15 @@ contenedores.
 Cada participante ejecutó cinco tareas: instalar la herramienta (T1), realizar un
 escaneo básico e identificar el veredicto (T2), interpretar el informe con
 \texttt{-{}-show-nodes} (T3), producir la salida \ac{JSON} (T4) y, opcionalmente,
-escanear un caso propio (T5). La Tabla~\ref{tab:usab_tareas} recoge la tasa de
+escanear un caso propio (T5). La Tabla~\ref{tab:usab_tareas} del
+Anexo~\ref{ap:repositorio} recoge la tasa de
 éxito (logrado = 1; logrado con ayuda = 0,5; no logrado = 0).
 
 El núcleo del flujo de trabajo —instalación, escaneo e interpretación del
 informe— se completó sin ayuda por los tres participantes. Las únicas fricciones
 fueron puntuales: un participante necesitó ayuda para extraer campos de la salida
 \ac{JSON} (T4) y la tarea opcional sobre un caso propio (T5) se completó con
-ayuda en dos casos. La tasa de éxito global del 90\,\% (Tabla~\ref{tab:usab_tareas})
+ayuda en dos casos. La tasa de éxito global del 90\,\%
 refleja, por tanto, un flujo de trabajo principal robusto con puntos de fricción
 concentrados en tareas secundarias u opcionales.
 
