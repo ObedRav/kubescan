@@ -29,7 +29,13 @@ El repositorio incluye los siguientes componentes:
     preprocesamiento de los manifiestos \ac{YAML} (fases 1 y 2).
   \item \textbf{\texttt{research/models/}}: código de entrenamiento del Random
     Forest (\texttt{train\_rf.py}), de la \ac{GAT} (\texttt{train\_gnn.py}), y del
-    Algoritmo Genético (\texttt{run\_ga\_ensemble.py}).
+    Algoritmo Genético (\texttt{run\_ga\_ensemble.py}), junto a los \textit{scripts}
+    de verificación que reproducen las comprobaciones citadas en el
+    Capítulo~\ref{cap:conclusiones}: \texttt{verify\_label\_circularity.py}, que
+    contrasta la etiqueta de la Capa~1 con la disyunción de las columnas de
+    misconfiguración, y \texttt{verify\_risk\_score\_channel.py}, que documenta la
+    procedencia y la cobertura del atributo nodal~25 y ejecuta su ablación sobre
+    el conjunto de test.
   \item \textbf{\texttt{research/data/}}: los grafos de clúster en formato
     \texttt{.npz} (NumPy, con campos \texttt{x}, \texttt{edge\_index},
     \texttt{edge\_attr}, \texttt{y}, \texttt{node\_labels} y \texttt{risk\_scores})
