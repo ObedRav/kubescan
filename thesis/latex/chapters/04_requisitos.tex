@@ -1,0 +1,204 @@
+% ============================================================
+\chapter{Identificación de requisitos}
+\label{cap:requisitos}
+% ============================================================
+
+Este capítulo identifica y justifica los requisitos que condicionaron el diseño
+de \textit{kubescan}. Los requisitos funcionales y no funcionales se derivan del
+análisis de vectores de ataque documentado en el estado del arte y de las
+limitaciones detectadas en las herramientas existentes. Delimitan además el
+alcance del sistema: qué analiza, sobre qué capas se apoya y qué queda fuera de
+sus objetivos. El capítulo cierra con dos estudios previos que determinaron
+directamente el diseño de la herramienta: la estrategia de partición y
+validación de datos, y las métricas empleadas para evaluarla.
+
+% -----------------------------------------------------------
+\section{Requisitos del sistema}
+\label{sec:requisitos}
+% -----------------------------------------------------------
+
+El diseño de \textit{kubescan} parte de un análisis de requisitos derivado tanto de
+las limitaciones identificadas en el estado del arte (Sección~\ref{sec:sintesis}) como
+de los vectores de ataque documentados por la \ac{NSA} y la \ac{CISA} \citep{NSA2022}.
+Este análisis se traduce en dos conjuntos de requisitos: funcionales, que definen
+las capacidades que el sistema debe ofrecer, y no funcionales, que acotan sus
+propiedades de calidad. Ambos conjuntos se detallan a continuación, junto con la
+justificación concreta de cada uno.
+
+\subsection{Requisitos funcionales}
+
+\begin{description}
+  \item[RF-1 — Detección de misconfiguraciones individuales.] El sistema debe clasificar
+    cada manifiesto \acs{YAML} como seguro o \textit{misconfigured}, produciendo además un
+    índice de severidad en tres niveles (limpio, bajo\,--\,medio, alto\,--\,crítico).
+    \textit{Justificación:} las herramientas de análisis estático existentes
+    (\textit{Checkov}, \textit{kube-linter}) ya cubren esta capacidad a nivel de
+    manifiesto individual (Sección~\ref{sec:iac}); el sistema debe igualarla como
+    condición previa a razonar sobre la estructura del clúster, y el índice de
+    severidad aporta priorización que las herramientas de reglas fijas no ofrecen.
+  \item[RF-2 — Detección de cadenas de ataque.] El sistema debe clasificar un conjunto
+    de manifiestos que describe un clúster en una de tres categorías: \textit{clean},
+    \textit{isolated} (misconfiguraciones sin cadena viable) o
+    \textit{attack\_chain} (ruta de escalada de privilegios hasta movimiento lateral).
+    \textit{Justificación:} es la carencia central identificada en el estado del arte
+    (Sección~\ref{sec:sintesis}): ninguna herramienta de análisis estático por
+    manifiesto individual modela las relaciones entre recursos necesarias para
+    detectar una cadena.
+  \item[RF-3 — Interfaz de línea de comandos.] El sistema debe exponer un comando
+    \texttt{kubescan scan <dir>} para análisis de directorios locales y un comando
+    \texttt{kubescan live} para análisis de clústeres activos mediante \textit{kubectl}.
+    \textit{Justificación:} un control de seguridad solo es adoptable en la práctica
+    si se integra en los flujos de trabajo existentes de un equipo de seguridad o de
+    \acs{CICD}; una interfaz de línea de comandos es el punto de integración mínimo
+    común a ambos.
+  \item[RF-4 — Formatos de salida.] El sistema debe producir informes en formato texto
+    legible y en formato \acs{JSON} estructurado para integración con herramientas externas.
+    \textit{Justificación:} el formato texto sirve a la revisión manual de un
+    operador, mientras que el formato \acs{JSON} permite el consumo automatizado
+    del veredicto por otras herramientas del \textit{pipeline} de \acs{CICD}.
+  \item[RF-5 — Priorización de riesgos.] El sistema debe producir una clasificación
+    ordenada de clústeres por puntuación de riesgo con Precisión@5 superior a
+    0,70 (umbral adoptado de OE4, Capítulo~\ref{cap:objetivos}, aunque allí se
+    define como media de validación cruzada de 5~pliegues de la Capa~2 y aquí
+    se aplica al ranking del sistema desplegado sobre el conjunto de test), de
+    modo que las cadenas de ataque reales queden situadas en las primeras
+    posiciones.
+    \textit{Justificación:} un equipo de seguridad revisa manualmente un número
+    reducido de alertas por jornada; un ranking que sitúe las cadenas reales en
+    las primeras posiciones hace viable esa revisión sobre un volumen de
+    clústeres que de otro modo sería inabarcable.
+\end{description}
+
+\subsection{Requisitos no funcionales}
+
+\begin{description}
+  \item[RNF-1 — Trazabilidad.] Todas las reglas de detección de nodos de escape y
+    movimiento lateral deben ser explícitas, auditables y derivadas de fuentes
+    normativas documentadas \citep{NSA2022,BishopFox2021}.
+    \textit{Justificación:} un sistema que informa decisiones de seguridad debe
+    permitir que su veredicto sea auditado y cuestionado; basar cada regla en una
+    fuente pública evita además introducir vectores de ataque no documentados.
+  \item[RNF-2 — Reproducibilidad.] Los modelos entrenados deben almacenarse como
+    \textit{checkpoints} e incluirse en el paquete, de forma que el análisis sea
+    idempotente dado el mismo directorio de entrada.
+    \textit{Justificación:} un control de seguridad con salidas no deterministas
+    no es fiable como \textit{gate} de \acs{CICD}, donde el mismo manifiesto debe
+    producir siempre el mismo veredicto.
+  \item[RNF-3 — Instalabilidad.] El sistema debe ser instalable mediante
+    \texttt{pip install -e kubescan/} sin dependencias de compiladores externos.
+    \textit{Justificación:} reduce la fricción de adopción por un equipo de
+    seguridad que no necesariamente dispone de un entorno de compilación
+    preparado para dependencias nativas.
+  \item[RNF-4 — Latencia.] El análisis de un clúster de hasta 500 manifiestos debe
+    completarse en menos de 60 segundos en hardware de gama media (CPU).
+    \textit{Justificación:} un tiempo de análisis del orden de segundos es
+    condición necesaria para que el sistema pueda operar como control preventivo
+    dentro de un \textit{pipeline} de \acs{CICD} sin introducir un cuello de
+    botella perceptible.
+\end{description}
+
+% -----------------------------------------------------------
+\section{Justificación del alcance}
+\label{sec:alcance}
+% -----------------------------------------------------------
+
+El sistema opera principalmente sobre manifiestos \acs{YAML} estáticos, sin
+requerir acceso a un clúster activo, aunque incorpora opcionalmente una vía de
+consulta directa al clúster mediante \texttt{kubescan live}. La elección del
+análisis estático como vía principal responde al principio \textit{shift-left
+security}: detectar una cadena de ataque antes del despliegue evita el coste de
+remediarla en producción, mientras que las herramientas de grafo de ataque sobre
+clúster activo (\textit{KubeHound}, \textit{IceKube}) solo pueden operar
+\textit{a posteriori} del despliegue y requieren credenciales de lectura amplia
+sobre el \acs{API} de \textit{Kubernetes}. La vía de consulta directa se mantiene
+como capacidad complementaria para auditorías puntuales sobre clústeres ya
+desplegados, no como sustituto de la vía preventiva.
+
+La arquitectura de tres capas responde a una separación de responsabilidades
+entre dos niveles de análisis y su combinación: la Capa~1 evalúa cada manifiesto
+de forma aislada (RF-1), la Capa~2 razona sobre la estructura relacional del
+clúster que ningún manifiesto individual expone por sí solo (RF-2), y la Capa~3
+combina ambas señales en un único veredicto priorizable (RF-5). Ninguna capa por
+sí sola satisface el conjunto completo de requisitos funcionales: un clasificador
+de manifiesto individual no puede expresar una relación entre dos recursos, y un
+modelo de grafo sin las características de nodo de la Capa~1 pierde la señal de
+riesgo específica de cada manifiesto. La elección de \textit{Random Forest} para
+la Capa~1 está además condicionada por las propiedades del conjunto de
+características —binarias, escasas y desequilibradas— frente a otros algoritmos
+candidatos, según la comparativa de la Tabla~\ref{tab:ml_comparison}.
+
+Quedan explícitamente fuera del alcance del sistema: la explotación activa de las
+cadenas de ataque detectadas (el sistema identifica rutas potenciales, no las
+verifica mediante ataque controlado); la remediación automática de las
+misconfiguraciones encontradas; y el análisis de vulnerabilidades a nivel de
+imagen de contenedor (\textit{CVE scanning}), cubierto por herramientas
+especializadas como \textit{Trivy} y complementario, no sustitutivo, del análisis
+estructural que aporta \textit{kubescan}.
+
+% -----------------------------------------------------------
+\section{Estrategia de partición y validación de datos}
+% -----------------------------------------------------------
+
+La estrategia de partición de datos difiere entre la Capa~1 (datos tabulares) y la
+Capa~2 (datos de grafos), dado que sus tamaños y distribuciones son distintos. El
+tamaño final de cada conjunto depende del proceso de adquisición y construcción
+descrito en las Secciones~\ref{sec:construccion_dataset} y~\ref{sec:construccion_grafo}
+del Capítulo~\ref{cap:herramienta}. A continuación se describe la partición seguida en
+cada capa por separado.
+
+Para la Capa~1, el conjunto de manifiestos se divide en un conjunto de entrenamiento
+(80\,\%) y un conjunto de test (20\,\%), con estratificación por la variable objetivo
+para mantener la proporción de clases en ambos subconjuntos. La evaluación del modelo
+se realiza mediante validación cruzada de 5~pliegues sobre el conjunto de
+entrenamiento para la selección de hiperparámetros, y el conjunto de test se reserva
+exclusivamente para la evaluación final.
+
+Para la Capa~2 se reserva desde el inicio una partición de test de clústeres
+originales, y el resto se evalúa mediante validación cruzada estratificada de
+5~pliegues, con estratificación por etiqueta de clúster (\textit{clean},
+\textit{isolated}, \textit{attack\_chain}) y particionado consciente de grupos y
+de familias de plantilla (Capítulo~\ref{cap:herramienta}). En cada pliegue, la
+aumentación de datos se aplica \textbf{exclusivamente} sobre los grafos de
+entrenamiento del pliegue, nunca sobre los de validación, evitando así la fuga de
+datos. La validación cruzada complementa al conjunto de test reservado porque es
+la estrategia estándar para conjuntos de grafos pequeños \citep{Hamilton2020}: con
+pocas muestras de la clase minoritaria, una única partición de validación no sería
+representativa por sí sola.
+
+% -----------------------------------------------------------
+\section{Métricas de evaluación}
+\label{sec:metricas}
+% -----------------------------------------------------------
+
+La selección de métricas de evaluación responde a los requisitos operacionales del
+sistema y a las características del dataset.
+
+\textbf{F1 macro} para la Capa~1 y la clasificación por clases de la Capa~2: la
+F1 macro calcula la media no ponderada de la F1 de cada clase, otorgando igual
+importancia a las clases minoritarias (misconfiguraciones críticas) que a las
+mayoritarias (manifiestos seguros). Esta propiedad es fundamental en datasets de
+seguridad desequilibrados, donde la exactitud (\textit{accuracy}) sería una métrica
+engañosa —sobre el conjunto de test de la Capa~1 (566~muestras), un clasificador
+que predice siempre «seguro» obtendría una exactitud del 56,3\,\% pero F1 macro
+del 36,0\,\%.
+
+\textbf{\ac{AUC}-\acs{ROC}} para el modelo binario: mide la capacidad del clasificador para
+separar las dos clases independientemente del umbral de decisión, lo que permite
+al operador ajustar la sensibilidad según las necesidades del entorno.
+
+\textbf{Precisión@k} (P@k) para la Capa~2: en lugar de evaluar la clasificación
+por umbral, P@k mide la fracción de clústeres de cadena de ataque en las primeras
+\(k\) posiciones del ranking por puntuación de riesgo. Esta métrica está directamente
+alineada con el caso de uso operacional: un equipo de seguridad que audita los
+\(k\) clústeres de mayor riesgo en su infraestructura quiere que todos sean cadenas
+de ataque reales, no falsas alarmas. La elección de \(k=5\) refleja la capacidad
+de revisión manual típica de un equipo de seguridad reducido en una jornada laboral.
+
+\textbf{\ac{FPR}\_clean} (tasa de falsos positivos sobre clústeres limpios): mide la
+fracción de clústeres limpios entre los \(k\) primeros del \textit{ranking} de
+riesgo\footnote{Operacionalmente es una tasa de limpios en el top-\(k\), no una
+tasa de falsos positivos en sentido estricto (que normalizaría por el total de
+clústeres limpios); se mantiene la denominación \ac{FPR}\_clean por coherencia con
+la implementación.}.
+Un \ac{FPR}\_clean\,=\,0 significa que ningún clúster limpio aparece entre los de mayor
+puntuación, eliminando las investigaciones innecesarias.

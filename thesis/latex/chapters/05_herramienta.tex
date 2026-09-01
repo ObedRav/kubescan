@@ -1,63 +1,17 @@
 % ============================================================
-\chapter{Diseño e implementación}
-\label{cap:diseno}
+\chapter{Descripción de la herramienta software desarrollada}
+\label{cap:herramienta}
 % ============================================================
 
-Este capítulo describe el diseño completo del sistema \textit{kubescan} y su
-implementación como herramienta de software distribuible. Se presentan, en primer lugar,
-los requisitos funcionales y no funcionales que guiaron las decisiones de diseño;
-a continuación se detalla la arquitectura de tres capas del sistema, los procesos de
-construcción del conjunto de datos y del grafo de clúster, y los algoritmos de
-entrenamiento de cada capa; finalmente se describe la interfaz de línea de comandos
-resultante. La implementación completa se encuentra disponible en el repositorio
-indicado en el Apéndice~\ref{ap:repositorio}.
-
-% -----------------------------------------------------------
-\section{Identificación de requisitos}
-\label{sec:requisitos}
-% -----------------------------------------------------------
-
-El diseño de \textit{kubescan} parte de un análisis de requisitos derivado tanto de
-las limitaciones identificadas en el estado del arte (Sección~\ref{sec:sintesis}) como
-de los vectores de ataque documentados por la \ac{NSA} y la \ac{CISA} \citep{NSA2022}.
-Este análisis se traduce en dos conjuntos de requisitos: funcionales, que definen
-las capacidades que el sistema debe ofrecer, y no funcionales, que acotan sus
-propiedades de calidad. Ambos conjuntos se detallan a continuación.
-
-\subsection{Requisitos funcionales}
-
-\begin{description}
-  \item[RF-1 — Detección de misconfiguraciones individuales.] El sistema debe clasificar
-    cada manifiesto \acs{YAML} como seguro o \textit{misconfigured}, produciendo además un
-    índice de severidad en tres niveles (limpio, bajo\,--\,medio, alto\,--\,crítico).
-  \item[RF-2 — Detección de cadenas de ataque.] El sistema debe clasificar un conjunto
-    de manifiestos que describe un clúster en una de tres categorías: \textit{clean},
-    \textit{isolated} (misconfiguraciones sin cadena viable) o
-    \textit{attack\_chain} (ruta de escalada de privilegios hasta movimiento lateral).
-  \item[RF-3 — Interfaz de línea de comandos.] El sistema debe exponer un comando
-    \texttt{kubescan scan <dir>} para análisis de directorios locales y un comando
-    \texttt{kubescan live} para análisis de clústeres activos mediante \textit{kubectl}.
-  \item[RF-4 — Formatos de salida.] El sistema debe producir informes en formato texto
-    legible y en formato \acs{JSON} estructurado para integración con herramientas externas.
-  \item[RF-5 — Priorización de riesgos.] El sistema debe producir una clasificación
-    ordenada de clústeres por puntuación de riesgo que maximice la Precisión@5, colocando las
-    cadenas de ataque reales en las primeras posiciones.
-\end{description}
-
-\subsection{Requisitos no funcionales}
-
-\begin{description}
-  \item[RNF-1 — Trazabilidad.] Todas las reglas de detección de nodos de escape y
-    movimiento lateral deben ser explícitas, auditables y derivadas de fuentes
-    normativas documentadas \citep{NSA2022,BishopFox2021}.
-  \item[RNF-2 — Reproducibilidad.] Los modelos entrenados deben almacenarse como
-    \textit{checkpoints} e incluirse en el paquete, de forma que el análisis sea
-    idempotente dado el mismo directorio de entrada.
-  \item[RNF-3 — Instalabilidad.] El sistema debe ser instalable mediante
-    \texttt{pip install -e kubescan/} sin dependencias de compiladores externos.
-  \item[RNF-4 — Latencia.] El análisis de un clúster de hasta 500 manifiestos debe
-    completarse en menos de 60 segundos en hardware de gama media (CPU).
-\end{description}
+Este capítulo describe de forma completa el sistema \textit{kubescan}, desde su
+arquitectura general hasta los detalles de su implementación como herramienta de
+software distribuible. Se presenta primero la arquitectura de tres capas, y a
+continuación los procesos de construcción del conjunto de datos y del grafo de
+clúster que alimentan dichas capas. Le siguen el diseño de entrenamiento de cada
+capa, la interfaz de línea de comandos resultante y las prácticas de ingeniería
+de software adoptadas durante el desarrollo. La implementación completa se
+encuentra disponible en el repositorio indicado en el
+Apéndice~\ref{ap:repositorio}.
 
 % -----------------------------------------------------------
 \section{Arquitectura general del sistema}
@@ -233,7 +187,7 @@ contiene el \textit{risk\_score} producido por el modelo \textit{Random Forest}.
   \caption{Ejemplo de grafo de clúster Kubernetes con cuatro nodos}
   \label{fig:grafo_cluster}
   \includegraphics[width=0.72\textwidth]{fig_grafo_cluster}
-  
+
   \fuentepropia
 \end{figure}
 
@@ -252,7 +206,7 @@ completo de Rahman et~al.\ \citep{Rahman2022}, cuyos \textit{namespaces} cruzado
 se resolvieron mediante descarga autenticada desde GitHub, lo que amplió
 sustancialmente el número de clústeres \textit{isolated} respecto a las fases
 experimentales preliminares descritas en la Sección~\ref{sec:layer2} del
-Capítulo~\ref{cap:resultados}.
+Capítulo~\ref{cap:evaluacion}.
 
 \subsection{Detección de escape y movimiento lateral}
 
@@ -642,7 +596,7 @@ Las 7~características extendidas están imputadas mediante \textit{Checkov} par
 47,4\,\% de filas con YAML disponible y mediante la mediana de columna para el resto.
 
 % -----------------------------------------------------------
-\section{Calidad de software y proceso de validación}
+\section{Calidad de software y proceso de desarrollo}
 \label{sec:calidad}
 % -----------------------------------------------------------
 
@@ -652,15 +606,14 @@ herramientas integradas en un \textit{pipeline} de pre-commit y \acs{CICD}: (1)
 \textit{ruff}, linter y formateador de código Python con reglas de estilo y
 seguridad; (2) \textit{mypy} en modo estricto, para comprobación estática de
 tipos en todos los módulos del paquete; (3) \textit{pytest}, para la suite de
-tests unitarios e de integración del paquete; y (4) \textit{pre-commit hooks},
+tests unitarios y de integración del paquete; y (4) \textit{pre-commit hooks},
 que aplican automáticamente ruff y mypy en cada commit.
 
 {\raggedright
-La suite de tests cubre los siguientes componentes: el parser de \acs{YAML}
-(\texttt{utils/yaml\_parser.py}), la construcción del grafo de clúster
-(\texttt{utils/graph\_builder.py}), el clasificador \ac{RF} (\texttt{model/rf\_classifier.py})
-y el ensamblador \ac{GA} (\texttt{model/ga\_ensemble.py}). Los tests de integración
-verifican el \textit{pipeline} completo de extremo a extremo: dado un directorio
-de manifiestos de prueba con flags de escape conocidas, se comprueba que la salida
-del comando \texttt{kubescan scan} produce el veredicto esperado (ATTACK\_CHAIN)
-con \textit{ensemble\_score} por encima del umbral de clasificación.\par}
+La suite de tests cubre el parser de \acs{YAML}
+(\texttt{utils/yaml\_parser.py}), la construcción del
+grafo de clúster (\texttt{utils/graph\_builder.py}), el clasificador \ac{RF}
+(\texttt{model/rf\_classifier.py}) y el ensamblador \ac{GA}
+(\texttt{model/ga\_ensemble.py}); la verificación funcional de extremo a extremo
+que estos tests de integración realizan se reporta como parte de la evaluación
+del sistema en el Capítulo~\ref{cap:evaluacion}.\par}
