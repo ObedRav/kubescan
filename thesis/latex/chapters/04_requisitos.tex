@@ -216,8 +216,8 @@ riesgo específica de cada manifiesto. La elección de \textit{Random Forest} pa
 la Capa~1 está además condicionada por tres propiedades que la
 Tabla~\ref{tab:ml_comparison} contrasta entre algoritmos candidatos: su
 independencia respecto de la normalización de escala de las entradas, su
-tolerancia al desequilibrio de clases y la calidad de las probabilidades que
-produce, requisito este último derivado de que dicha salida se emplea como
+tolerancia al desequilibrio de clases y la granularidad de la puntuación continua
+que produce, requisito este último derivado de que dicha salida se emplea como
 característica de nodo en la Capa~2.
 
 A las tres capas se añade una cuarta componente arquitectónica: la restricción
@@ -262,9 +262,21 @@ de 5~pliegues aplicada sobre el corpus tabular constituye un protocolo de
 estimación del rendimiento esperado, no un procedimiento de búsqueda de
 hiperparámetros: la configuración del clasificador es fija y se documenta en la
 Sección~\ref{sec:capa1_diseno}, sin que intervenga ninguna exploración de rejilla
-ni muestreo aleatorio del espacio de configuraciones. El conjunto de test se
-reserva en consecuencia de forma exclusiva para la medición final del criterio de
-aceptación de RF-1.
+ni muestreo aleatorio del espacio de configuraciones. Al no existir búsqueda de
+hiperparámetros, ninguna decisión de modelado queda condicionada por el
+rendimiento observado, lo que preserva la validez del conjunto de test como
+medida final del criterio de aceptación de RF-1.
+
+Ambos protocolos difieren, no obstante, en el corpus sobre el que operan, y esa
+diferencia debe explicitarse para interpretar correctamente los resultados de la
+Capa~1. La validación cruzada de 5~pliegues se ejecuta sobre la totalidad del
+corpus tabular, es decir, sobre las mismas filas que después integran el conjunto
+de test, mientras que la columna de test procede del modelo entrenado únicamente
+sobre el 80\,\% de entrenamiento. En consecuencia, la cifra de validación cruzada
+no constituye una estimación sobre datos completamente ajenos al ajuste y debe
+leerse como indicador de estabilidad del rendimiento entre particiones del
+corpus; la única estimación sobre datos retenidos es la de la columna de test,
+que es la que sustenta la verificación de RF-1.
 
 Para la Capa~2 se reserva desde el inicio una partición de test de clústeres
 originales, y el resto se evalúa mediante validación cruzada estratificada de
@@ -291,8 +303,11 @@ criterio de aceptación de un requisito concreto: la F1 macro cuantifica el
 criterio de RF-1 y describe la clasificación por clases invocada en RF-2, la
 Precisión@5 cuantifica el criterio de RF-5, y la \ac{AUC}-\acs{ROC} y la
 \ac{FPR}\_clean caracterizan el margen operativo con el que ambos criterios se
-satisfacen. Las cuatro se definen a continuación junto con la razón por la que
-resultan preferibles a alternativas de uso más extendido.
+satisfacen. Todas ellas se calculan sobre las particiones definidas en la
+Sección~\ref{sec:particion}, cuyo alcance determina si el valor resultante
+constituye una estimación sobre datos retenidos. Las cuatro se definen a
+continuación junto con la razón por la que resultan preferibles a alternativas de
+uso más extendido.
 
 \paragraph{F1 macro.} Se aplica a la Capa~1 y a la clasificación por clases de la
 Capa~2. La F1 macro calcula la media no ponderada de la F1 de cada clase, otorgando igual
@@ -309,8 +324,27 @@ separar las dos clases independientemente del umbral de decisión, lo que permit
 al operador ajustar la sensibilidad según las necesidades del entorno.
 
 \paragraph{Precisión@k.} Se aplica a la Capa~2 y al \textit{ranking} del sistema
-completo. En lugar de evaluar la clasificación por umbral, P@k mide la fracción de clústeres de cadena de ataque en las primeras
-\(k\) posiciones del ranking por puntuación de riesgo. Esta métrica está directamente
+completo. En lugar de evaluar la clasificación por umbral, P@k cuenta los
+clústeres de cadena de ataque situados en las primeras \(k\) posiciones del
+\textit{ranking} por puntuación de riesgo y normaliza ese recuento por
+\(\min(k,\, n_{\text{pos}})\), siendo \(n_{\text{pos}}\) el número de cadenas
+presentes en el conjunto evaluado:
+
+\begin{equation}
+  \text{P@}k \;=\;
+  \frac{\left|\left\{\, i \in \text{top-}k \;:\; y_i = \textit{attack\_chain} \,\right\}\right|}
+       {\min(k,\, n_{\text{pos}})}
+  \label{eq:precision_at_k}
+\end{equation}
+
+Esta definición coincide con la fracción convencional sobre \(k\) únicamente
+cuando el conjunto evaluado contiene al menos \(k\) cadenas; cuando contiene
+menos, el denominador pasa a ser \(n_{\text{pos}}\) y la métrica alcanza el valor
+1 si y solo si todas las cadenas existentes ocupan posiciones dentro del top-\(k\).
+La forma normalizada es la que dota de sentido al techo teórico de la métrica
+analizado en la Sección~\ref{sec:layer2}: sin ella, un conjunto con menos de
+\(k\) cadenas tendría un máximo alcanzable inferior a la unidad por construcción
+y no por deficiencia del modelo. Esta métrica está directamente
 alineada con el caso de uso operacional: un equipo de seguridad que audita los
 \(k\) clústeres de mayor riesgo en su infraestructura quiere que todos sean cadenas
 de ataque reales, no falsas alarmas. La elección de \(k=5\) refleja la capacidad

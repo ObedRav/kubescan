@@ -73,6 +73,9 @@ thesis/latex/*.lof
 thesis/latex/*.lot
 thesis/latex/*.loe
 thesis/latex/*.synctex.gz
+thesis/latex/*.fdb_latexmk
+thesis/latex/*.fls
+thesis/latex/*.xdv
 thesis/latex/test_fig.pdf
 
 # Internal audit / working notes — kept local, not for reviewers

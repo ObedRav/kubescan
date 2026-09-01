@@ -46,8 +46,18 @@ repository (third-party licenses); the acquisition scripts re-download them.
 
 ### Manifest level (RF)
 
-`label` is **feature-derived** — it is not an independent human annotation.
-It is computed by `scripts/01_acquire/ingest_attack_repos.py::compute_label`:
+`label` has **two different provenances depending on the source**, and the
+distinction matters when interpreting Layer 1 results.
+
+**Rahman rows (`source` in {github, gitlab}, 1,906 rows — 67 % of the corpus).**
+The label comes from the source corpus's own `INSECURE` ground truth, not from
+our rule. Verified: the `compute_label` disjunction below reproduces the shipped
+label for only 245/1,510 github and 87/396 gitlab rows, which would be
+impossible if the rule had generated them.
+
+**attack_repos rows (779 rows).** These are labelled by
+`scripts/01_acquire/ingest_attack_repos.py::compute_label`, which reproduces the
+shipped label for **779/779** rows exactly:
 
 ```python
 MISCONFIG_COLS = frozenset(FEATURE_COLS) - {"VALID_TAINT_SECRET"}
@@ -57,17 +67,23 @@ def compute_label(row: dict) -> int:
     return 1 if any(int(row.get(c, 0)) for c in MISCONFIG_COLS) else 0
 ```
 
-That is, `label = 1` iff **any** of the 24 misconfiguration flags is set —
-all 25 `FEATURE_COLS` from `kubescan/utils/yaml_parser.py` except
+That is, for these rows `label = 1` iff **any** of the 24 misconfiguration flags
+is set — all 25 `FEATURE_COLS` from `kubescan/utils/yaml_parser.py` except
 `VALID_TAINT_SECRET`, which is excluded because the extractor never sets it.
+The remaining fixture sources (badpods 112/128, kubernetes_goat 13/14) largely
+follow the same rule.
+
 `severity_class` is derived from the same row by `compute_severity`: class 2
 if any `ESCAPE_COLS` flag is set, otherwise `compute_label(row)`.
 
 ### Known label/feature circularity
 
-Because the label is a disjunction over the same flags the model receives as
-input, the RF target is a deterministic function of its own feature space.
-Two measured consequences on the shipped corpus:
+The circularity does not come from our labelling rule — it survives even on the
+Rahman rows, whose labels we did not generate. Rahman et al. define `INSECURE`
+as "the manifest exhibits at least one of the catalogued misconfiguration
+categories", and our extractor reproduces those same categories as features.
+The independently-sourced label is therefore still a deterministic function of
+our own feature space. Two measured consequences on the shipped corpus:
 
 - **Rahman rows (`source` in {github, gitlab}, 1,906 rows):** the binary label
   is *exactly* the disjunction of eight input features —

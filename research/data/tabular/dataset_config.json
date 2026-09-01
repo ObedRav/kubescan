@@ -123,7 +123,8 @@
       "0": "directory_proximity — manifests in same YAML subdirectory (undirected)",
       "1": "privilege_reach — escape-capable pod directed to all others",
       "2": "sa_lateral — SA-exposed pod directed to co-located pods",
-      "3": "semantic_namespace — same K8s namespace (from parsed YAML)"
+      "3": "semantic_namespace — same K8s namespace (from parsed YAML)",
+      "4": "rbac_priv — pod bound to a privileged ServiceAccount directed to co-located pods in the same namespace"
     },
     "graph_label_distribution": {
       "_comment": "Originals only; the 555 augmented graphs are all attack_chain, giving 592 chain graphs across all 1154.",

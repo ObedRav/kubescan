@@ -110,7 +110,7 @@ cadenas de ataque. También destaca
 \textit{Kubescape} \citep{Kubescape2021}, una plataforma de seguridad de código
 abierto integrada en la \ac{CNCF} que combina
 análisis estático con validación de cumplimiento contra los marcos \ac{NSA}, MITRE ATT\&CK
-y \acs{CIS} \textit{Benchmarks}. Al igual que Checkov y kube-linter, sin embargo, Kubescape
+y \ac{CIS} \textit{Benchmarks}. Al igual que Checkov y kube-linter, sin embargo, Kubescape
 evalúa recursos de forma independiente y no construye ningún modelo del clúster como
 estructura relacional.
 
@@ -190,7 +190,7 @@ fue marcado como de alto riesgo, la interpretabilidad del \textit{Random Forest}
 —mediante importancia de características y reglas de árbol legibles— representa una
 ventaja operacional significativa sobre los modelos de caja negra.
 
-La aplicación de técnicas de aprendizaje automático (\ac{ML}) a la predicción de
+La aplicación de técnicas de \ac{ML} a la predicción de
 vulnerabilidades en software es un enfoque consolidado que supera de forma
 consistente a los modelos estadísticos clásicos \citep{Jabeen2022}. Dentro de ese
 espacio, el \textit{Random Forest} resulta especialmente adecuado para el problema
@@ -219,12 +219,17 @@ naturaleza de los datos del problema:
     minoritaria (misconfiguraciones críticas) sin modificar la función de pérdida
     subyacente \citep{Pedregosa2011}.
 
-  \item \textbf{Generación de probabilidades calibradas.} El promedio de los votos
-    del \textit{ensemble} de árboles produce probabilidades suaves en \([0,1]\) que
-    pueden utilizarse directamente como características continuas (\textit{risk\_scores})
-    en el grafo de la Capa~2. Algoritmos como los Árboles de Decisión individuales o
-    los \textit{k}-Nearest Neighbours producen probabilidades menos calibradas en
-    presencia de desequilibrio de clases.
+  \item \textbf{Generación de puntuaciones continuas utilizables.} El promedio de
+    los votos del \textit{ensemble} de árboles produce puntuaciones suaves en
+    \([0,1]\) que pueden utilizarse directamente como características continuas
+    (\textit{risk\_scores}) en el grafo de la Capa~2. Un Árbol de Decisión
+    individual concentra su salida en valores próximos a los extremos, al derivarse
+    de la composición de una única hoja, y los \textit{k}-Nearest Neighbours la
+    restringen a múltiplos de \(1/k\), de modo que ambos ofrecen un rango efectivo
+    mucho más pobre como señal continua. El requisito que se persigue aquí es la
+    granularidad y el ordenamiento de la puntuación, no su interpretación como
+    probabilidad en sentido frecuentista, que exigiría un procedimiento de
+    calibración explícito no aplicado en este trabajo.
 \end{enumerate}
 
 La Tabla~\ref{tab:ml_comparison} resume esta comparativa entre algoritmos
@@ -236,13 +241,13 @@ candidatos para la Capa~1.
 \label{tab:ml_comparison}
 \begin{tabular}{@{}p{2.7cm}cp{2.1cm}p{2cm}p{4.1cm}@{}}
 \toprule
-Algoritmo & \shortstack{Sin norma-\\lización} & Desequilibrio & Prob.\ calibrada & Observación \\
+Algoritmo & \shortstack{Sin norma-\\lización} & Desequilibrio & \shortstack{Puntuación\\continua} & Observación \\
 \midrule
-Random Forest & \checkmark & \checkmark & Buena & Adoptado (Capa~1) \\
-Árbol de Decisión & \checkmark & Parcial & Pobre & Alta varianza \\
-\ac{SVM} (RBF) & No & Parcial & Requiere Platt & Entrenamiento O(n\textsuperscript{2})--O(n\textsuperscript{3}); viable pero menos eficiente \\
+Random Forest & \checkmark & \checkmark & Suave & Adoptado (Capa~1) \\
+Árbol de Decisión & \checkmark & Parcial & Casi binaria & Alta varianza \\
+\ac{SVM} (RBF) & No & Parcial & Margen sin acotar & Entrenamiento O(n\textsuperscript{2})--O(n\textsuperscript{3}); viable pero menos eficiente \\
 Red Neuronal (\acs{MLP}) & No & Con pesos & Variable & Sensible a la escala de entrada \\
-\textit{k}-NN & No & No & Estimada & Costoso en inferencia \\
+\textit{k}-NN & No & No & Múltiplos de 1/\textit{k} & Costoso en inferencia \\
 \bottomrule
 \end{tabular}
 \fuentepropia
@@ -330,7 +335,7 @@ taxonomía y documenta un crecimiento sostenido de la investigación en el área
 los últimos años.
 
 \textit{E-GraphSAGE} \citep{Lo2022} propone representar flujos de red como grafos de
-transacción para clasificación de intrusiones en \acs{IoT}, alcanzando tasas de detección
+transacción para clasificación de intrusiones en \ac{IoT}, alcanzando tasas de detección
 superiores a los clasificadores tabulares clásicos sobre las re-publicaciones en
 formato NetFlow de los conjuntos de referencia habituales del área
 (NF-UNSW-NB15-v2, NF-ToN-IoT y NF-BoT-IoT), y no sobre la versión original de

@@ -7,12 +7,17 @@ Este capítulo evalúa el sistema \textit{kubescan} completo. Se parte de una
 línea de base tomada del estado del arte, frente a la cual se contrastan los
 resultados de cada capa; a continuación se reportan dichos resultados en el
 mismo orden que las fases de entrenamiento descritas en el
-Capítulo~\ref{cap:herramienta}, se sintetiza una métrica de proceso completo que
-resume el comportamiento extremo a extremo del sistema, y se verifica el
-cumplimiento de los requisitos funcionales y no funcionales definidos en el
-Capítulo~\ref{cap:requisitos}. El capítulo cierra con la evaluación de
-usabilidad y aplicabilidad realizada con usuarios expertos. Las métricas
-empleadas se justifican en detalle en la Sección~\ref{sec:metricas}.
+Capítulo~\ref{cap:herramienta}. El desglose por clases del clasificador de grafo
+sobre el conjunto de test (Sección~\ref{sec:gnn_por_clase}) caracteriza la
+dirección de los errores residuales, y el contraste con una herramienta de
+análisis estático externa (Sección~\ref{sec:validacion_externa}) delimita hasta
+qué punto el corpus admite verificación independiente. Sobre esa base se
+sintetiza una métrica de proceso completo que resume el comportamiento extremo a
+extremo del sistema y se verifica el cumplimiento de los requisitos funcionales y
+no funcionales definidos en el Capítulo~\ref{cap:requisitos}. El capítulo cierra
+con la evaluación de usabilidad y aplicabilidad realizada con usuarios expertos.
+Las métricas empleadas se justifican en detalle en la
+Sección~\ref{sec:metricas}.
 
 % -----------------------------------------------------------
 \section{Línea de base del estado del arte}
@@ -157,11 +162,12 @@ de decisión. En la práctica, este valor implica que, si se ordenan los 566~man
 de test de mayor a menor \textit{risk\_score}, los manifiestos misconfigured aparecen
 casi todos antes que los seguros. Esta propiedad es la que habilita el uso del
 \textit{risk\_score} como característica nodal cuantitativa en el grafo de la Capa~2:
-la señal transmitida a la \ac{GNN} no es un bit binario sino una probabilidad calibrada
-que refleja la densidad de misconfiguraciones del manifiesto. En la matriz de
-confusión de la Figura~\ref{fig:rf_confusion} (566~muestras), los 3~falsos
-positivos corresponden a manifiestos seguros con alta densidad de
-características de riesgo, y no existe ningún falso negativo.
+la señal transmitida a la \ac{GNN} no es un bit binario sino una puntuación
+continua que ordena los manifiestos por densidad de misconfiguraciones. No se
+aplica ninguna técnica de calibración de probabilidades, por lo que el valor no
+debe interpretarse como una probabilidad calibrada en sentido estricto; el
+ordenamiento resultante es, en cambio, consistente con la matriz de confusión de
+la Figura~\ref{fig:rf_confusion}.
 
 \begin{figure}[htbp]
   \centering
@@ -276,8 +282,10 @@ resultados por pliegue de la configuración final, la ablación de la función d
 pérdida y del criterio de selección, y la robustez frente a la semilla de
 entrenamiento. A diferencia de la Capa~1, la Capa~2 requirió varias iteraciones
 metodológicas antes de alcanzar una configuración cuyas métricas fueran a la vez
-válidas y reproducibles. Esta evolución se documenta explícitamente porque es
-también, en sí misma, una contribución metodológica del trabajo.
+válidas y reproducibles. Cada iteración corrigió una fuente concreta de fuga de
+información o una elección de entrenamiento subóptima, y el descenso de las
+métricas que acompaña a esas correcciones cuantifica el sesgo optimista que
+introducían los protocolos de particionado sucesivamente descartados.
 
 \subsection{Evolución por fase experimental}
 
@@ -308,8 +316,8 @@ Sección~\ref{sec:ablacion_perdida}), esta fase es la que se reporta como
 resultado final del trabajo — sus métricas son las que produce el modelo
 efectivamente desplegado y reproducible a partir de los \textit{checkpoints} del
 repositorio. Por el cambio de protocolo, sus cifras no son directamente
-comparables con las de las fases anteriores: miden generalización entre familias,
-no interpolación entre casi duplicados.
+comparables con las de las fases~1--5 de la Tabla~\ref{tab:gnn_evolution}: miden
+generalización entre familias, no interpolación entre casi duplicados.
 
 \begin{table}[htbp]
 \centering\small
@@ -397,6 +405,14 @@ propia atomicidad de las familias: cada pliegue evalúa 1, 1, 4, 5 y
 5~familias independientes respectivamente, como se detalla a continuación.
 
 \subsection{Resultados por pliegue (fase final)}
+
+Las medias de validación cruzada de la configuración desplegada ocultan una
+dispersión considerable entre pliegues, y su desglose es necesario para atribuir
+esa dispersión a una causa concreta. La Tabla~\ref{tab:gnn_folds} recoge la F1
+macro y la Precisión@5 obtenidas en cada uno de los cinco pliegues, junto con la
+media y la desviación típica poblacional que resumen el conjunto. Los valores
+individuales se interpretan a continuación a la luz de la composición de cada
+pliegue en términos de familias de plantilla.
 
 \begin{table}[htbp]
 \centering
@@ -515,6 +531,64 @@ combinación desplegada es la única que sitúa la media de validación cruzada 
 encima del objetivo, y la configuración más alejada de él —\textit{focal loss}
 con selección por F1 macro, 0,480— sí queda separada por un margen que excede la
 dispersión observada.
+
+\subsection{Ablación de arquitectura}
+\label{sec:ablacion_arquitectura}
+
+La elección de \ac{GAT} frente a alternativas más simples y la profundidad de
+tres capas se fijaron en el diseño de la Capa~2 y admiten contraste empírico
+sobre el mismo protocolo. La literatura sobre \acs{GNN}s aplicadas a grafos
+pequeños heterogéneos documenta de forma consistente que los mecanismos de
+atención mejoran la precisión cuando los tipos de arista tienen importancias
+desiguales \citep{Velickovic2018}. En el grafo de clúster
+\textit{Kubernetes}, las aristas de \textit{privilege\_reach} (tipo~1) son
+cualitativamente más informativas que las de \textit{dir\_proximity} (tipo~0): la
+primera conecta directamente nodos de escape con el resto del clúster, mientras que
+la segunda simplemente refleja la organización de directorios del repositorio.
+\ac{GAT} puede aprender esta distinción durante el entrenamiento, mientras que \ac{GCN} asigna
+pesos uniformes a todos los vecinos, diluyendo la señal de escape con ruido de
+co-localización.
+
+Esta hipótesis se cuantifica empíricamente mediante un experimento de ablación
+controlado sobre el corpus completo, con particionado, semilla, función de
+pérdida y criterio de selección idénticos a los de la configuración final
+(fase~6 de la Tabla~\ref{tab:gnn_evolution}), de modo que las tres filas son
+directamente comparables entre sí y con el resultado final (Tabla~\ref{tab:arch_ablation}):
+
+\begin{table}[htbp]
+\centering
+\caption{Ablación de arquitectura — Capa~2}
+\label{tab:arch_ablation}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Arquitectura & F1 macro & P@5 \\
+\midrule
+\ac{GAT} 3 capas + \textit{embedding} de aristas (desplegada)
+  & \textbf{0,803 \(\pm\) 0,137} & \textbf{0,720 \(\pm\) 0,160} \\
+\ac{GAT} 2 capas + \textit{embedding} de aristas
+  & 0,800 \(\pm\) 0,171 & \textbf{0,720 \(\pm\) 0,160} \\
+\ac{GCN} 3 capas (sin tipos de arista)
+  & 0,711 \(\pm\) 0,143 & 0,680 \(\pm\) 0,160 \\
+\bottomrule
+\end{tabular}
+\fuentepropia
+\end{table}
+
+La \ac{GAT} supera a la \ac{GCN} en F1 (+9,2~puntos) y en P@5 (+4~puntos),
+confirmando que la atención sobre tipos de arista aporta señal real tanto para la
+clasificación como para el ranking de cadenas. La comparación 2 vs.\ 3~capas es
+menos concluyente: las medias de validación cruzada casi coinciden
+—P@5\,=\,0,720\,\(\pm\)\,0,160 en ambas configuraciones y F1 macro de 0,803
+frente a 0,800—, pero esa coincidencia agregada oculta un desacuerdo apreciable
+pliegue a pliegue, con diferencias de F1 de \(+\)0,142 en el pliegue~3 y
+\(-\)0,191 en el pliegue~4 que se cancelan al promediar y dejan una brecha media
+de sólo 0,003. Dos modelos que difieren en esa magnitud sobre pliegues concretos
+no evidencian robustez de la arquitectura frente a la profundidad, sino que la
+profundidad no determina el nivel medio de las métricas sobre este corpus. Se
+mantiene la configuración de 3~capas como desplegada por su ventaja marginal en
+F1 macro y por coherencia con el resto de resultados reportados. La
+ablación de \textit{pooling} (\textit{mean}-only vs.\ \textit{mean+max}) queda
+como trabajo futuro (TF6, Sección~\ref{sec:trabajo_futuro}).
 
 \subsection{Robustez frente a la semilla de entrenamiento}
 \label{sec:multisemilla}
@@ -648,10 +722,7 @@ albergar una cadena. \ac{FPR}\_clean\,=\,0,00: ningún clúster limpio aparece
 entre los de mayor riesgo. La F1~macro por clasificación \textit{argmax} del
 ensemble de pliegues sobre el conjunto de test es 0,883 (F1 por clase:
 \textit{clean} 1,0; \textit{isolated} 0,981; \textit{attack\_chain} 0,667,
-con 3 de las 5~cadenas correctamente clasificadas). La Figura~\ref{fig:structural_gate}
-compara las métricas de ranking del conjunto de test con y sin la restricción:
-descartar los clústeres de un solo nodo del \textit{ranking} eleva P@1 de 0,00 a
-1,00 y P@5 de 0,60 a 0,80.
+con 3 de las 5~cadenas correctamente clasificadas).
 
 \begin{figure}[htbp]
   \centering
@@ -668,7 +739,8 @@ P@5 \([0{,}60,\ 1{,}00]\), \ac{FPR}\_clean \([0{,}00,\ 0{,}40]\) y F1~macro
 \([0{,}66,\ 1{,}00]\). Los valores puntuales deben interpretarse como
 \textit{consistentes con} los objetivos de diseño, no como demostraciones
 concluyentes; la ampliación adicional del corpus de test es la vía directa para
-estrechar estos intervalos (TF1). La Figura~\ref{fig:ensemble_patk} resume las
+estrechar estos intervalos (TF1, Sección~\ref{sec:trabajo_futuro}). La
+Figura~\ref{fig:ensemble_patk} resume las
 tres métricas de ranking del ensemble sobre el conjunto de test.
 
 \begin{figure}[htbp]
@@ -719,11 +791,10 @@ Solo señal de escape                    & 0,00 & 0,67 & 0,80 & 0,00 \\
 \label{sec:gnn_por_clase}
 % -----------------------------------------------------------
 
-La Tabla~\ref{tab:gnn_folds} reporta las métricas agregadas (F1 macro y P@5) para
-los cinco pliegues de validación cruzada. El registro de la validación cruzada
-conserva únicamente esas dos métricas por pliegue y la exactitud agregada, sin
-matrices de confusión individuales, por lo que el análisis por clases se apoya
-exclusivamente en el conjunto de test. En él, la matriz de confusión del ensemble
+El registro de la validación cruzada conserva por pliegue únicamente la F1 macro,
+la Precisión@5 y la exactitud agregada, sin matrices de confusión individuales,
+por lo que el desglose por clases se apoya exclusivamente en el conjunto de
+test. En él, la matriz de confusión del ensemble
 de pliegues (Figura~\ref{fig:gnn_confusion}, clasificación \textit{argmax})
 concentra el error en la frontera entre cadena y aislado: los dos falsos
 negativos de cadena se clasifican como \textit{isolated} y ninguno como
@@ -753,68 +824,22 @@ cambio, combinan probabilidad \ac{GNN} alta (0,47--0,63) con fracciones de
 escape por nodo muy variables (0,02--0,94; magnitud descriptiva, no la señal
 binaria del ensemble), lo que confirma que el canal estructural es
 el que ordena los repositorios reales. Esta observación motiva el trabajo futuro
-TF3 (análisis semántico de \ac{RBAC} completo).
+TF3 (análisis semántico de \ac{RBAC} completo,
+Sección~\ref{sec:trabajo_futuro}).
 
-En cuanto a la elección arquitectónica de \ac{GAT} sobre alternativas más simples, la
-literatura sobre \acs{GNN}s aplicadas a grafos pequeños heterogéneos documenta de forma
-consistente que los mecanismos de atención mejoran la precisión cuando los tipos de
-arista tienen importancias desiguales \citep{Velickovic2018}. En el grafo de clúster
-\textit{Kubernetes}, las aristas de \textit{privilege\_reach} (tipo~1) son
-cualitativamente más informativas que las de \textit{dir\_proximity} (tipo~0): la
-primera conecta directamente nodos de escape con el resto del clúster, mientras que
-la segunda simplemente refleja la organización de directorios del repositorio.
-\ac{GAT} puede aprender esta distinción durante el entrenamiento, mientras que \ac{GCN} asigna
-pesos uniformes a todos los vecinos, diluyendo la señal de escape con ruido de
-co-localización.
-
-Esta hipótesis se cuantifica empíricamente mediante un experimento de ablación
-controlado sobre el corpus completo, con particionado, semilla, función de
-pérdida y criterio de selección idénticos a los de la configuración final
-(fase~6 de la Tabla~\ref{tab:gnn_evolution}), de modo que las tres filas son
-directamente comparables entre sí y con el resultado final (Tabla~\ref{tab:arch_ablation}):
-
-\begin{table}[htbp]
-\centering
-\caption{Ablación de arquitectura — Capa~2}
-\label{tab:arch_ablation}
-\begin{tabular}{@{}lrr@{}}
-\toprule
-Arquitectura & F1 macro & P@5 \\
-\midrule
-\ac{GAT} 3 capas + \textit{embedding} de aristas (desplegada)
-  & \textbf{0,803 \(\pm\) 0,137} & \textbf{0,720 \(\pm\) 0,160} \\
-\ac{GAT} 2 capas + \textit{embedding} de aristas
-  & 0,800 \(\pm\) 0,171 & \textbf{0,720 \(\pm\) 0,160} \\
-\ac{GCN} 3 capas (sin tipos de arista)
-  & 0,711 \(\pm\) 0,143 & 0,680 \(\pm\) 0,160 \\
-\bottomrule
-\end{tabular}
-\fuentepropia
-\end{table}
-
-La \ac{GAT} supera a la \ac{GCN} en F1 (+9,2~puntos) y en P@5 (+4~puntos),
-confirmando que la atención sobre tipos de arista aporta señal real tanto para la
-clasificación como para el ranking de cadenas. La comparación 2 vs.\ 3~capas es
-menos concluyente: las medias de validación cruzada casi coinciden
-—P@5\,=\,0,720\,\(\pm\)\,0,160 en ambas configuraciones y F1 macro de 0,803
-frente a 0,800—, pero esa coincidencia agregada oculta un desacuerdo apreciable
-pliegue a pliegue, con diferencias de F1 de \(+\)0,142 en el pliegue~3 y
-\(-\)0,191 en el pliegue~4 que se cancelan al promediar y dejan una brecha media
-de sólo 0,003. Dos modelos que difieren en esa magnitud sobre pliegues concretos
-no evidencian robustez de la arquitectura frente a la profundidad, sino que la
-profundidad no determina el nivel medio de las métricas sobre este corpus. Se
-mantiene la configuración de 3~capas como desplegada por su ventaja marginal en
-F1 macro y por coherencia con el resto de resultados reportados. La
-ablación de \textit{pooling} (\textit{mean}-only vs.\ \textit{mean+max}) queda
-como trabajo futuro (TF6).
 
 % -----------------------------------------------------------
 \section{Validación con herramientas de análisis estático}
+\label{sec:validacion_externa}
 % -----------------------------------------------------------
 
-Como contraste externo, se ejecutó \textit{Checkov} \citep{Checkov2021} sobre
-los 1.175~manifiestos cuyo \acs{YAML} descargado resultó analizable por la
-herramienta. Para esta validación, el índice \ac{UMI} se calcula como la
+Como contraste externo, se ejecutó \textit{Checkov} \citep{Checkov2021} sobre el
+subconjunto de manifiestos procedentes de GitHub, para el que la herramienta
+produjo salida en 1.175 de las 1.510~filas de esa fuente. La descarga previa de
+los manifiestos referenciados por Rahman et~al.\ tuvo éxito en 1.985 de 2.039
+casos (97,4\,\%); los 54~restantes ya no eran accesibles en origen. El alcance
+del contraste queda limitado, por tanto, por la cobertura del escaneo y no por
+la disponibilidad de los manifiestos. Para esta validación, el índice \ac{UMI} se calcula como la
 proporción de comprobaciones de \textit{Checkov} que fallan sobre el total
 evaluado por manifiesto (\(\in [0,1]\); valores más altos indican mayor densidad
 de misconfiguraciones detectadas). El índice \ac{UMI} medio resultante fue de
@@ -822,29 +847,30 @@ de misconfiguraciones detectadas). El índice \ac{UMI} medio resultante fue de
 \textit{checkov\_no\_run\_as\_nonroot} (38,3\,\%) y
 \textit{checkov\_no\_readonly\_rootfs} (37,2\,\%).
 
-El alcance de este contraste es limitado y conviene delimitarlo. La ejecución de
-\textit{Checkov} vuelca sus identificadores de comprobación en columnas de
-diagnóstico \texttt{checkov\_*} independientes, que no alimentan las
-características de la Capa~1: éstas proceden del análisis sintáctico propio del
-\acs{YAML} descrito en el Capítulo~\ref{cap:herramienta}. Sobre esas mismas
-1.175~filas, además, las características homólogas del extractor propio
-(\texttt{NO\_RUN\_AS\_NON\_ROOT} y \texttt{NO\_READ\_ONLY\_ROOT\_FS}) están
-ausentes en su totalidad, de modo que no es posible cotejar detección con
-detección manifiesto a manifiesto ni cuantificar una tasa de acuerdo entre ambas
-fuentes. El resultado debe interpretarse, en consecuencia, como una corroboración
-de cobertura y procedencia —ambos conjuntos de características codifican los
-mismos controles de configuración segura de referencia para \textit{Kubernetes},
-obtenidos por implementaciones distintas— y no como una validación externa
-independiente de las predicciones del modelo.
+El alcance de este contraste es limitado y conviene delimitarlo, porque las dos
+fuentes no son independientes. Sobre esas mismas 1.175~filas las características
+homólogas del extractor propio (\texttt{NO\_RUN\_AS\_NON\_ROOT} y
+\texttt{NO\_READ\_ONLY\_ROOT\_FS}) están ausentes en su totalidad, y es
+precisamente la salida de \textit{Checkov} la que las rellena en tiempo de carga
+a través de la tabla de equivalencias \texttt{CHECKOV\_FILL}
+(Sección~\ref{sec:construccion_dataset}). Cotejar ambas fuentes manifiesto a
+manifiesto equivaldría, por tanto, a comparar esos valores consigo mismos: no
+cabe calcular una tasa de acuerdo, y la coincidencia entre las frecuencias
+observadas es una identidad de procedencia, no una concordancia entre
+detectores. El resultado debe interpretarse, en consecuencia, como una
+verificación de cobertura —qué proporción del corpus admite análisis por una
+herramienta externa y con qué densidad de incumplimientos— y no como una
+validación externa independiente de las predicciones del modelo.
 
 % -----------------------------------------------------------
 \section{Métrica global del proceso completo}
 \label{sec:metrica_global}
 % -----------------------------------------------------------
 
-Las secciones anteriores evalúan cada capa por separado; esta sección destaca la
-métrica que resume el comportamiento del sistema completo de extremo a extremo,
-tal como lo experimenta un operador que confía en el \textit{ranking} final. Esa
+Las Secciones~\ref{sec:layer1},~\ref{sec:layer2} y~\ref{sec:layer3} evalúan cada
+capa por separado, mientras que el comportamiento del sistema de extremo a
+extremo —tal como lo experimenta un operador que confía en el \textit{ranking}
+final— se resume en una única métrica de proceso completo. Esa
 métrica es el conjunto Precisión@k / \ac{FPR}\_clean del sistema desplegado sobre
 el conjunto de test, ya reportado en la Sección~\ref{sec:layer3} y resumido en
 la Figura~\ref{fig:ensemble_patk}: P@1\,=\,1,00, P@3\,=\,1,00, P@5\,=\,0,80 y
@@ -879,10 +905,16 @@ riesgo real.
 \label{sec:verificacion_requisitos}
 % -----------------------------------------------------------
 
-Esta sección verifica el cumplimiento de los requisitos funcionales y no
-funcionales definidos en el Capítulo~\ref{cap:requisitos}, complementando las
-métricas predictivas de las secciones anteriores con evidencia de que el
-sistema es efectivamente utilizable como herramienta de línea de comandos.
+El cumplimiento de los requisitos funcionales y no funcionales definidos en el
+Capítulo~\ref{cap:requisitos} se verifica a partir de dos clases de evidencia: las
+métricas predictivas reportadas en las Secciones~\ref{sec:layer1},
+\ref{sec:layer2}, \ref{sec:layer3} y~\ref{sec:metrica_global}, y las
+comprobaciones operacionales realizadas sobre la herramienta de línea de comandos
+descrita en la Sección~\ref{sec:implementacion}. Los requisitos funcionales
+RF-1, RF-2 y RF-5 disponen de un criterio de aceptación numérico y se contrastan
+contra las métricas ya reportadas, mientras que RF-3, RF-4 y los cuatro
+requisitos no funcionales se sustentan en evidencia de ejecución. Ambas clases de
+evidencia se recogen en los dos apartados siguientes.
 
 \subsection{Requisitos funcionales}
 
@@ -956,7 +988,8 @@ el tamaño nominal del requisito.
 \section{Evaluación de usabilidad y aplicabilidad con usuarios expertos}
 \label{sec:usabilidad}
 
-Además de la verificación de requisitos anterior, se realizó una evaluación de
+Además de la verificación de requisitos de la
+Sección~\ref{sec:verificacion_requisitos}, se realizó una evaluación de
 usabilidad y aplicabilidad de la herramienta con \textbf{usuarios expertos},
 siguiendo el protocolo descrito en el repositorio (Anexo~\ref{ap:repositorio}).
 Participaron \textbf{tres profesionales} con experiencia en \textit{Kubernetes} y
@@ -1025,8 +1058,8 @@ concentrados en tareas secundarias u opcionales.
 
 \subsection{Usabilidad percibida (SUS)}
 
-La usabilidad se midió con la escala \textbf{SUS} (\textit{System Usability
-Scale}) de diez ítems \citep{Brooke1996}, que produce una puntuación en el rango
+La usabilidad se midió con la escala \acs{SUS} de diez ítems
+\citep{Brooke1996}, que produce una puntuación en el rango
 0--100. La media obtenida fue de \textbf{88,3\,\(\pm\)\,10,4} (puntuaciones
 individuales de 100, 80 y 85), consistente con la media de referencia del sector
 (68) y situada en la banda cualitativa «excelente» de la escala de adjetivos de

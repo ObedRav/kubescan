@@ -65,12 +65,12 @@ disponible como atributo de nodo para el razonamiento estructural.
 
 La construcción del conjunto de datos parte de la recolección de manifiestos
 \acs{YAML} procedentes de fuentes públicas heterogéneas y avanza hasta la
-extracción de las características que alimentan la Capa~1. Esta sección describe
-primero el origen y la composición de los manifiestos recopilados y, a
-continuación, el proceso de extracción de características que transforma cada
-manifiesto en un vector estructurado. El conjunto resultante es la base tanto del
-clasificador de la Capa~1 como del grafo de clúster construido en la
-Sección~\ref{sec:construccion_grafo}.
+extracción de las características que alimentan la Capa~1. El origen y la
+composición de los manifiestos recopilados determinan la cobertura de patrones de
+misconfiguración disponible, y el proceso de extracción de características
+transforma cada manifiesto en un vector estructurado de dimensión fija. El
+conjunto resultante es la base tanto del clasificador de la Capa~1 como del grafo
+de clúster construido en la Sección~\ref{sec:construccion_grafo}.
 
 \subsection{Fuentes de datos}
 \label{sec:fuentes_datos}
@@ -91,13 +91,28 @@ Rahman et~al.\ \citep{Rahman2022} — GitHub & 1.510 & Manifiestos reales, etiqu
 Rahman et~al.\ \citep{Rahman2022} — GitLab & 396 & Ídem, plataforma distinta \\
 BishopFox BadPods \citep{BishopFox2021} & 128 & Pods vulnerables intencionales \\
 Kubernetes Goat \citep{KubernetesGoat} & 14 & Escenarios de vulnerabilidad \\
-Repositorios de seguridad adicionales & 779 & CTFs, \textit{fixtures} de herramientas, labs \\
+Repositorios de seguridad adicionales & 779 & CTFs, \textit{fixtures} de herramientas, labs; etiqueta derivada por regla \\
 \midrule
 \textbf{Total} & \textbf{2.827} & \\
 \bottomrule
 \end{tabular}
 \fuentepropia
 \end{table}
+
+La procedencia de la etiqueta binaria no es homogénea entre las fuentes de la
+Tabla~\ref{tab:dataset}, y esa heterogeneidad condiciona la interpretación de los
+resultados de la Capa~1. Las 1.906~filas de Rahman et~al.\ \citep{Rahman2022}
+conservan la anotación \textit{INSECURE} del corpus original, ajena al extractor
+de características de este trabajo: sólo 245 de las 1.510~filas de GitHub y 87 de
+las 396 de GitLab coinciden con la disyunción de las columnas de misconfiguración
+observadas. Las 779~filas de los repositorios de seguridad adicionales, en
+cambio, carecen de anotación en origen y reciben una etiqueta derivada por regla
+en la ingesta (\texttt{compute\_label} en
+\texttt{ingest\_attack\_repos.py}), definida como la disyunción de las columnas de
+misconfiguración; las 779 satisfacen por construcción esa equivalencia exacta. El
+corpus final combina, por tanto, verdad de referencia externa y etiquetado por
+regla, circunstancia que se retoma al analizar la circularidad entre etiqueta y
+características en la Sección~\ref{sec:rf_importance}.
 
 La incorporación de BadPods fue esencial para mitigar la escasez de ejemplos de
 misconfiguraciones críticas en los repositorios reales: antes de añadir esta fuente,
@@ -245,8 +260,10 @@ como constantes inmutables (\texttt{frozenset}). Un nodo se clasifica como de
 incorporado durante el desarrollo al detectar que \textit{badpods\_hostpath} —que monta
 el sistema de ficheros del anfitrión— era incorrectamente etiquetado como
 \textit{isolated} al no tener ninguna otra flag de escape activa. Con la corrección,
-el número de clústeres de cadena de ataque del corpus preliminar de 307~grafos
-ascendió de 13 a 15 (25 en el corpus extendido de 471; 37 en el corpus final de 599).\par}
+el número de clústeres de cadena de ataque del corpus preliminar ascendió de 13
+a~15; la trayectoria completa del tamaño del corpus y del número de cadenas a lo
+largo de las fases experimentales se recoge en la
+Tabla~\ref{tab:gnn_evolution}.\par}
 
 Un nodo se clasifica como de \textbf{movimiento lateral} si tiene activa al menos una
 de las siguientes 4~flags: \texttt{SA\_AUTOMOUNT\_TOKEN} (token de cuenta de servicio
@@ -290,7 +307,8 @@ características descritas en la Sección~\ref{sec:construccion_dataset}. Se ent
 independientes sobre el mismo conjunto de características: un clasificador
 binario que distingue manifiestos seguros de mal configurados, y un modelo de
 severidad que estima el grado de gravedad de la configuración incorrecta
-detectada. A continuación se describe el diseño de cada uno.
+detectada. Ambos comparten el conjunto de 28~características y los mismos
+hiperparámetros de bosque, y difieren únicamente en la variable objetivo.
 
 \subsection{Modelo binario}
 
@@ -323,10 +341,11 @@ grafo; se incluye como salida adicional de la Capa~1.
 
 La Capa~2 opera sobre el grafo de clúster construido en la
 Sección~\ref{sec:construccion_grafo} y clasifica el clúster completo según el
-riesgo de cadena de ataque que presenta.
-Esta sección describe la arquitectura del modelo \acs{GAT}, el procedimiento de
-entrenamiento empleado y la estrategia de aumentación de datos aplicada para
-mitigar la escasez de clústeres con cadena de ataque confirmada.
+riesgo de cadena de ataque que presenta. Su diseño se apoya en tres decisiones
+acopladas: una arquitectura \acs{GAT} con \textit{embedding} de tipo de arista, un
+procedimiento de entrenamiento con validación cruzada estratificada de
+5~pliegues, y una estrategia de aumentación de datos que mitiga la escasez de
+clústeres con cadena de ataque confirmada.
 
 \subsection{Arquitectura}
 
@@ -344,24 +363,24 @@ con las dimensiones exactas verificadas en \texttt{gat\_encoder.py}:
         \texttt{GATConv} consume como atributo de arista
         (\textit{edge\_dim=8}).
   \item \textbf{Proyección inicial}: \texttt{Linear(26, 256)} \(+\) \texttt{LayerNorm(256)}
-        \(+\) \acs{ReLU} \(+\) \texttt{Dropout(0.3)}.
+        \(+\) \ac{ReLU} \(+\) \texttt{Dropout(0.3)}.
         Proyecta el vector de nodo de 26~dims a 256~dims
         (\(64 \times 4\,\text{cabezas}\)).
   \item \textbf{Capas \ac{GAT}~0 y~1} (\textit{concat=True}):
         \texttt{GATConv(256, 64, heads=4)} con \textit{edge\_dim=8};
-        salida 256~dims \((64 \times 4)\); seguidas de \texttt{LayerNorm}, \acs{ELU},
+        salida 256~dims \((64 \times 4)\); seguidas de \texttt{LayerNorm}, \ac{ELU},
         conexión residual y \texttt{Dropout(0.3)}.
   \item \textbf{Capa \ac{GAT}~2} (\textit{concat=False, heads=1}):
         \texttt{GATConv(256, 64, heads=1)}; salida 64~dims
         (una sola cabeza de atención que produce directamente
         el embedding final del nodo, sin concatenación);
-        seguida de \texttt{LayerNorm}, \ac{ELU} y \texttt{Dropout(0.3)}
+        seguida de \texttt{LayerNorm}, \acs{ELU} y \texttt{Dropout(0.3)}
         (sin conexión residual: las dimensiones de entrada y salida difieren,
         256 frente a 64).
   \item \textbf{Global pooling}: \texttt{global\_mean\_pool} y \texttt{global\_max\_pool}
         sobre los 64-dim embeddings de todos los nodos; concatenación
         \(\to\) 128~dims (\(64 + 64\)).
-  \item \textbf{Clasificador \ac{MLP}}: \texttt{Linear(128, 64)} \(+\) \ac{ReLU} \(+\)
+  \item \textbf{Clasificador \ac{MLP}}: \texttt{Linear(128, 64)} \(+\) \acs{ReLU} \(+\)
         \texttt{Dropout(0.3)} \(+\) \texttt{Linear(64, 3)}.
 \end{enumerate}
 
@@ -388,6 +407,25 @@ estratificada de 5~pliegues. El \textit{checkpoint} de cada pliegue se seleccion
 por la mejor Precisión@5 de validación, con la F1 macro como criterio de
 desempate (\texttt{--select-by p5}), alineando la selección de modelos con la
 métrica primaria del sistema en lugar de con la métrica de clasificación.
+
+El guion de entrenamiento (\texttt{train\_gnn.py}) expone tres opciones que
+seleccionan variantes de esa configuración y que hacen reproducibles los estudios
+de ablación reportados en el Capítulo~\ref{cap:evaluacion}. La opción
+\texttt{-{}-conv} escoge el operador de convolución sobre el grafo entre
+\texttt{gat}, el \ac{GAT} con \textit{embedding} de tipo de arista descrito en la
+arquitectura y empleado en la configuración desplegada, y \texttt{gcn}, una
+\ac{GCN} de referencia que ignora los tipos de arista y pondera todos los vecinos
+por igual. La opción \texttt{-{}-focal-loss}, acompañada del parámetro de enfoque
+\texttt{-{}-focal-gamma} (valor 2 por defecto), sustituye la entropía cruzada
+ponderada por la \textit{focal loss} \citep{Lin2017}, que reduce el peso de los
+ejemplos ya bien clasificados para concentrar el gradiente en los difíciles. La
+opción \texttt{-{}-select-by} fija el criterio de selección del \textit{checkpoint}
+de cada pliegue entre \texttt{f1} (F1 macro de validación) y \texttt{p5}
+(Precisión@5 de validación), con la métrica restante como criterio de desempate.
+La configuración desplegada corresponde a \texttt{-{}-conv gat}, sin
+\texttt{-{}-focal-loss} y con \texttt{-{}-select-by p5}; las alternativas se
+cuantifican en las Secciones~\ref{sec:ablacion_perdida}
+y~\ref{sec:ablacion_arquitectura}.
 
 Los pesos de clase se calculan en cada pliegue de entrenamiento mediante la
 siguiente fórmula implementada en \texttt{train\_gnn.py}:
@@ -474,7 +512,10 @@ Ecuación~\ref{eq:ensemble} son optimizados mediante un Algoritmo Genético
 \citep{Holland1975} con 60~individuos codificados como pares
 \((w_{\text{gnn}}, w_{\text{esc}})\) \(\in [0,1]^2\), con \(w_{\text{rf}}\) derivado
 como \(1 - w_{\text{gnn}} - w_{\text{esc}}\) (la representación 2D garantiza que la
-suma de los tres pesos sea siempre~1). La función objetivo es:
+suma de los tres pesos sea siempre~1). La función objetivo combina la métrica de
+\textit{ranking} Precisión@5 y la tasa de falsos positivos sobre clústeres
+limpios \ac{FPR}\_clean, ambas definidas en la Sección~\ref{sec:metricas}, junto
+con un término de regularización:
 
 \begin{equation}
   F = 0{,}7 \cdot P@5 + 0{,}3 \cdot (1 - \text{FPR\_clean})
@@ -565,6 +606,75 @@ pesos del modelo sigue la cadena: argumento \texttt{--checkpoints-dir}
 excepción tipada derivada de \texttt{KubescanError} y definida en
 \texttt{exceptions.py}.
 
+Ambos comandos comparten el conjunto de opciones recogido en la
+Tabla~\ref{tab:cli_options}, definido con \textit{Click} en \texttt{cli.py}. La
+opción \texttt{-{}-format} selecciona entre el informe en texto y la salida
+\ac{JSON}; \texttt{-{}-show-nodes} añade el desglose por manifiesto al informe en
+texto; \texttt{-{}-cluster-name} fija el nombre del clúster que encabeza el
+informe, que por defecto es el del directorio analizado; y
+\texttt{-{}-checkpoints-dir} altera el primer eslabón de la cadena de resolución de
+pesos. Las opciones \texttt{-{}-namespace} y \texttt{-{}-all-namespaces} son
+exclusivas de \texttt{kubescan live} y delimitan el ámbito de la consulta al
+\ac{API} de \textit{Kubernetes}. El grupo raíz añade, por su parte,
+\texttt{-{}-verbose}, que eleva el nivel del registro de \texttt{WARNING} a
+\texttt{DEBUG}, y \texttt{-{}-version}, que emite la versión instalada del paquete.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Opciones de la interfaz de línea de comandos de \textit{kubescan}}
+\label{tab:cli_options}
+\begin{tabular}{@{}p{3.9cm}p{2.5cm}p{6.2cm}@{}}
+\toprule
+Opción & Ámbito & Efecto \\
+\midrule
+\texttt{-{}-format \{text,json\}} & \texttt{scan}, \texttt{live} & Formato de salida; \texttt{text} por defecto \\
+\texttt{-{}-show-nodes} & \texttt{scan}, \texttt{live} & Desglose de riesgo por manifiesto (sólo formato texto) \\
+\texttt{-{}-cluster-name}, \texttt{-n}\(^{*}\) & \texttt{scan}, \texttt{live} & Nombre legible del clúster en el informe \\
+\texttt{-{}-checkpoints-dir}, \texttt{-c} & \texttt{scan}, \texttt{live} & Directorio de \textit{checkpoints} del modelo \\
+\texttt{-{}-namespace}, \texttt{-n} & \texttt{live} & \textit{Namespace} consultado vía \textit{kubectl} \\
+\texttt{-{}-all-namespaces}, \texttt{-A} & \texttt{live} & Consulta todos los \textit{namespaces} \\
+\texttt{-{}-verbose}, \texttt{-v} & Grupo raíz & Registro en nivel \texttt{DEBUG} \\
+\texttt{-{}-version} & Grupo raíz & Versión instalada del paquete \\
+\bottomrule
+\end{tabular}
+
+{\footnotesize\(^{*}\)La forma corta \texttt{-n} corresponde a
+\texttt{-{}-cluster-name} en \texttt{scan} y a \texttt{-{}-namespace} en
+\texttt{live}.\par}
+\fuentepropia
+\end{table}
+
+El informe en texto se estructura en tres bloques. El encabezado identifica el
+clúster y la ruta analizada; el cuerpo emite el veredicto
+(\texttt{CLEAN}, \texttt{ISOLATED\_MISCONFIG} o \texttt{ATTACK\_CHAIN}) seguido de
+las señales que lo sustentan —\textit{ensemble score}, probabilidad de cadena del
+ensemble de cinco pliegues, probabilidad de clúster limpio, riesgo \ac{RF} medio,
+fracción de manifiestos con capacidad de escape y con capacidad de movimiento
+lateral— y de los tres pesos \(w_{\text{rf}}\), \(w_{\text{gnn}}\) y
+\(w_{\text{esc}}\) efectivamente aplicados; el bloque final, condicionado a
+\texttt{-{}-show-nodes}, tabula los manifiestos ordenados por
+\textit{risk\_score} descendente con su marca de escape (\texttt{ESC}) o
+movimiento lateral (\texttt{LAT}) y sus primeras cuatro flags activas. La
+Figura~\ref{fig:cli_pipeline} del Anexo~\ref{ap:guia_uso} traza el recorrido
+completo de una invocación de \texttt{kubescan scan} y reproduce una
+transcripción íntegra de este informe.
+
+La salida \ac{JSON} expone la misma información en un objeto de un solo nivel
+apto para consumo automatizado: los campos \texttt{cluster},
+\texttt{cluster\_dir} y \texttt{verdict} identifican el análisis; los campos
+\texttt{ensemble\_score}, \texttt{chain\_probability},
+\texttt{clean\_probability}, \texttt{mean\_rf\_risk} y \texttt{escape\_fraction}
+recogen las señales numéricas redondeadas a seis decimales; los recuentos
+\texttt{n\_manifests}, \texttt{n\_escape\_capable} y \texttt{n\_lateral\_capable}
+resumen la composición del clúster; el objeto anidado \texttt{weights} contiene
+los tres pesos del \textit{ensemble}; y la lista \texttt{manifests}, ordenada por
+\textit{risk\_score} descendente, aporta por cada manifiesto su nombre de fichero,
+su \textit{risk\_score}, los indicadores booleanos \texttt{escape\_capable} y
+\texttt{lateral\_capable}, y la lista completa \texttt{flags} de características
+de seguridad activas. Estos dos últimos campos son la evidencia de trazabilidad
+que verifica el requisito RNF-1 en la
+Sección~\ref{sec:verificacion_requisitos}.
+
 % -----------------------------------------------------------
 \section{Tabla de características del sistema}
 \label{sec:features_table}
@@ -580,7 +690,7 @@ también forman el vector de nodo de la Capa~2.
 \centering\small
 \caption{Características del clasificador \ac{RF} — grupo Rahman (1/2)}
 \label{tab:features_a}
-\begin{tabular}{@{}p{4.2cm}llp{4.5cm}@{}}
+\begin{tabular}{@{}p{4.7cm}llp{4.5cm}@{}}
 \toprule
 Nombre & Grupo & Rol en grafo & Descripción \\
 \midrule
@@ -592,7 +702,7 @@ Nombre & Grupo & Rol en grafo & Descripción \\
 \texttt{CAP\_SYS\_MODULE} & Rahman & ESC & Capacidad \texttt{SYS\_MODULE} activa \\
 \texttt{WITHIN\_MANIFEST\_SECRET} & Rahman & LAT & Secreto en texto plano embebido en el manifiesto \\
 \texttt{SEC\_CONT\_OVER\_PRIVIL} & Rahman & ESC & Contenedor privilegiado (\texttt{privileged: true}) \\
-\texttt{ALLOW\_PRIVI} & Rahman & LAT & \texttt{allowPrivilegeEscalation: true} \\
+\texttt{ALLOW\_PRIVI} & Rahman & LAT & Permite escalada de privilegios (\texttt{allowPrivilege\-Escalation: true}) \\
 \texttt{INSECURE\_HTTP} & Rahman & — & Usa HTTP sin TLS en puerto conocido \\
 \texttt{NO\_SECU\_CONTEXT} & Rahman & — & Ausencia de \texttt{securityContext} definido \\
 \texttt{HOST\_ALIAS} & Rahman & — & Usa \texttt{hostAliases} para resolución DNS manual \\
@@ -611,7 +721,7 @@ Nombre & Grupo & Rol en grafo & Descripción \\
 \centering\small
 \caption{Características del clasificador \ac{RF} — grupos derivado y extendido, y nodo (2/2)}
 \label{tab:features_b}
-\begin{tabular}{@{}p{4.2cm}llp{4.5cm}@{}}
+\begin{tabular}{@{}p{4.7cm}llp{4.5cm}@{}}
 \toprule
 Nombre & Grupo & Rol en grafo & Descripción \\
 \midrule
@@ -649,8 +759,10 @@ columna (731)—, según detalla la Sección~\ref{sec:construccion_dataset}. La 
 % -----------------------------------------------------------
 
 El desarrollo de \textit{kubescan} sigue prácticas de ingeniería de software
-orientadas a la producción. La calidad del código se garantiza mediante cuatro
-herramientas integradas en un \textit{pipeline} de pre-commit y \acs{CICD}: (1)
+orientadas a la producción. Cuatro herramientas integradas en un
+\textit{pipeline} de pre-commit y \acs{CICD} comprueban de forma automática el
+estilo, los tipos, el comportamiento y la complejidad del código, y bloquean la
+integración cuando alguna comprobación falla: (1)
 \textit{ruff}, linter y formateador de código Python con reglas de estilo y
 seguridad; (2) \textit{mypy} en modo estricto
 (\texttt{mypy kubescan/src -{}-strict}), para comprobación estática de tipos en
@@ -670,5 +782,5 @@ La suite de tests cubre el parser de \acs{YAML}
 grafo de clúster (\texttt{utils/graph\_builder.py}), el clasificador \ac{RF}
 (\texttt{model/rf\_classifier.py}) y el ensamblador \ac{GA}
 (\texttt{model/ga\_ensemble.py}); la verificación funcional de extremo a extremo
-que estos tests de integración realizan se reporta como parte de la evaluación
-del sistema en el Capítulo~\ref{cap:evaluacion}.\par}
+que estos tests de integración realizan se reporta como evidencia de los
+requisitos RF-1 y RF-2 en la Sección~\ref{sec:verificacion_requisitos}.\par}
