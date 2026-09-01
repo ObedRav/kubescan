@@ -249,7 +249,7 @@ nodos del clúster.
 % -----------------------------------------------------------
 
 La Capa~1 clasifica cada manifiesto de forma individual a partir de las
-características descritas en la sección anterior. Se entrenan dos modelos
+características descritas en la Sección~\ref{sec:construccion_dataset}. Se entrenan dos modelos
 independientes sobre el mismo conjunto de características: un clasificador
 binario que distingue manifiestos seguros de mal configurados, y un modelo de
 severidad que estima el grado de gravedad de la configuración incorrecta
@@ -284,8 +284,9 @@ grafo; se incluye como salida adicional de la Capa~1.
 \label{sec:capa2_diseno}
 % -----------------------------------------------------------
 
-La Capa~2 opera sobre el grafo de clúster construido en la sección anterior y
-clasifica el clúster completo según el riesgo de cadena de ataque que presenta.
+La Capa~2 opera sobre el grafo de clúster construido en la
+Sección~\ref{sec:construccion_grafo} y clasifica el clúster completo según el
+riesgo de cadena de ataque que presenta.
 Esta sección describe la arquitectura del modelo \acs{GAT}, el procedimiento de
 entrenamiento empleado y la estrategia de aumentación de datos aplicada para
 mitigar la escasez de clústeres con cadena de ataque confirmada.
