@@ -15,27 +15,64 @@ disponible en el siguiente repositorio de GitHub:
 El repositorio incluye los siguientes componentes:
 
 \begin{itemize}
-  \item \textbf{\texttt{kubescan/}}: paquete Python instalable con la CLI y los
-    modelos de inferencia.
+  \item \textbf{\texttt{kubescan/}}: paquete Python instalable con la \ac{CLI} y
+    los modelos de inferencia.
+  \item \textbf{\texttt{kubescan/tests/}}: batería de pruebas automatizadas, con
+    siete módulos unitarios (\texttt{test\_yaml\_parser.py},
+    \texttt{test\_graph\_builder.py}, \texttt{test\_gat\_encoder.py},
+    \texttt{test\_rf\_classifier.py}, \texttt{test\_ga\_ensemble.py},
+    \texttt{test\_device\_utils.py} y \texttt{test\_properties.py}, este último
+    basado en pruebas de propiedades con \textit{Hypothesis}) y una prueba de
+    integración de extremo a extremo sobre la \ac{CLI}
+    (\texttt{integration/test\_cli\_scan.py}).
   \item \textbf{\texttt{research/scripts/}}: \textit{scripts} de adquisición y
-    preprocesamiento de los manifiestos YAML (fases 1 y 2).
+    preprocesamiento de los manifiestos \ac{YAML} (fases 1 y 2).
   \item \textbf{\texttt{research/models/}}: código de entrenamiento del Random
-    Forest (\texttt{train\_rf.py}), de la GAT (\texttt{train\_gnn.py}), y del
+    Forest (\texttt{train\_rf.py}), de la \ac{GAT} (\texttt{train\_gnn.py}), y del
     Algoritmo Genético (\texttt{run\_ga\_ensemble.py}).
   \item \textbf{\texttt{research/data/}}: los grafos de clúster en formato
     \texttt{.npz} (NumPy, con campos \texttt{x}, \texttt{edge\_index},
     \texttt{edge\_attr}, \texttt{y}, \texttt{node\_labels} y \texttt{risk\_scores})
     y el dataset tabular en formato \texttt{.csv}.
   \item \textbf{\texttt{research/models/checkpoints/}}: \textit{checkpoints}
-    de los 5~modelos GAT entrenados en validación cruzada y el modelo RF
-    (disponible también como enlace simbólico en
+    de los 5~modelos \ac{GAT} entrenados en validación cruzada y el modelo
+    \ac{RF} (disponible también como enlace simbólico en
     \texttt{kubescan/checkpoints/trained/}).
+  \item \textbf{\texttt{thesis/usability-study/}}: protocolo, cuestionario e
+    instrumentos del estudio de usabilidad descrito en la
+    Sección~\ref{sec:usabilidad}, junto con la plantilla de resultados y el
+    \textit{script} de agregación \texttt{compute\_results.py}.
+  \item \textbf{\texttt{Makefile}}: objetivos de reproducción del \textit{pipeline}
+    de investigación (\texttt{make data}, \texttt{make reproduce}).
+  \item \textbf{\texttt{requirements-lock.txt}}: fijación exacta de versiones de
+    todas las dependencias transitivas del entorno de entrenamiento.
+  \item \textbf{\texttt{.pre-commit-config.yaml}} y
+    \textbf{\texttt{.github/workflows/ci.yml}}: controles automáticos de estilo,
+    tipado y ejecución de la batería de pruebas en integración continua.
   \item \textbf{\texttt{thesis/}}: fuentes LaTeX de esta memoria.
 \end{itemize}
 
+Los pesos entrenados se distribuyen junto con el código, de modo que un clon
+nuevo del repositorio puede ejecutar \texttt{kubescan scan} sin reentrenar
+ningún modelo. El directorio \texttt{research/models/checkpoints/} contiene los
+cinco \textit{checkpoints} de validación cruzada
+(\texttt{gnn\_fold\_0.pt}--\texttt{gnn\_fold\_4.pt}), el \textit{checkpoint}
+\texttt{gnn\_best.pt}, los dos modelos \ac{RF} serializados en formato
+\texttt{.skops} (\texttt{rf\_model.skops} y \texttt{rf\_severity.skops}), los
+pesos del \textit{ensemble} en \texttt{ga\_weights.json} y los ficheros de
+métricas (\texttt{cv\_results.json}, \texttt{rf\_results.json},
+\texttt{ga\_results.json} y \texttt{test\_results.json}). El conjunto ocupa
+aproximadamente 32~MB y es el mismo que consume la \ac{CLI} a través del enlace
+simbólico \texttt{kubescan/checkpoints/trained/}.
+
 Para garantizar la reproducibilidad, los resultados finales de esta memoria se
 entrenaron y evaluaron sobre una GPU NVIDIA~T4 (CUDA) con Python~3.12, PyTorch~2.11
-(CUDA~12.8), PyTorch Geometric~2.8, scikit-learn~1.6 y NumPy~2.0. Las versiones
+(CUDA~12.8), PyTorch Geometric~2.8, scikit-learn~1.6 y NumPy~2.0. Esa
+configuración corresponde al entorno de entrenamiento e investigación, que exige
+GPU y las dependencias completas de \textit{PyTorch Geometric}; el paquete
+distribuible admite un rango de instalación más amplio y su instalación se
+verificó también en entornos Python~3.10 y~3.11, según se detalla en la
+Sección~\ref{sec:verificacion_requisitos} (RNF-3). Las versiones
 exactas de todas las dependencias, junto con las semillas, las particiones y las sumas
 de verificación (\textit{checksums}) de los datos y los \textit{checkpoints}, se
 registran en \texttt{research/models/checkpoints/run\_manifest.json}; el flujo completo

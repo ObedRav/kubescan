@@ -3,15 +3,14 @@
 \label{cap:herramienta}
 % ============================================================
 
-Este capítulo describe de forma completa el sistema \textit{kubescan}, desde su
-arquitectura general hasta los detalles de su implementación como herramienta de
-software distribuible. Se presenta primero la arquitectura de tres capas, y a
-continuación los procesos de construcción del conjunto de datos y del grafo de
-clúster que alimentan dichas capas. Le siguen el diseño de entrenamiento de cada
-capa, la interfaz de línea de comandos resultante y las prácticas de ingeniería
-de software adoptadas durante el desarrollo. La implementación completa se
-encuentra disponible en el repositorio indicado en el
-Anexo~\ref{ap:repositorio}.
+El sistema \textit{kubescan} se organiza en tres capas que transforman un
+directorio de manifiestos \acs{YAML} en una puntuación de riesgo de cadena de
+ataque, y se distribuye como una herramienta de línea de comandos instalable.
+Su construcción abarca la obtención del conjunto de datos, la derivación del
+grafo de clúster que representa las relaciones de seguridad entre manifiestos,
+el diseño y entrenamiento de cada capa, y las prácticas de ingeniería de
+software aplicadas al desarrollo. La implementación completa se encuentra
+disponible en el repositorio indicado en el Anexo~\ref{ap:repositorio}.
 
 % -----------------------------------------------------------
 \section{Arquitectura general del sistema}
@@ -56,9 +55,8 @@ validación cruzada (Sección~\ref{sec:capa3_diseno}).
 La Figura~\ref{fig:arquitectura} muestra el proceso de tres capas, desde los
 manifiestos \acs{YAML} de entrada hasta la clasificación de riesgo del clúster. Los
 \textit{risk\_scores} producidos por la Capa~1 se incorporan como atributo nodal~26
-del grafo de entrada de la Capa~2. Las secciones siguientes detallan, en este mismo
-orden, la construcción del conjunto de datos, la construcción del grafo y el diseño
-de cada una de las tres capas.
+del grafo de entrada de la Capa~2, de modo que la señal por manifiesto queda
+disponible como atributo de nodo para el razonamiento estructural.
 
 % -----------------------------------------------------------
 \section{Construcción del conjunto de datos}
@@ -500,9 +498,10 @@ frontera (tasa del 5\,\%) que salta a los vértices del símplex, seguida de
 re-proyección al dominio válido (\(w_{\text{rf}} \geq 0\)); la población inicial se
 siembra con los vértices y puntos medios del símplex y con muestreo de Dirichlet, y el
 criterio de parada es 150~generaciones.
-Como \textit{baseline} determinístico, se ejecuta previamente una búsqueda en rejilla
-2D con paso \(1/20\) (231~evaluaciones); la comparación de su óptimo con el resultado
-del \ac{GA} se discute en la Sección~\ref{sec:layer3}.
+Como \textit{baseline} determinístico, antes de la optimización genética se
+ejecuta una búsqueda en rejilla 2D con paso \(1/20\) (231~evaluaciones); la
+comparación de su óptimo con el resultado del \ac{GA} se discute en la
+Sección~\ref{sec:layer3}.
 
 La señal de escape se define como un indicador binario que vale~1,0 si al menos un
 nodo del clúster tiene alguna flag de escape activa, y~0,0 en caso contrario. Esta
