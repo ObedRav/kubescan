@@ -202,3 +202,28 @@ entornos \textit{Google Colab} con GPU. El objetivo
 en la Tabla~\ref{tab:arch_ablation} (\ac{GAT} de 2~capas y \ac{GCN} de
 3~capas) con la misma configuración de pérdida y selección que el modelo
 desplegado.\par}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Opciones de la interfaz de línea de comandos de \textit{kubescan}}
+\label{tab:cli_options}
+\begin{tabular}{@{}p{3.9cm}p{2.5cm}p{6.2cm}@{}}
+\toprule
+Opción & Ámbito & Efecto \\
+\midrule
+\texttt{-{}-format \{text,json\}} & \texttt{scan}, \texttt{live} & Formato de salida; \texttt{text} por defecto \\
+\texttt{-{}-show-nodes} & \texttt{scan}, \texttt{live} & Desglose de riesgo por manifiesto (sólo formato texto) \\
+\texttt{-{}-cluster-name}, \texttt{-n}\(^{*}\) & \texttt{scan}, \texttt{live} & Nombre legible del clúster en el informe \\
+\texttt{-{}-checkpoints-dir}, \texttt{-c} & \texttt{scan}, \texttt{live} & Directorio de \textit{checkpoints} del modelo \\
+\texttt{-{}-namespace}, \texttt{-n} & \texttt{live} & \textit{Namespace} consultado vía \textit{kubectl} \\
+\texttt{-{}-all-namespaces}, \texttt{-A} & \texttt{live} & Consulta todos los \textit{namespaces} \\
+\texttt{-{}-verbose}, \texttt{-v} & Grupo raíz & Registro en nivel \texttt{DEBUG} \\
+\texttt{-{}-version} & Grupo raíz & Versión instalada del paquete \\
+\bottomrule
+\end{tabular}
+
+{\footnotesize\(^{*}\)La forma corta \texttt{-n} corresponde a
+\texttt{-{}-cluster-name} en \texttt{scan} y a \texttt{-{}-namespace} en
+\texttt{live}.\par}
+\fuentepropia
+\end{table}

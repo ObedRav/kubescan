@@ -289,12 +289,10 @@ introducían los protocolos de particionado sucesivamente descartados.
 
 \subsection{Evolución por fase experimental}
 
-La Tabla~\ref{tab:gnn_evolution} muestra la evolución de los resultados de la \ac{GAT}
-a lo largo de las seis fases del desarrollo experimental. La
-Figura~\ref{fig:gnn_evolution} traza la trayectoria de las cuatro
-primeras fases y muestra cómo la aumentación de datos y la corrección del vector
-de escape \texttt{HOSTPATH\_MOUNT} contribuyeron de forma independiente y
-complementaria. La quinta fase corrige el protocolo de particionado: las fases~1--4
+La Tabla~\ref{tab:gnn_evolution} muestra la evolución de los resultados de la
+\ac{GAT} a lo largo de las seis fases del desarrollo experimental. En las cuatro
+primeras, la aumentación de datos y la corrección del vector de escape
+\texttt{HOSTPATH\_MOUNT} contribuyeron de forma independiente y complementaria. La quinta fase corrige el protocolo de particionado: las fases~1--4
 incluían en el entrenamiento variantes aumentadas derivadas de los
 clústeres de validación y test (fuga de datos por casi-duplicados), por lo que sus
 métricas están infladas de forma optimista. Esa quinta fase aplica el protocolo
@@ -358,19 +356,9 @@ y 5~cadenas respectivamente, por lo que el denominador es 5 en todos ellos y el
 techo 1,0 exige cinco aciertos en las cinco primeras posiciones; únicamente el
 pliegue~0 lo consigue.
 
-\begin{figure}[htbp]
-  \centering
-  \caption{Evolución de F1 macro y Precisión@5 de la Capa~2}
-  \label{fig:gnn_evolution}
-  \includegraphics[width=\textwidth]{fig_gnn_evolution}
-
-  \fuentepropia
-\end{figure}
-
-La Figura~\ref{fig:gnn_evolution} recorre las cuatro primeras fases experimentales
-(protocolo preliminar). Las líneas de puntos indican
-el objetivo de diseño de ranking (P@5\,>\,0,70) y, como referencia, el umbral de
-F1 fijado para la Capa~1 (0,85); las barras de error
+Las cuatro primeras fases de la Tabla~\ref{tab:gnn_evolution} corresponden al
+protocolo preliminar. El objetivo de diseño de ranking es P@5\,>\,0,70 y el umbral
+de F1 fijado para la Capa~1, tomado como referencia, 0,85; las desviaciones típicas
 representan la desviación estándar entre los 5~pliegues de validación cruzada. La
 fase final \textit{group-aware} no está incluida en el gráfico y se reporta en la
 Tabla~\ref{tab:gnn_evolution}.
@@ -507,18 +495,9 @@ diseñada para regímenes con miles de ejemplos por clase \citep{Lin2017}, adem�
 anula por completo la clasificación de la clase \textit{attack\_chain} en el
 conjunto de test (F1 de clase 0,0 frente a 0,667 con entropía cruzada). La
 configuración desplegada es, en consecuencia, entropía cruzada ponderada con
-selección por Precisión@5 (Figura~\ref{fig:loss_ablation}).
+selección por Precisión@5.
 
-\begin{figure}[htbp]
-  \centering
-  \caption{Precisión@5 de la ablación de pérdida y selección}
-  \label{fig:loss_ablation}
-  \includegraphics[width=0.82\textwidth]{fig_loss_ablation}
-
-  \fuentepropia
-\end{figure}
-
-La Figura~\ref{fig:loss_ablation} representa la Precisión@5 de validación cruzada
+La Tabla~\ref{tab:loss_ablation} recoge la Precisión@5 de validación cruzada
 (\(\pm\)\(\sigma\)) de las cuatro configuraciones; solo la desplegada —entropía
 cruzada ponderada con selección por Precisión@5— supera el objetivo de diseño.
 La distancia respecto de la segunda mejor configuración es, no obstante, estrecha
@@ -751,17 +730,8 @@ P@5 \([0{,}60,\ 1{,}00]\), \ac{FPR}\_clean \([0{,}00,\ 0{,}40]\) y F1~macro
 \textit{consistentes con} los objetivos de diseño, no como demostraciones
 concluyentes; la ampliación adicional del corpus de test es la vía directa para
 estrechar estos intervalos (TF1, Sección~\ref{sec:trabajo_futuro}). La
-Figura~\ref{fig:ensemble_patk} resume las
-tres métricas de ranking del ensemble sobre el conjunto de test.
-
-\begin{figure}[htbp]
-  \centering
-  \caption{Precisión@k del ensemble sobre el conjunto de test}
-  \label{fig:ensemble_patk}
-  \includegraphics[width=0.6\textwidth]{fig_ensemble_pat_k}
-
-  \fuentepropia
-\end{figure}
+Tabla~\ref{tab:ensemble_ablation} recoge las tres métricas de ranking del
+\textit{ensemble} sobre el conjunto de test.
 
 La Tabla~\ref{tab:ensemble_ablation} desglosa la contribución de cada componente
 sobre el conjunto de test (86~grafos, 5~cadenas, techo P@5\,=\,1,00), con la
@@ -838,7 +808,6 @@ el que ordena los repositorios reales. Esta observación motiva el trabajo futur
 TF3 (análisis semántico de \ac{RBAC} completo,
 Sección~\ref{sec:trabajo_futuro}).
 
-
 % -----------------------------------------------------------
 \section{Validación con herramientas de análisis estático}
 \label{sec:validacion_externa}
@@ -883,8 +852,8 @@ capa por separado, mientras que el comportamiento del sistema de extremo a
 extremo —tal como lo experimenta un operador que confía en el \textit{ranking}
 final— se resume en una única métrica de proceso completo. Esa
 métrica es el conjunto Precisión@k / \ac{FPR}\_clean del sistema desplegado sobre
-el conjunto de test, ya reportado en la Sección~\ref{sec:layer3} y resumido en
-la Figura~\ref{fig:ensemble_patk}: P@1\,=\,1,00, P@3\,=\,1,00, P@5\,=\,0,80 y
+el conjunto de test, ya reportado en la Sección~\ref{sec:layer3} y recogido en
+la Tabla~\ref{tab:ensemble_ablation}: P@1\,=\,1,00, P@3\,=\,1,00, P@5\,=\,0,80 y
 \ac{FPR}\_clean\,=\,0,00 sobre 86~grafos con 5~cadenas de ataque de repositorios
 reales, genuinamente no vistos durante el desarrollo; dado el tamaño reducido de
 este conjunto, los intervalos de confianza al 95\,\% son amplios (P@5

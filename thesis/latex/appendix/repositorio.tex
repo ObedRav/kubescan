@@ -89,3 +89,78 @@ El estudiante es el único autor de todos los \textit{commits} del repositorio.
 Los datos públicos utilizados provienen de las fuentes citadas en la
 Sección~\ref{sec:fuentes_datos} (Rahman et~al., BishopFox BadPods, Kubernetes Goat y repositorios
 de seguridad adicionales de dominio público).
+
+\section*{Catálogo de características del clasificador}
+\addcontentsline{toc}{section}{Catálogo de características del clasificador}
+
+Las tablas siguientes enumeran las 28~características que emplea la Capa~1,
+con su grupo de procedencia y su papel en el grafo de la Capa~2, según se
+describe en la Sección~\ref{sec:construccion_dataset}.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Características del clasificador \ac{RF} — grupo Rahman (1/3)}
+\label{tab:features_a}
+\begin{tabular}{@{}p{4.7cm}llp{4.5cm}@{}}
+\toprule
+Nombre & Grupo & Rol en grafo & Descripción \\
+\midrule
+\texttt{TRUE\_HOST\_PID} & Rahman & ESC & Comparte PID namespace del anfitrión \\
+\texttt{TRUE\_HOST\_IPC} & Rahman & ESC & Comparte IPC namespace del anfitrión \\
+\texttt{TRUE\_HOST\_NET} & Rahman & ESC & Comparte red del anfitrión \\
+\texttt{DOCKERSOCK\_PATH} & Rahman & ESC & Monta socket de Docker \\
+\texttt{CAP\_SYS\_ADMIN} & Rahman & ESC & Capacidad \texttt{SYS\_ADMIN} activa \\
+\texttt{CAP\_SYS\_MODULE} & Rahman & ESC & Capacidad \texttt{SYS\_MODULE} activa \\
+\texttt{WITHIN\_MANIFEST\_SECRET} & Rahman & LAT & Secreto en texto plano embebido en el manifiesto \\
+\texttt{SEC\_CONT\_OVER\_PRIVIL} & Rahman & ESC & Contenedor privilegiado (\texttt{privileged: true}) \\
+\texttt{ALLOW\_PRIVI} & Rahman & LAT & Permite escalada de privilegios (\texttt{allowPrivilege\-Escalation: true}) \\
+\bottomrule
+\end{tabular}
+\fuentepropia
+\end{table}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Características del clasificador \ac{RF} — grupo Rahman (2/3)}
+\label{tab:features_a2}
+\begin{tabular}{@{}p{4.7cm}llp{4.5cm}@{}}
+\toprule
+Nombre & Grupo & Rol en grafo & Descripción \\
+\midrule
+\texttt{INSECURE\_HTTP} & Rahman & — & Usa HTTP sin TLS en puerto conocido \\
+\texttt{NO\_SECU\_CONTEXT} & Rahman & — & Ausencia de \texttt{securityContext} definido \\
+\texttt{HOST\_ALIAS} & Rahman & — & Usa \texttt{hostAliases} para resolución DNS manual \\
+\texttt{NO\_DEFAULT\_NSPACE} & Rahman & — & Despliega en el \textit{namespace} \texttt{default} \\
+\texttt{NO\_RESO} & Rahman & — & Sin límites/\textit{requests} de recursos definidos \\
+\texttt{NO\_ROLLING\_UPDATE} & Rahman & — & Sin estrategia de actualización \textit{RollingUpdate} \\
+\texttt{SECCOMP\_UNCONFINED} & Rahman & — & Perfil \textit{seccomp} \texttt{unconfined} (sin filtrado de \textit{syscalls}) \\
+\texttt{VALID\_TAINT\_SECRET} & Rahman & — & Secreto válido referenciado en \textit{taint}/\textit{toleration} \\
+\texttt{NO\_NETWORK\_POLICY} & Rahman & — & Sin \texttt{NetworkPolicy} definida en el \textit{namespace} \\
+\bottomrule
+\end{tabular}
+\fuentepropia
+\end{table}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Características del clasificador \ac{RF} — grupos derivado y extendido, y nodo (3/3)}
+\label{tab:features_b}
+\begin{tabular}{@{}p{4.7cm}llp{4.5cm}@{}}
+\toprule
+Nombre & Grupo & Rol en grafo & Descripción \\
+\midrule
+\texttt{cap\_misuse} & Derivada & — & OR lógico de \texttt{CAP\_SYS\_ADMIN} y \texttt{CAP\_SYS\_MODULE} \\
+\texttt{all\_secrets} & Derivada & — & OR de los indicadores de exposición de secretos \\
+\texttt{total\_misconfigs} & Derivada & — & Suma de todas las flags activas \\
+\texttt{NO\_RUN\_AS\_NON\_ROOT} & Extendida & — & Sin restricción de usuario no root \\
+\texttt{NO\_READ\_ONLY\_ROOT\_FS} & Extendida & — & Sistema de ficheros raíz con escritura \\
+\texttt{IMAGE\_USES\_LATEST} & Extendida & — & Imagen con \texttt{tag: latest} \\
+\texttt{SA\_AUTOMOUNT\_TOKEN} & Extendida & LAT & \textit{ServiceAccount} con token automontado \\
+\texttt{USES\_DEFAULT\_SA} & Extendida & LAT & Usa la \textit{ServiceAccount} \texttt{default} del \textit{namespace} \\
+\texttt{UNTRUSTED\_REGISTRY} & Extendida & — & Imagen proveniente de un registro no confiable \\
+\texttt{HOSTPATH\_MOUNT} & Extendida & ESC & Monta ruta del sistema de ficheros del anfitrión \\
+\texttt{risk\_score} & Nodo (Capa~2) & — & Probabilidad \ac{RF} clase misconfigured \(\in [0,1]\) \\
+\bottomrule
+\end{tabular}
+\fuentepropia
+\end{table}
