@@ -35,14 +35,16 @@ Rahman et~al.\ \citep{Rahman2022}, cuyos datos forman la base del presente
 trabajo, no reportan modelos de clasificación supervisada sobre el mismo
 conjunto: el objetivo de su trabajo era la construcción del dataset y el
 análisis de la densidad de misconfiguraciones, no la predicción, por lo que no
-ofrece una cifra de referencia directa. La línea de base aplicable procede en
-su lugar de la literatura de \acs{IDS} sobre UNSW-NB15 \citep{Moustafa2015},
-donde clasificadores basados en \textit{Random Forest} típicamente alcanzan F1
-macro entre 0,85 y 0,93; ese rango es el que motiva el umbral objetivo
-F1\,>\,0,85 adoptado en este trabajo (OE2). Frente a esa línea de base, el
-resultado de la Capa~1 (F1 macro\,=\,0,9946, \ac{AUC}-\ac{ROC}\,=\,0,9986;
-Sección~\ref{sec:layer1}) se sitúa por encima del extremo
-superior del rango de referencia. Esta separación casi perfecta es consistente
+ofrece una cifra de referencia directa. Tampoco la literatura de \acs{IDS} sobre
+UNSW-NB15 \citep{Moustafa2015} proporciona una: ese trabajo presenta el conjunto
+de datos y compara exactitud y tasa de falsas alarmas de otros algoritmos, sin
+reportar F1 macro ni resultados de \textit{Random Forest}
+(Sección~\ref{sec:ml_vulnerabilidades}). En consecuencia, el umbral
+F1\,>\,0,85 de OE2 es un criterio de diseño propio y no una cota tomada de la
+literatura, y la comparación informativa para la Capa~1 no es contra ese umbral
+sino contra una línea de base trivial calculada sobre el propio corpus: la mejor
+regla de una sola característica alcanza F1 macro\,=\,0,8502, frente al 0,9946
+del modelo (Sección~\ref{sec:layer1}). Esa separación es consistente
 con la naturaleza del problema: las misconfiguraciones en manifiestos
 \acs{YAML} son mayoritariamente discretas y acumulativas (más flags activas
 implica mayor riesgo), lo que hace que el espacio de características sea
@@ -51,31 +53,40 @@ suficientemente representativo.
 
 \subsection{Capa 2 en contexto}
 
-No existe ningún trabajo previo que aborde la clasificación supervisada de
-cadenas de ataque en clústeres \textit{Kubernetes} mediante \acs{GNN}s, por lo
-que la Capa~2 no dispone de una línea de base directamente comparable. Las
-referencias más cercanas son los trabajos de \acs{GNN}s para \ac{IDS} en red,
-como \textit{E-GraphSAGE} \citep{Lo2022}, que reporta mejoras del 2--8\,\% en F1
-sobre clasificadores tabulares en el dataset UNSW-NB15; y la literatura sobre
-conjuntos de grafos pequeños (n\,<\,200), que identifica la escasez de datos
-como el principal factor de variabilidad en \acs{GNN}s para ciberseguridad y
-recomienda validación cruzada estratificada como estándar de evaluación para
-conjuntos de este tamaño \citep{GNNSurvey2024} — la metodología adoptada en
-este trabajo. Frente a esa referencia, la ventaja del componente estructural
-observada en este trabajo es mayor de lo reportado por \textit{E-GraphSAGE} y
+Según la revisión bibliográfica no sistemática realizada en este trabajo
+(Capítulo~\ref{cap:estado}), no se ha localizado ningún trabajo previo que
+aborde la clasificación supervisada de cadenas de ataque en clústeres
+\textit{Kubernetes} mediante \acs{GNN}s, por lo que la Capa~2 no dispone de una
+línea de base directamente comparable. Las referencias más cercanas son los
+trabajos de \acs{GNN}s para \ac{IDS} en red, como \textit{E-GraphSAGE}
+\citep{Lo2022}, que reporta tasas de detección superiores a las de
+clasificadores tabulares clásicos sobre las re-publicaciones en formato NetFlow
+de los conjuntos de referencia del área; y la literatura que documenta la
+escasez de conjuntos de datos de grafos etiquetados en ciberseguridad
+\citep{GNNSurvey2024}. Conviene precisar que esta última no establece un régimen
+de tamaño concreto ni prescribe un protocolo de evaluación, de modo que no puede
+invocarse como respaldo de la varianza observada en este trabajo; la validación
+cruzada estratificada se adopta aquí como decisión metodológica propia. La
+ventaja del componente estructural
 se mide sobre el conjunto de test genuinamente no visto: P@5 pasa de 0,40
 (\ac{RF}-sólo) a 0,80 (configuraciones con \ac{GNN}) y P@1 de 0,00 a 1,00
 (Tabla~\ref{tab:ensemble_ablation}; Sección~\ref{sec:layer2} y siguientes),
 indicando que la información estructural del grafo es decisiva para identificar
 cadenas de ataque reales. La varianza entre pliegues de la fase final
-(\(\sigma\)\,=\,0,160 para P@5) es coherente con la variabilidad esperada según
-\citeauthor{GNNSurvey2024} \citeyear{GNNSurvey2024} para conjuntos de este
-tamaño, y en este trabajo tiene además una causa estructural identificada: el
-particionado por familias concentra las cadenas de validación de cada pliegue
-en 1--3 familias independientes (Sección~\ref{sec:layer2}), de modo que la
-desviación estándar entre pliegues mide en gran parte la dispersión de
-dificultad entre familias y no inestabilidad del modelo, como confirma el
-análisis multi-semilla (Sección~\ref{sec:multisemilla}).
+(\(\sigma\)\,=\,0,160 para P@5) no se contrasta aquí con ninguna cota externa,
+al no disponerse de una referencia que la establezca para conjuntos de este
+tamaño; en este trabajo tiene, no obstante, una causa estructural identificada: el
+particionado por familias concentra las cadenas de validación de cada pliegue en
+1, 1, 4, 5 y 5~familias independientes respectivamente
+(Sección~\ref{sec:layer2}), de modo que la desviación estándar entre pliegues
+mide en buena parte la dispersión de dificultad entre familias. El análisis
+multi-semilla (Sección~\ref{sec:multisemilla}) matiza esa lectura: cuatro de los
+cinco pliegues puntúan de forma idéntica con las tres semillas ensayadas, pero el
+único que varía —el pliegue~1, correspondiente a la familia
+\texttt{badpods\_*}— es también el que más contribuye a esa desviación. En ese
+pliegue concreto, la dificultad de la familia y la sensibilidad a la semilla no
+resultan separables con los datos disponibles, de modo que la atribución
+estructural de la varianza es parcial y no total.
 
 % -----------------------------------------------------------
 \section{Resultados de la Capa 1: Random Forest}
@@ -101,6 +112,15 @@ dataset), exactitud (\textit{accuracy}, porcentaje simple de aciertos), \ac{AUC}
 entrenamiento, sin necesitar un conjunto de validación aparte). El clasificador
 alcanza una F1 macro de 0,9946 en el conjunto de test, superando el objetivo de
 diseño (OE2, F1 macro\,>\,0,85) en 14,5 puntos porcentuales.
+
+Conviene situar esa cifra frente a una línea de base trivial, porque el umbral de
+OE2 resulta poco exigente sobre este corpus: la mejor regla de una sola
+característica (\texttt{NO\_RESO}\,=\,1) alcanza por sí sola F1 macro\,=\,0,8502,
+prácticamente el umbral de 0,85. El margen relevante del modelo no es, por tanto,
+el que separa 0,9946 de 0,85, sino el que lo separa de esa regla trivial:
+14,4~puntos porcentuales sobre la mejor decisión de una única condición. Una
+disyunción de todas las \textit{flags} binarias, en cambio, se desploma a
+F1 macro\,=\,0,3042, al marcar como mal configurado casi cualquier manifiesto.
 
 \begin{table}[htbp]
 \centering
@@ -165,8 +185,27 @@ como confirma la ausencia de falsos negativos en la clasificación binaria. Las
 dos primeras características de la Figura~\ref{fig:rf_importance} (en rojo)
 concentran el 48\,\% de la capacidad discriminativa total del modelo. Un estudio
 de ablación eliminando \texttt{total\_misconfigs} produce F1 idéntico y la misma
-matriz de confusión, confirmando que el modelo no depende de esta característica
-derivada y que no existe fuga de datos circular.
+matriz de confusión, lo que confirma que el modelo no depende de esa
+característica derivada: su señal es recuperable a partir de las flags que la
+componen.
+
+Esa ablación, sin embargo, no permite concluir que no exista circularidad entre
+etiqueta y características. La etiqueta binaria del corpus de Rahman et~al.\ se
+define como la presencia de al menos una misconfiguración de un subconjunto
+concreto de patrones, y esos patrones son a su vez características de entrada del
+modelo: sobre las 1.906~filas de esa fuente, la etiqueta coincide exactamente con
+la disyunción de ocho de las características observadas
+(\texttt{INSECURE\_HTTP}, \texttt{NO\_SECU\_CONTEXT},
+\texttt{WITHIN\_MANIFEST\_SECRET}, \texttt{NO\_RESO}, \texttt{CAP\_SYS\_ADMIN},
+\texttt{TRUE\_HOST\_NET}, \texttt{ALLOW\_PRIVI} y \texttt{DOCKERSOCK\_PATH}), sin
+un solo falso positivo ni falso negativo. Reentrenar la misma configuración
+restringida a esas filas produce, consecuentemente, F1 macro\,=\,1,0000. La Capa~1
+aprende por tanto una aproximación robusta de una regla determinista definida
+sobre su propio espacio de características —bajo imputación, valores ausentes y
+las etiquetas heterogéneas del resto de fuentes—, no una noción de
+misconfiguración independiente de dicha regla. Esta limitación, análoga a la que
+afecta al etiquetado de grafos, se analiza en la limitación~L5 del
+Capítulo~\ref{cap:conclusiones}.
 
 \begin{figure}[htbp]
   \centering
@@ -204,18 +243,23 @@ Macro media & 0,9836 & 0,9842 & 0,9838 & — \\
 \fuentepropia
 \end{table}
 
-La clase \textit{high-critical} (96~muestras de test, que representan manifiestos con
-flags de escape activas como \texttt{TRUE\_HOST\_PID} o \texttt{SEC\_CONT\_OVER\_PRIVIL})
-obtiene el F1 más bajo de las tres clases (0,9789), con 3~errores, los tres clasificados
-como \textit{low-medium}; ningún manifiesto crítico es clasificado como \textit{clean}.
-Esta ausencia de fugas hacia la clase \textit{clean} es la propiedad más relevante desde
-el punto de vista de seguridad operacional: en el peor caso, un manifiesto crítico es
-subestimado a \textit{low-medium}, nunca descartado como seguro. El resto de errores del
-modelo se concentra en la frontera entre \textit{clean} y \textit{low-medium} (3~casos), donde
-algunos manifiestos con pocas flags de baja severidad se sobreclasifican como
-\textit{low-medium} (falsos positivos benignos desde el punto de vista del operador); un
-único manifiesto \textit{low-medium} se sobreclasifica como \textit{high-critical}, un error
-igualmente conservador. El modelo de severidad se utiliza en el informe de salida
+El F1 más bajo de las tres clases corresponde a \textit{low-medium} (0,9772), por
+debajo del de \textit{high-critical} (0,9789). La causa no es una dificultad
+intrínseca de la clase intermedia, cuyo \textit{recall} es de 0,9934, sino su
+papel de sumidero de los errores del modelo: absorbe los seis manifiestos mal
+asignados del conjunto de test —tres procedentes de \textit{clean} y tres de
+\textit{high-critical}—, lo que rebaja su precisión a 0,9615. La clase
+\textit{high-critical} (96~muestras de test, que representan manifiestos con
+flags de escape activas como \texttt{TRUE\_HOST\_PID} o
+\texttt{SEC\_CONT\_OVER\_PRIVIL}) comete 3~errores, los tres clasificados como
+\textit{low-medium}; ningún manifiesto crítico es clasificado como
+\textit{clean}. Esa ausencia de fugas hacia la clase \textit{clean} es la
+propiedad relevante desde el punto de vista de seguridad operacional: en el peor
+caso un manifiesto crítico se subestima a \textit{low-medium}, nunca se descarta
+como seguro, y la dirección de los errores restantes —tres manifiestos
+\textit{clean} sobreclasificados como \textit{low-medium} y un único manifiesto
+\textit{low-medium} elevado a \textit{high-critical}— es igualmente conservadora.
+El modelo de severidad se utiliza en el informe de salida
 de \textit{kubescan} para proporcionar al operador una descripción cualitativa
 del nivel de riesgo de cada manifiesto, complementando el \textit{risk\_score}
 numérico del modelo binario.
@@ -295,11 +339,16 @@ registro histórico; la fase~5 introduce el protocolo \textit{group-aware} sobre
 corpus preliminar; la fase~6 es el resultado final, con protocolo
 \textit{group-aware} sobre el corpus completo.
 La columna «Cobert.\ techo» indica en cuántos de los 5~pliegues el modelo alcanza
-el \emph{techo teórico} de P@5: el valor máximo de P@5 posible dado el número de
-cadenas de ataque presentes en ese pliegue, que se alcanza cuando todas ellas
-quedan situadas en el top-5 del ranking. En la fase final, los cinco pliegues de
-validación contienen 8, 7, 6, 6 y 5~cadenas respectivamente (techo 1,0 en todos),
-y el pliegue~0 lo alcanza.
+el \emph{techo teórico} de P@5. La métrica se calcula como el número de cadenas
+situadas en el top-5 dividido entre \(\min(5,\, n_{\text{pos}})\), siendo
+\(n_{\text{pos}}\) el número de cadenas presentes en el pliegue, de modo que el
+techo vale 1,0 siempre que el pliegue contenga al menos una cadena y se alcanza
+cuando las cinco primeras posiciones del \textit{ranking} están ocupadas por
+cadenas —o, si el pliegue contiene menos de cinco, cuando todas ellas figuran en
+el top-5. En la fase final, los cinco pliegues de validación contienen 8, 7, 6, 6
+y 5~cadenas respectivamente, por lo que el denominador es 5 en todos ellos y el
+techo 1,0 exige cinco aciertos en las cinco primeras posiciones; únicamente el
+pliegue~0 lo consigue.
 
 \begin{figure}[htbp]
   \centering
@@ -343,9 +392,9 @@ que la caída se debía a las elecciones de función de pérdida y de criterio d
 selección —no al corpus ni al protocolo de particionado—, y que revertir a
 entropía cruzada ponderada y seleccionar por Precisión@5 recupera el objetivo
 sobre el mismo particionado honesto. La varianza entre pliegues
-(\(\sigma\)\,=\,0,160, frente a 0,098 en la fase~5) no refleja inestabilidad del
-modelo sino la propia atomicidad de las familias: cada pliegue evalúa 1--3
-familias independientes, como se detalla a continuación.
+(\(\sigma\)\,=\,0,160, frente a 0,098 en la fase~5) refleja en gran medida la
+propia atomicidad de las familias: cada pliegue evalúa 1, 1, 4, 5 y
+5~familias independientes respectivamente, como se detalla a continuación.
 
 \subsection{Resultados por pliegue (fase final)}
 
@@ -381,11 +430,16 @@ independientes. El pliegue~0 valida sobre las nueve variantes \texttt{datadog\_*
 F1\,=\,1,0 y P@5\,=\,1,0; el pliegue~1 valida sobre las ocho variantes
 \texttt{badpods\_*} (siete de ellas cadenas) y
 es sistemáticamente el más difícil (P@5\,=\,0,60 con la semilla desplegada;
-0,2--0,6 según la semilla, Sección~\ref{sec:multisemilla}); los pliegues 2--4
-combinan familias \texttt{simulator\_*} y \texttt{kubernetes\_goat\_*} con
-repositorios únicos. Cada pliegue mide, por tanto, la capacidad del modelo de
-generalizar a 1--3 familias no vistas —un tamaño muestral efectivo mucho menor
-que el número nominal de cadenas—, lo que explica que la varianza
+0,2--0,6 según la semilla, Sección~\ref{sec:multisemilla}). Los tres pliegues
+restantes reparten las dos familias grandes que quedan junto a repositorios
+únicos: el pliegue~2 concentra las ocho variantes \texttt{simulator\_*}, el
+pliegue~3 las doce variantes \texttt{kubernetes\_goat\_*} y el pliegue~4 no
+contiene ninguna de las cuatro familias de plantilla, sino exclusivamente
+repositorios únicos. El número de familias independientes portadoras de cadena
+por pliegue es, en consecuencia, de 1, 1, 4, 5 y 5. Cada pliegue mide, por tanto,
+la capacidad del modelo de generalizar a un número reducido de familias no vistas
+—un tamaño muestral efectivo menor que el número nominal de cadenas—, lo que
+explica que la varianza
 (\(\sigma\)\,=\,0,160) sea mayor que bajo protocolos con fuga y constituye una
 amenaza a la validez de conclusión que se documenta en el
 Capítulo~\ref{cap:conclusiones}.
@@ -423,11 +477,16 @@ Entropía cruzada pond. & P@5 & \textbf{0,720 \(\pm\) 0,160} & 0,803 \(\pm\) 0,1
 
 Las cuatro configuraciones de la Tabla~\ref{tab:loss_ablation} se evaluaron con
 5-fold \ac{CV} sobre el corpus completo, particionado por familias y semilla~42.
-Los dos efectos principales son independientes y aproximadamente aditivos:
-sustituir \textit{focal loss} por entropía cruzada ponderada aporta
-+0,12~puntos de P@5 con selección por F1 (y +0,04 con selección por P@5), y
-seleccionar los \textit{checkpoints} por la métrica primaria de ranking en lugar
-de por F1 macro aporta entre +0,12 y +0,20~puntos. La \textit{focal loss},
+Los dos efectos principales apuntan en la misma dirección, pero no se comportan
+de forma aditiva: sustituir \textit{focal loss} por entropía cruzada ponderada
+aporta +0,12~puntos de P@5 con selección por F1 macro y sólo +0,04 con selección
+por P@5, mientras que seleccionar los \textit{checkpoints} por la métrica
+primaria de ranking en lugar de por F1 macro aporta +0,20~puntos bajo
+\textit{focal loss} y +0,12 bajo entropía cruzada. La suma de ambos efectos
+principales sobre la configuración de partida (0,480) predeciría
+P@5\,=\,0,80, frente al 0,720 efectivamente observado: existe una interacción
+negativa de 0,08~puntos, es decir, la mejora que aporta cada factor se solapa
+parcialmente con la del otro en lugar de acumularse. La \textit{focal loss},
 diseñada para regímenes con miles de ejemplos por clase \citep{Lin2017}, además
 anula por completo la clasificación de la clase \textit{attack\_chain} en el
 conjunto de test (F1 de clase 0,0 frente a 0,667 con entropía cruzada). La
@@ -446,15 +505,22 @@ selección por Precisión@5 (Figura~\ref{fig:loss_ablation}).
 La Figura~\ref{fig:loss_ablation} representa la Precisión@5 de validación cruzada
 (\(\pm\)\(\sigma\)) de las cuatro configuraciones; solo la desplegada —entropía
 cruzada ponderada con selección por Precisión@5— supera el objetivo de diseño.
-Las otras tres configuraciones quedan por debajo de P@5\,>\,0,70 con márgenes
-distintos, lo que confirma que ambos factores —función de pérdida y criterio de
-selección— deben acertarse simultáneamente para alcanzar el objetivo.
+La distancia respecto de la segunda mejor configuración es, no obstante, estrecha
+(0,720\,\(\pm\)\,0,160 frente a 0,680\,\(\pm\)\,0,204): sus bandas de una
+desviación típica se solapan casi por completo y, sobre cinco pliegues y con una
+métrica cuantizada en múltiplos de 0,2, esa diferencia equivale a un solo acierto
+de \textit{ranking} en un único pliegue. Los datos sostienen, por tanto, una
+afirmación más débil que la de una dependencia estricta de ambos factores: la
+combinación desplegada es la única que sitúa la media de validación cruzada por
+encima del objetivo, y la configuración más alejada de él —\textit{focal loss}
+con selección por F1 macro, 0,480— sí queda separada por un margen que excede la
+dispersión observada.
 
 \subsection{Robustez frente a la semilla de entrenamiento}
 \label{sec:multisemilla}
 
-Para descartar que el resultado dependa de la semilla de entrenamiento, la
-configuración final se reentrenó con tres semillas (7, 42, 123; Tabla~\ref{tab:multiseed}
+Para acotar la dependencia del resultado respecto de la semilla de entrenamiento,
+la configuración final se reentrenó con tres semillas (7, 42, 123; Tabla~\ref{tab:multiseed}
 y Figura~\ref{fig:multiseed_folds}) manteniendo fijo
 el particionado (semilla~42): re-sortear también las particiones confundiría la
 varianza del modelo con la asignación de familias a pliegues, que la
@@ -483,7 +549,14 @@ Semilla & P@5 (\acs{CV}) & F1 macro (\acs{CV}) & Test P@1/P@3/P@5 \\
 Dos observaciones acotan la lectura del 0,72. Primera: la variación entre
 semillas se concentra íntegramente en el pliegue~1 (la familia
 \texttt{badpods\_*}: P@5 de 0,2/0,4/0,6 según semilla), mientras que los otros
-cuatro pliegues puntúan de forma idéntica con las tres semillas. Segunda: las
+cuatro pliegues puntúan de forma idéntica con las tres semillas. Esa coincidencia
+impide leer el experimento como una demostración de estabilidad global, porque el
+único pliegue sensible a la semilla es precisamente el que domina la desviación
+típica entre pliegues: en él, la dificultad de la familia y la variabilidad de
+entrenamiento quedan confundidas y no pueden separarse con tres semillas. Lo que
+el experimento sí establece es que cuatro quintas partes del particionado son
+invariantes a la semilla y que la incertidumbre residual de la estimación de
+validación cruzada se localiza en una sola familia de plantilla. Segunda: las
 métricas de test a nivel de despliegue son estables —P@1\,=\,1,00 y
 P@3\,=\,1,00 con las tres semillas, y P@5 entre 0,80 y 1,00—, de modo que la
 sensibilidad a la semilla afecta a la estimación de validación cruzada, no al
@@ -647,13 +720,16 @@ Solo señal de escape                    & 0,00 & 0,67 & 0,80 & 0,00 \\
 % -----------------------------------------------------------
 
 La Tabla~\ref{tab:gnn_folds} reporta las métricas agregadas (F1 macro y P@5) para
-los cinco pliegues de validación cruzada. En el conjunto de test, la matriz de
-confusión del ensemble de pliegues (Figura~\ref{fig:gnn_confusion}, clasificación
-\textit{argmax}) muestra el
-mismo patrón de error que los pliegues de validación: los dos falsos negativos de
-cadena se clasifican como \textit{isolated}, nunca como \textit{clean} — el
-sistema degrada hacia la clase intermedia, no hacia la omisión total. Los errores
-caen en la frontera cadena/aislado; ninguna cadena se degrada a limpio.
+los cinco pliegues de validación cruzada. El registro de la validación cruzada
+conserva únicamente esas dos métricas por pliegue y la exactitud agregada, sin
+matrices de confusión individuales, por lo que el análisis por clases se apoya
+exclusivamente en el conjunto de test. En él, la matriz de confusión del ensemble
+de pliegues (Figura~\ref{fig:gnn_confusion}, clasificación \textit{argmax})
+concentra el error en la frontera entre cadena y aislado: los dos falsos
+negativos de cadena se clasifican como \textit{isolated} y ninguno como
+\textit{clean}, de modo que el sistema degrada hacia la clase intermedia y no
+hacia la omisión total. Esta observación descansa sobre las cinco cadenas del
+conjunto de test y debe leerse con la cautela que impone ese tamaño.
 
 \begin{figure}[htbp]
   \centering
@@ -718,12 +794,17 @@ Arquitectura & F1 macro & P@5 \\
 
 La \ac{GAT} supera a la \ac{GCN} en F1 (+9,2~puntos) y en P@5 (+4~puntos),
 confirmando que la atención sobre tipos de arista aporta señal real tanto para la
-clasificación como para el ranking de cadenas. La comparación 2 vs.\ 3~capas
-muestra que la profundidad no es el factor determinante del ranking: ambas
-configuraciones alcanzan P@5\,=\,0,72 con pliegues idénticos, y la de 3~capas
-aventaja marginalmente en F1 (0,803 frente a 0,800). Se mantiene la
-configuración de 3~capas como desplegada, y la equivalencia con 2~capas se lee
-como robustez de la arquitectura frente a la profundidad, no como fragilidad. La
+clasificación como para el ranking de cadenas. La comparación 2 vs.\ 3~capas es
+menos concluyente: las medias de validación cruzada casi coinciden
+—P@5\,=\,0,720\,\(\pm\)\,0,160 en ambas configuraciones y F1 macro de 0,803
+frente a 0,800—, pero esa coincidencia agregada oculta un desacuerdo apreciable
+pliegue a pliegue, con diferencias de F1 de \(+\)0,142 en el pliegue~3 y
+\(-\)0,191 en el pliegue~4 que se cancelan al promediar y dejan una brecha media
+de sólo 0,003. Dos modelos que difieren en esa magnitud sobre pliegues concretos
+no evidencian robustez de la arquitectura frente a la profundidad, sino que la
+profundidad no determina el nivel medio de las métricas sobre este corpus. Se
+mantiene la configuración de 3~capas como desplegada por su ventaja marginal en
+F1 macro y por coherencia con el resto de resultados reportados. La
 ablación de \textit{pooling} (\textit{mean}-only vs.\ \textit{mean+max}) queda
 como trabajo futuro (TF6).
 
@@ -731,18 +812,30 @@ como trabajo futuro (TF6).
 \section{Validación con herramientas de análisis estático}
 % -----------------------------------------------------------
 
-Como validación cruzada, se ejecutó \textit{Checkov} \citep{Checkov2021} sobre
+Como contraste externo, se ejecutó \textit{Checkov} \citep{Checkov2021} sobre
 los 1.175~manifiestos cuyo \acs{YAML} descargado resultó analizable por la
 herramienta. Para esta validación, el índice \ac{UMI} se calcula como la
 proporción de comprobaciones de \textit{Checkov} que fallan sobre el total
 evaluado por manifiesto (\(\in [0,1]\); valores más altos indican mayor densidad
 de misconfiguraciones detectadas). El índice \ac{UMI} medio resultante fue de
-0,603.
-Las detecciones de \textit{checkov\_no\_run\_as\_nonroot} (38,3\,\%) y
-\textit{checkov\_no\_readonly\_rootfs} (37,2\,\%) coinciden con los nodos de
-severidad media identificados por la Capa~1. Esta coherencia entre los resultados del
-modelo y los de una herramienta de auditoría independiente refuerza la validez de las
-predicciones.
+0,603, y las comprobaciones incumplidas con mayor frecuencia fueron
+\textit{checkov\_no\_run\_as\_nonroot} (38,3\,\%) y
+\textit{checkov\_no\_readonly\_rootfs} (37,2\,\%).
+
+El alcance de este contraste es limitado y conviene delimitarlo. La ejecución de
+\textit{Checkov} vuelca sus identificadores de comprobación en columnas de
+diagnóstico \texttt{checkov\_*} independientes, que no alimentan las
+características de la Capa~1: éstas proceden del análisis sintáctico propio del
+\acs{YAML} descrito en el Capítulo~\ref{cap:herramienta}. Sobre esas mismas
+1.175~filas, además, las características homólogas del extractor propio
+(\texttt{NO\_RUN\_AS\_NON\_ROOT} y \texttt{NO\_READ\_ONLY\_ROOT\_FS}) están
+ausentes en su totalidad, de modo que no es posible cotejar detección con
+detección manifiesto a manifiesto ni cuantificar una tasa de acuerdo entre ambas
+fuentes. El resultado debe interpretarse, en consecuencia, como una corroboración
+de cobertura y procedencia —ambos conjuntos de características codifican los
+mismos controles de configuración segura de referencia para \textit{Kubernetes},
+obtenidos por implementaciones distintas— y no como una validación externa
+independiente de las predicciones del modelo.
 
 % -----------------------------------------------------------
 \section{Métrica global del proceso completo}
@@ -763,11 +856,14 @@ Sección~\ref{sec:layer3}), por lo que la cifra debe leerse como indicativa.
 
 Esta cifra es la bondad global de la herramienta porque resume, en un único
 indicador operacional, la salida final que recibe el operador tras pasar por las
-tres capas: un P@1 perfecto significa que la primera posición del
-\textit{ranking} es siempre una cadena de ataque real cuando existe, un P@3
-perfecto extiende esa garantía a las tres primeras posiciones, y un
-\ac{FPR}\_clean nulo significa que ningún clúster limpio compite nunca por la
-atención del operador. La Sección~\ref{sec:layer3} muestra que, sobre este
+tres capas: sobre los 86~grafos evaluados, un P@1 de 1,00 indica que la primera
+posición del \textit{ranking} correspondió en todos los casos a una cadena de
+ataque real, un P@3 de 1,00 extiende esa observación a las tres primeras
+posiciones y un \ac{FPR}\_clean nulo indica que ninguno de los tres clústeres
+limpios llegó a competir por la atención del operador. Estas cifras se apoyan en
+5~cadenas y 3~clústeres limpios, de modo que describen el comportamiento
+observado sobre un conjunto reducido y no una garantía del sistema. La
+Sección~\ref{sec:layer3} muestra que, sobre este
 conjunto de test, el componente \ac{GNN} por sí solo iguala estas cifras y que
 el \textit{ensemble} no las mejora; la aportación de la Capa~3 no es superar a
 su mejor componente individual, sino producir el mismo resultado sin heredar los
@@ -848,8 +944,14 @@ externos.
 \paragraph{Latencia (RNF-4).} Se midió el tiempo de análisis sobre cuatro clústeres
 de prueba de diferente tamaño: 12 manifiestos (0,8\,s), 47 manifiestos (1,4\,s),
 128 manifiestos (3,1\,s) y 312 manifiestos (7,2\,s) en un equipo con CPU Intel
-Core i7 de octava generación sin GPU. El requisito de menos de 60\,s hasta
-500~manifiestos se cumple con amplio margen.
+Core i7 de octava generación sin GPU. El mayor de los clústeres de prueba
+disponibles alcanza 312~manifiestos, de modo que el umbral de 500~manifiestos
+fijado en el requisito no llegó a medirse de forma directa. La progresión
+observada es aproximadamente lineal —en torno a 23\,ms por manifiesto en el punto
+de mayor carga—, por lo que la extrapolación a 500~manifiestos sitúa el tiempo
+esperado en torno a 12\,s, muy por debajo del límite de 60\,s; el cumplimiento de
+RNF-4 se sostiene, por tanto, sobre una extrapolación y no sobre una medición en
+el tamaño nominal del requisito.
 
 \section{Evaluación de usabilidad y aplicabilidad con usuarios expertos}
 \label{sec:usabilidad}
@@ -862,7 +964,9 @@ CI/CD, a los que se entregó una guía de tareas con órdenes listas para ejecut
 un cuestionario en línea, en formato autoservicio asíncrono (\(\approx\)10~minutos
 por participante). El instrumento se generó de forma reproducible mediante un
 \textit{script} versionado (véase Anexo~\ref{ap:repositorio}) y el protocolo se
-validó previamente con una prueba piloto. La muestra reducida (\(n=3\)) se asume
+depuró mediante una prueba piloto simulada, sin participantes reales, cuyo único
+objetivo fue verificar la consistencia del cuestionario y del guion de tareas
+antes de la sesión con los expertos. La muestra reducida (\(n=3\)) se asume
 explícitamente como amenaza a la validez (Sección~\ref{sec:usab_amenazas}); aun
 así, tres participantes cubren una fracción sustancial de los problemas de
 usabilidad en pruebas formativas \citep{Nielsen2000}.
@@ -924,10 +1028,13 @@ concentrados en tareas secundarias u opcionales.
 La usabilidad se midió con la escala \textbf{SUS} (\textit{System Usability
 Scale}) de diez ítems \citep{Brooke1996}, que produce una puntuación en el rango
 0--100. La media obtenida fue de \textbf{88,3\,\(\pm\)\,10,4} (puntuaciones
-individuales de 100, 80 y 85), muy por encima de la media de referencia del
-sector (68) y dentro de la banda de valoración cualitativa «excelente» (A) según
-la escala de adjetivos de \citet{Bangor2009}. Debe interpretarse como indicativo
-dado el tamaño de la muestra.
+individuales de 100, 80 y 85), consistente con la media de referencia del sector
+(68) y situada en la banda cualitativa «excelente» de la escala de adjetivos de
+\citet{Bangor2009}. Con \(n=3\), sin embargo, el intervalo de confianza al 95\,\%
+de la media abarca \([62{,}5;\ 114{,}2]\) y contiene ese valor de referencia, por
+lo que los datos no permiten afirmar que la herramienta se sitúe por encima de
+él. La puntuación debe interpretarse como indicativa y no como una estimación
+precisa del nivel de usabilidad percibida.
 
 \subsection{Aplicabilidad y análisis cualitativo}
 
@@ -935,18 +1042,24 @@ Los participantes valoraron cuatro afirmaciones de aplicabilidad (escala 1--5):
 integración en CI/CD o auditoría (A1), ajuste de la priorización de riesgo a su
 forma de auditar (A2), accionabilidad del informe (A3) y confianza en el
 veredicto (A4). Las medias fueron A1\,=\,4,3, A2\,=\,4,3, A4\,=\,4,3 y, como
-punto más bajo, A3\,=\,3,7. El análisis cualitativo de las respuestas abiertas es coherente con estas cifras.
+punto más bajo, A3\,=\,3,7. Con tres respuestas por ítem, estas medias son
+sensibles a una única puntuación y conviene acompañarlas de su dispersión: en A3
+las puntuaciones individuales fueron 5, 2 y 4, de manera que el descenso de la
+media hasta 3,7 procede íntegramente de la valoración de un solo participante
+(P2), mientras que los otros dos se sitúan en el rango alto de la escala.
 Como fortaleza, un participante destacó exactamente la contribución central del
 trabajo: la herramienta «no solo te dice qué está mal en un manifiesto, sino que
 conecta varios problemas pequeños para mostrarte» una cadena de ataque, en lugar
 de fallos aislados; otros valoraron la interpretabilidad del informe y la
-rapidez del análisis. La debilidad, señalada de forma independiente por dos
-participantes y consistente con el valor más bajo de A3, es la
-\textbf{accionabilidad}: el informe comunica el riesgo pero no las acciones
-concretas de remediación ni las reglas subyacentes al veredicto. Un participante
-lo expresó como que el \ac{JSON} «muestra el estado actual pero no las acciones
-que debería tomar», y otro como la dificultad de «confiar en un puntaje sin
-conocer bien qué reglas concretas hay detrás». Esta limitación se recoge como
+rapidez del análisis. La debilidad más recurrente en las respuestas abiertas es
+la \textbf{accionabilidad}: el informe comunica el riesgo pero no las acciones
+concretas de remediación ni las reglas subyacentes al veredicto. Dos
+participantes la mencionaron en el apartado abierto —uno expresó que el
+\ac{JSON} «muestra el estado actual pero no las acciones que debería tomar» y
+otro la dificultad de «confiar en un puntaje sin conocer bien qué reglas
+concretas hay detrás»—, si bien sólo uno de ellos la trasladó a la escala
+numérica, ya que el segundo puntuó A3 con un 4. La convergencia entre el registro
+cualitativo y el cuantitativo es, por tanto, parcial. Esta limitación se recoge como
 línea de trabajo futuro (explicabilidad de reglas y recomendaciones de
 remediación) en el Capítulo~\ref{cap:conclusiones}. Los casos de uso propuestos
 —\textit{gate} en el \textit{pipeline} de CI/CD antes de desplegar a producción y

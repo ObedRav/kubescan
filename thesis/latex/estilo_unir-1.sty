@@ -4,14 +4,15 @@
 %
 %
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{unir}
+\ProvidesPackage{estilo_unir-1}
 %
 %---paquetes---------------------
 %
 %idioma i codificación
 \usepackage{babel}
-\usepackage[utf8]{inputenc} %descomentar esta línea si se trabaja en linux
-%\usepackage[latin1]{inputenc} %comentar esta línea si se trabaja en linux
+%--- inputenc es inerte bajo XeLaTeX/LuaLaTeX (el motor ya lee UTF-8 de forma
+%    nativa). Se deja comentado para evitar avisos del motor.
+%\usepackage[utf8]{inputenc}
 
 %--- Tipografía exigida por la plantilla UNIR: Calibri regular para todo el
 %    cuerpo (párrafos, listas, cabeceras, leyendas y fuentes de
@@ -21,28 +22,59 @@
 %    "Light Bold": el Título 3 (negrita) y el \textbf del cuerpo usan
 %    Calibri Bold normal, la sustitución habitual cuando una familia Light
 %    carece de negrita propia.
-\usepackage[T1]{fontenc}
+%--- fontenc es inerte bajo XeLaTeX/LuaLaTeX: fontspec instala su propia
+%    codificación (TU) y desactiva la selección T1. Se deja comentado.
+%\usepackage[T1]{fontenc}
 \usepackage{fontspec}
-\setsansfont{Calibri}[
-  Path = /Applications/Microsoft Word.app/Contents/Resources/DFonts/,
-  Extension = .ttf,
-  UprightFont = Calibri,
-  ItalicFont = Calibrii,
-  BoldFont = Calibrib,
-  BoldItalicFont = Calibriz,
-]
-\renewcommand{\familydefault}{\sfdefault}
 
-%--- Familia de los Títulos 1-3: Calibri Light, con Calibri Bold normal
-%    como sustituto para el Título 3 (negrita).
-\newfontfamily\calibrilight[
-  Path = /Applications/Microsoft Word.app/Contents/Resources/DFonts/,
-  Extension = .ttf,
-  UprightFont = calibril,
-  ItalicFont = calibrili,
-  BoldFont = Calibrib,
-  BoldItalicFont = Calibriz,
-]{Calibri Light}
+%--- Directorio de la Calibri que instala Microsoft Office en macOS. Calibri no
+%    es una tipografía libre y no se puede redistribuir con el documento, así
+%    que su presencia se comprueba en tiempo de compilación: si falta, se
+%    sustituye por Carlito, el clon libre métricamente compatible incluido en
+%    TeX Live. El documento compila en cualquier máquina; sólo cambia el
+%    fichero de tipografía subyacente, no la maquetación.
+\newcommand{\directoriocalibri}{/Applications/Microsoft Word.app/Contents/Resources/DFonts/}
+
+\IfFontExistsTF{\directoriocalibri Calibri.ttf}{%
+  \setsansfont{Calibri}[
+    Path = \directoriocalibri,
+    Extension = .ttf,
+    UprightFont = Calibri,
+    ItalicFont = Calibrii,
+    BoldFont = Calibrib,
+    BoldItalicFont = Calibriz,
+  ]%
+  %--- Familia de los Títulos 1-3: Calibri Light, con Calibri Bold normal
+  %    como sustituto para el Título 3 (negrita).
+  \newfontfamily\calibrilight[
+    Path = \directoriocalibri,
+    Extension = .ttf,
+    UprightFont = calibril,
+    ItalicFont = calibrili,
+    BoldFont = Calibrib,
+    BoldItalicFont = Calibriz,
+  ]{Calibri Light}%
+}{%
+  \PackageWarning{estilo_unir-1}{Calibri no encontrada; se usa Carlito
+    (clon libre metricamente compatible) como sustituto}%
+  \setsansfont{Carlito}[
+    Extension = .ttf,
+    UprightFont = *-Regular,
+    ItalicFont = *-Italic,
+    BoldFont = *-Bold,
+    BoldItalicFont = *-BoldItalic,
+  ]%
+  %--- Carlito no distribuye un peso Light: los Títulos 1-3 caen en el peso
+  %    regular, igual que la sustitución de negrita descrita arriba.
+  \newfontfamily\calibrilight[
+    Extension = .ttf,
+    UprightFont = *-Regular,
+    ItalicFont = *-Italic,
+    BoldFont = *-Bold,
+    BoldItalicFont = *-BoldItalic,
+  ]{Carlito}%
+}
+\renewcommand{\familydefault}{\sfdefault}
 
 
 %simbolos
@@ -125,12 +157,13 @@
 %--- Azul corporativo UNIR de la plantilla 2026: #0098CD.
 \definecolor{azulunir}{rgb}{0,0.596,0.804}
 
+%--- La portada de la plantilla UNIR 2026 no lleva ciudad, así que no existe
+%    \nombreciudad: \creaportada compone logo, universidad, escuela,
+%    titulación, título y la tabla de datos del trabajo, y nada más.
 \newcommand\director[1]{\def\@director{#1}}
-\newcommand\nombreciudad[1]{\def\@nombreciudad{#1}}
 \newcommand\titulacion[1]{\def\@titulacion{#1}}
 \newcommand\tipotrabajo[1]{\def\@tipotrabajo{#1}}
 \director{}
-\nombreciudad{}
 \tipotrabajo{}
 
 %--- Jerarquía de títulos de la plantilla UNIR 2026:
@@ -157,8 +190,16 @@
 \setcounter{tocdepth}{3}
 
 %--- Anexos: «Anexo A. Título», sin mayúsculas forzadas (estilo «Anexo»).
+%    El índice de contenidos se compone mucho antes de que empiecen los anexos,
+%    de modo que redefinir \cftchappresnum aquí llegaría tarde: la redefinición
+%    se escribe en el .toc con \addtocontents, en el punto exacto en que
+%    comienzan los anexos. Así los capítulos 1-7 conservan «1.», «2.», … y sólo
+%    las entradas posteriores pasan a «Anexo A.», «Anexo B.», «Anexo C.».
+%    \appendixname se expande al escribir (ya vale «Anexo» en ese momento).
 \newcommand{\activaformatoanexo}{%
   \titleformat{\chapter}[hang]{\fontsize{18pt}{22pt}\selectfont\calibrilight\color{azulunir}}{\appendixname~\thechapter.}{0.5em}{}%
+  \addtocontents{toc}{\protect\renewcommand{\protect\cftchappresnum}{\appendixname~}}%
+  \addtocontents{toc}{\protect\setlength{\protect\cftchapnumwidth}{5.5em}}%
 }
 
 

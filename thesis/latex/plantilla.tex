@@ -21,22 +21,17 @@
 \documentclass[12pt,a4paper,spanish,oneside]{book}
 \usepackage{estilo_unir-1}
 \usepackage[natbibapa]{apacite}  % natbibapa enables \citep, \citet etc.
-\usepackage{hyperref}
+% amsmath, graphicx y hyperref ya los carga estilo_unir-1, que se lee antes.
 \usepackage{bookmark}
 \hypersetup{hidelinks}  % enlaces navegables sin recuadros de color (aspecto elegante)
 \usepackage{booktabs}
 \usepackage{multirow}
-\usepackage{amsmath}
-\usepackage{graphicx}
-\usepackage{acronym}  % definitions only; list built manually below
+\usepackage{acronym}  % la lista se compone en appendix/acronimos.tex
 \usepackage{tocloft}
 \graphicspath{{../figures/}}
 % Márgenes y altura de cabecera los fija estilo_unir-1 (vmargin/setmarginsrb).
 \raggedbottom
 \emergencystretch=3em
-\newcommand{\safeincludegraphics}[2][]{%
-  \includegraphics[#1]{#2}%
-}
 % La plantilla numera figuras, tablas y ecuaciones de forma continua
 % («Figura 1», «Tabla 1», «(1)»), no por capítulo.
 \counterwithout{equation}{chapter}
@@ -60,7 +55,11 @@
 \renewcommand{\cfttabpresnum}{Tabla }
 \renewcommand{\cfttabaftersnum}{.}
 \setlength{\cfttabnumwidth}{5em}
-\newlistof{ecuaciones}{loe}{Índice de ecuaciones}
+% tocloft no crea un macro de título para las listas nuevas (a diferencia de
+% \listfigurename/\listtablename), así que se declara aquí y se reutiliza tanto
+% en la lista como en su entrada del índice de contenidos.
+\newcommand{\listecuacionesname}{Índice de ecuaciones}
+\newlistof{ecuaciones}{loe}{\listecuacionesname}
 \renewcommand{\cftloetitlefont}{\estilotituloindice}
 \renewcommand{\cftecuacionespresnum}{Ecuación }
 \renewcommand{\cftecuacionesaftersnum}{.}
@@ -91,7 +90,6 @@
 \date{Septiembre de 2026}
 \director{Pedro León Millán}
 \tipotrabajo{Desarrollo de software}
-\nombreciudad{Medellín}
 
 % Uncomment to speed up compilation while editing a single chapter:
 %\includeonly{chapters/06_evaluacion}
@@ -113,11 +111,19 @@
 \renewcommand{\thepage}{\Roman{page}}
 \include{chapters/00_resumen}
 \tableofcontents
+% Los tres índices auxiliares se listan en el índice de contenidos, igual que
+% las referencias bibliográficas; \phantomsection fija el destino del enlace.
 \clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{\listfigurename}
 \listoffigures
 \clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{\listtablename}
 \listoftables
 \clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{\listecuacionesname}
 \listofecuaciones
 \clearpage
 

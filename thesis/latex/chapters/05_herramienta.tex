@@ -11,7 +11,7 @@ clúster que alimentan dichas capas. Le siguen el diseño de entrenamiento de ca
 capa, la interfaz de línea de comandos resultante y las prácticas de ingeniería
 de software adoptadas durante el desarrollo. La implementación completa se
 encuentra disponible en el repositorio indicado en el
-Apéndice~\ref{ap:repositorio}.
+Anexo~\ref{ap:repositorio}.
 
 % -----------------------------------------------------------
 \section{Arquitectura general del sistema}
@@ -130,9 +130,27 @@ El extractor de características aplica 28 reglas de análisis estático a cada 
     de secretos), \texttt{total\_misconfigs} (suma de todas las flags activas).
   \item \textbf{7 features extendidas}: \texttt{NO\_RUN\_AS\_NON\_ROOT},
     \texttt{IMAGE\_USES\_LATEST}, \texttt{SA\_AUTOMOUNT\_TOKEN}, \texttt{HOSTPATH\_MOUNT},
-    etc.; imputadas mediante \textit{Checkov} para el 47,4\,\% de filas con YAML
-    descargado, y mediante la mediana de columna para el resto.
+    etc. Seis de ellas presentan una procedencia mixta de valores; la séptima,
+    \texttt{HOSTPATH\_MOUNT}, se extrae siempre del propio manifiesto.
 \end{itemize}
+
+La procedencia de los valores de las seis características extendidas con
+equivalente en \textit{Checkov} \citep{Checkov2021} —\texttt{NO\_RUN\_AS\_NON\_ROOT},
+\texttt{NO\_READ\_ONLY\_ROOT\_FS}, \texttt{IMAGE\_USES\_LATEST},
+\texttt{SA\_AUTOMOUNT\_TOKEN}, \texttt{USES\_DEFAULT\_SA} y
+\texttt{UNTRUSTED\_REGISTRY}— se reparte en tres vías sobre las 2.827~filas del
+corpus: 921~filas (32,6\,\%) reciben el valor extraído directamente por el
+analizador \acs{YAML}, 1.175~filas (41,6\,\%) se rellenan con la salida de
+\textit{Checkov} a través de la tabla \texttt{CHECKOV\_FILL}, y las 731~restantes
+(25,9\,\%) se imputan mediante la mediana de columna. Ese relleno no es un
+mecanismo general aplicable a toda fila con \acs{YAML} disponible, sino específico
+de la fuente: \textit{Checkov} se ejecutó únicamente sobre el subconjunto de
+GitHub —1.175 de sus 1.510~filas— y no produjo salida alguna para los
+repositorios de seguridad adicionales, GitLab, BadPods ni Kubernetes Goat, cuyas
+filas se resuelven por el analizador \acs{YAML} o por mediana. La séptima
+característica extendida queda al margen de este esquema, ya que
+\texttt{HOSTPATH\_MOUNT} se deriva por completo del análisis estático del
+manifiesto y está poblada para las 2.827~filas.
 
 La Capa~2 (\ac{GNN}) consume únicamente las 18~flags Rahman y las 7~features extendidas
 (25 en total, \texttt{FEATURE\_COLS} en \texttt{yaml\_parser.py}) como vector de nodo,
@@ -142,9 +160,14 @@ Sección~\ref{sec:features_table}. De estas 25, tres presentan varianza casi nul
 se mantienen en el entrenamiento, con importancia residual o nula
 (Sección~\ref{sec:rf_importance}): \texttt{SECCOMP\_UNCONFINED} (15/2.827 activa),
 \texttt{VALID\_TAINT\_SECRET} (0/2.827 activa) y \texttt{NO\_NETWORK\_POLICY}
-(2.818/2.827 activa, sin poder discriminativo). Se conservan pese a su bajo aporte
-individual porque su ausencia no simplifica el vector de nodo ni mejora el
-entrenamiento de forma medible.
+(2.818/2.827 activa, sin poder discriminativo). Las importancias de característica
+registradas por el modelo \ac{RF} confirman ese aporte marginal:
+\(1{,}6\times10^{-5}\) para \texttt{SECCOMP\_UNCONFINED}, \(0{,}0\) para
+\texttt{VALID\_TAINT\_SECRET} y \(2{,}4\times10^{-5}\) para
+\texttt{NO\_NETWORK\_POLICY}. Se conservan para preservar la estabilidad del
+contrato de características (\texttt{FEATURE\_COLS}) y la correspondencia exacta
+con el conjunto de flags de Rahman et~al.\ \citep{Rahman2022}; no se ha realizado
+un estudio de ablación que cuantifique el efecto de su eliminación.
 
 % -----------------------------------------------------------
 \section{Construcción del grafo de clúster}
@@ -164,15 +187,15 @@ detallan en las dos subsecciones siguientes.
 \centering\small
 \caption{Tipos de aristas en el grafo de clúster}
 \label{tab:edge_types}
-\begin{tabular}{@{}p{3cm}cp{3.1cm}p{4.3cm}@{}}
+\begin{tabular}{@{}p{3cm}cp{3.6cm}p{3.8cm}@{}}
 \toprule
 Tipo & Código & Dirección & Criterio \\
 \midrule
-Proximidad de directorio & 0 & Bidireccional & Mismo subdirectorio \acs{YAML} \\
-Alcance de privilegio & 1 & Dirigida (escape\(\to\)todos) & Flag de escape activa \\
-Movimiento lateral \acs{SA} & 2 & Dirigida (lateral\(\to\)todos) & Flag de movimiento lateral \\
+Proximidad de directorio & 0 & Bidireccional & Mismos dos componentes finales de ruta \acs{YAML} \\
+Alcance de privilegio & 1 & Dirigida (escape\(\to\)mismo \textit{namespace}) & Flag de escape activa \\
+Movimiento lateral \acs{SA} & 2 & Dirigida (lateral\(\to\)mismo \textit{namespace}) & Flag de movimiento lateral \\
 Co-espacio de nombres (\texttt{SEMANTIC\_NS}) & 3 & Bidireccional & Mismo \textit{namespace} K8s \\
-Escalada \ac{RBAC} & 4 & Dirigida (elevado\(\to\)todos) & \ac{SA} vinculado a rol privilegiado \\
+Escalada \ac{RBAC} & 4 & Dirigida (elevado\(\to\)mismo \textit{namespace}) & \ac{SA} vinculado a rol privilegiado \\
 \bottomrule
 \end{tabular}
 \fuentepropia
@@ -194,14 +217,18 @@ contiene el \textit{risk\_score} producido por el modelo \textit{Random Forest}.
 La Figura~\ref{fig:grafo_cluster} muestra los tres tipos de nodo (escape, movimiento
 lateral y limpio) y las aristas dirigidas que cada uno origina. El nodo rojo (pod-A) tiene
 flags de escape activas y emite aristas de tipo~1 (\textit{privilege\_reach}) hacia
-todos los demás nodos del clúster. El nodo naranja (pod-B) tiene flags de
+todos los demás nodos de su mismo \textit{namespace}. El nodo naranja (pod-B) tiene flags de
 movimiento lateral y emite aristas de tipo~2 (\textit{sa\_lateral}). La arista de
 tipo~4 (\ac{RBAC}) representa la vinculación de un \textit{ServiceAccount} a un rol
 privilegiado.
 
 El conjunto de datos de grafos final comprende 599~grafos originales (25~clean, 537~isolated,
-37~attack\_chain) y 1.154~grafos totales tras la aumentación de datos aplicada
-exclusivamente en el conjunto de entrenamiento. Esta cifra incorpora el corpus
+37~attack\_chain) y 1.154~grafos totales tras la aumentación de datos, cuyas variantes
+se destinan exclusivamente al conjunto de entrenamiento. De los 555~grafos aumentados
+que componen ese \textit{pool}, solo 390 entran efectivamente en el entrenamiento: los
+165~restantes derivan de clústeres asignados a validación o test y quedan excluidos por
+la regla de asignación consciente de grupos descrita en la
+Sección~\ref{sec:aumentacion}. Esta cifra incorpora el corpus
 completo de Rahman et~al.\ \citep{Rahman2022}, cuyos \textit{namespaces} cruzados
 se resolvieron mediante descarga autenticada desde GitHub, lo que amplió
 sustancialmente el número de clústeres \textit{isolated} respecto a las fases
@@ -229,8 +256,19 @@ automontado), \texttt{USES\_DEFAULT\_SA} (usa la cuenta de servicio por defecto 
 \textit{namespace}), \texttt{WITHIN\_MANIFEST\_SECRET} (secreto referenciado en el
 manifiesto) o \texttt{ALLOW\_PRIVI} (contenedor con capacidad de escalada). Las aristas
 de movimiento lateral (tipo~2) se construyen de forma análoga a las de escape: se emite
-una arista dirigida desde cada nodo lateral hacia todos los demás, pero únicamente si
-no existe ya una arista de mayor prioridad (escape o \ac{RBAC}).
+una arista dirigida desde cada nodo lateral hacia los demás nodos de su mismo
+\textit{namespace}.
+
+La convivencia de los cinco tipos sobre un mismo par de nodos se resuelve por orden de
+inserción y no por una jerarquía explícita de prioridades. Las aristas se añaden en la
+secuencia proximidad de directorio (tipo~0), alcance de privilegio (tipo~1), movimiento
+lateral (tipo~2), co-espacio de nombres (tipo~3) y escalada \ac{RBAC} (tipo~4). Las de
+alcance de privilegio son las únicas que sobrescriben incondicionalmente cualquier
+etiqueta previa, de modo que un nodo con capacidad de escape nunca queda degradado a
+mero vecino; los cuatro tipos restantes se emiten bajo la guarda \texttt{not
+G.has\_edge}, por lo que una arista de proximidad de directorio ya presente impide que
+el par se reetiquete como movimiento lateral, y las aristas \ac{RBAC}, al añadirse en
+último lugar, nunca desplazan a las de movimiento lateral.
 
 \subsection{Detección de privilegio \acs{RBAC}}
 
@@ -240,8 +278,9 @@ está en el conjunto \{cluster-admin, admin, edit\} o cuyas reglas contienen ver
 escalada \{*, escalate, bind, impersonate\}. La segunda pasada recorre los objetos
 \textit{RoleBinding} y \textit{ClusterRoleBinding}: sólo cuando el campo
 \textit{roleRef} referencia un rol privilegiado identificado en la primera pasada se
-emite una arista \ac{RBAC} desde el pod que usa esa cuenta de servicio hacia todos los demás
-nodos del clúster.
+emite una arista \ac{RBAC} desde el pod que usa esa cuenta de servicio hacia los demás
+nodos de su mismo \textit{namespace}, coherentemente con el ámbito de los objetos
+\textit{RoleBinding} de los que se derivan las cuentas elevadas.
 
 % -----------------------------------------------------------
 \section{Capa 1: Random Forest}
@@ -367,14 +406,17 @@ proporcionalmente equivalente al comportamiento de \texttt{class\_weight=balance
 \textit{scikit-learn} (misma ponderación relativa entre clases). Cabe destacar que los pesos se calculan
 \textbf{después} de la aumentación de datos: como la aumentación genera 15~variantes
 por grafo de cadena de ataque, la clase \textit{attack\_chain} pasa de ser la
-minoría a ser la mayoría en el conjunto de entrenamiento (aproximadamente 380~grafos
-aumentados vs.\ 18~clean y 367~isolated en el conjunto de entrenamiento de cada
-pliegue, tras excluir las variantes de los clústeres de validación y test). La Ecuación~\ref{eq:class_weights} se auto-adapta a esta nueva distribución
+minoría a ser la mayoría en el conjunto de entrenamiento. Los tres recuentos varían de
+un pliegue a otro, ya que las variantes de los clústeres reservados para validación se
+excluyen en cada iteración: entre 360 y 405~grafos de \textit{attack\_chain} aumentados
+frente a 17--18 \textit{clean} y 361--371 \textit{isolated}. La
+Ecuación~\ref{eq:class_weights} se auto-adapta a esta nueva distribución
 asignando mayor peso a \textit{clean} e \textit{isolated}, y menor peso a
 \textit{attack\_chain}, compensando el efecto de la sobre-representación creada por
 la aumentación.
 
 \subsection{Aumentación de datos}
+\label{sec:aumentacion}
 
 Para mitigar la escasez de ejemplos de cadena de ataque (37 de 599 grafos
 originales), se aplican tres estrategias de aumentación exclusivamente sobre los
@@ -406,8 +448,9 @@ constituiría fuga de datos.
 
 El particionado es además \textbf{consciente de familias de plantilla}: los
 clústeres originales que comparten una misma plantilla base (por ejemplo, las
-siete variantes \texttt{badpods\_*}, que difieren únicamente en qué flag de
-escape activan, o las nueve \texttt{datadog\_*}) son casi duplicados entre sí, no
+ocho variantes \texttt{badpods\_*}, que difieren únicamente en qué flag de
+escape activan —salvo \texttt{badpods\_nothing-allowed}, que no activa ninguna—,
+o las nueve \texttt{datadog\_*}) son casi duplicados entre sí, no
 muestras independientes. Cuando una familia contiene etiquetas mixtas, sus
 miembros se asignan como una unidad atómica a una única partición — nunca se
 reparten entre entrenamiento, validación y test ni entre pliegues — y la
@@ -519,7 +562,9 @@ emite un informe de riesgo en formato texto o \ac{JSON}. El segundo,
 temporal y ejecuta el \textit{pipeline} completo sobre ellos. La resolución de los
 pesos del modelo sigue la cadena: argumento \texttt{--checkpoints-dir}
 \(\to\) variable de entorno \texttt{KUBESCAN\_CHECKPOINTS} \(\to\) enlace simbólico
-\texttt{kubescan/checkpoints/trained/} \(\to\) \texttt{FileNotFoundError}.
+\texttt{kubescan/checkpoints/trained/} \(\to\) \texttt{CheckpointNotFoundError},
+excepción tipada derivada de \texttt{KubescanError} y definida en
+\texttt{exceptions.py}.
 
 % -----------------------------------------------------------
 \section{Tabla de características del sistema}
@@ -593,8 +638,11 @@ Las 8~flags de escape (ESC, \texttt{ESCAPE\_FLAGS} en \texttt{graph\_builder.py}
 \identcode{SEC\_CONT\_OVER\_PRIVIL} y \identcode{HOSTPATH\_MOUNT}. Las 4~flags de movimiento
 lateral (LAT, \texttt{LATERAL\_FLAGS}) son \identcode{SA\_AUTOMOUNT\_TOKEN},
 \identcode{USES\_DEFAULT\_SA}, \identcode{WITHIN\_MANIFEST\_SECRET} y \identcode{ALLOW\_PRIVI}.
-Las 7~características extendidas están imputadas mediante \textit{Checkov} para el
-47,4\,\% de filas con YAML disponible y mediante la mediana de columna para el resto.
+Seis de las 7~características extendidas combinan tres vías de procedencia sobre las
+2.827~filas del corpus —analizador \acs{YAML} (921~filas), relleno desde
+\textit{Checkov} sobre el subconjunto de GitHub (1.175) e imputación por mediana de
+columna (731)—, según detalla la Sección~\ref{sec:construccion_dataset}. La séptima,
+\identcode{HOSTPATH\_MOUNT}, se extrae del manifiesto en la totalidad de las filas.
 
 % -----------------------------------------------------------
 \section{Calidad de software y proceso de desarrollo}
@@ -605,10 +653,17 @@ El desarrollo de \textit{kubescan} sigue prácticas de ingeniería de software
 orientadas a la producción. La calidad del código se garantiza mediante cuatro
 herramientas integradas en un \textit{pipeline} de pre-commit y \acs{CICD}: (1)
 \textit{ruff}, linter y formateador de código Python con reglas de estilo y
-seguridad; (2) \textit{mypy} en modo estricto, para comprobación estática de
-tipos en todos los módulos del paquete; (3) \textit{pytest}, para la suite de
-tests unitarios y de integración del paquete; y (4) \textit{pre-commit hooks},
-que aplican automáticamente ruff y mypy en cada commit.
+seguridad; (2) \textit{mypy} en modo estricto
+(\texttt{mypy kubescan/src -{}-strict}), para comprobación estática de tipos en
+todos los módulos del paquete; (3) \textit{pytest}, para la suite de tests
+unitarios y de integración del paquete; y (4) \textit{radon}, para el control de
+la complejidad ciclomática. El reparto entre las dos etapas del \textit{pipeline}
+no es uniforme: los \textit{hooks} de pre-commit ejecutan únicamente
+\textit{ruff}, \textit{ruff-format} y comprobaciones de higiene del repositorio
+(espacios finales, fin de fichero, validez de los \acs{YAML} de configuración y
+tamaño máximo de los ficheros añadidos), mientras que \textit{mypy},
+\textit{pytest} y \textit{radon} se ejecutan en el flujo de integración continua
+de GitHub Actions sobre cada \textit{push} y cada \textit{pull request}.
 
 {\raggedright
 La suite de tests cubre el parser de \acs{YAML}

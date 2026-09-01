@@ -8,9 +8,15 @@ se encuentra en la intersección de cuatro áreas de investigación activa: el a
 de seguridad en infraestructura como código (\textit{Infrastructure as Code}, \acs{IaC}),
 el aprendizaje automático aplicado a la ciberseguridad, las redes neuronales de grafos
 para razonamiento estructural, y la construcción de grafos de ataque para la
-identificación de rutas de explotación. A continuación se revisan los trabajos y
-herramientas más relevantes en cada área, y se posiciona la contribución de este
-trabajo respecto a ellos.
+identificación de rutas de explotación. Cada una de estas áreas aporta una pieza
+del problema: el análisis estático delimita qué constituye una misconfiguración,
+el aprendizaje automático permite estimar el riesgo asociado a esos indicadores,
+las redes neuronales de grafos añaden razonamiento sobre las relaciones entre
+recursos, y los grafos de ataque definen qué combinaciones de esas relaciones
+constituyen una ruta de explotación viable. Ninguna de las cuatro líneas ha
+producido hasta la fecha un sistema que prediga cadenas de ataque a partir de
+manifiestos estáticos mediante un modelo supervisado, carencia que delimita el
+espacio en el que se sitúa la contribución de este trabajo.
 
 % -----------------------------------------------------------
 \section{Contexto del problema: seguridad en infraestructuras Kubernetes}
@@ -49,8 +55,10 @@ Los trabajos de BishopFox \citep{BishopFox2021} demostraron empíricamente que u
 anfitrión en segundos y pivotar lateralmente a través del clúster. La plataforma
 educativa \textit{Kubernetes Goat} \citep{KubernetesGoat} sistematiza más de
 veinte escenarios de vulnerabilidad con los que se pueden reproducir rutas de
-explotación completas en un entorno controlado. Ambas fuentes son la base de las etiquetas de cadena de ataque
-del presente trabajo.
+explotación completas en un entorno controlado. Ambas constituyen fuentes de
+manifiestos del presente trabajo; las etiquetas de cadena de ataque no proceden
+de ellas, sino de la regla explícita de etiquetado descrita en el
+Capítulo~\ref{cap:herramienta}.
 
 El marco taxonómico de referencia para los ataques en entornos de contenedores y
 \textit{Kubernetes} es \textit{MITRE ATT\&CK for Containers}
@@ -76,8 +84,17 @@ literatura. Rahman et~al.\ \citep{Rahman2022} construyeron un conjunto de datos
 de referencia para manifiestos \textit{Kubernetes} extraídos de repositorios
 públicos, con 2.039 manifiestos de 92 repositorios etiquetados en 11 categorías de
 \textit{misconfiguration} identificadas mediante análisis cualitativo y cuantificadas
-con su herramienta de análisis estático (SLI-KUBE). De
-ese trabajo, el presente sistema recupera y codifica 1.906 manifiestos de GitHub y
+con su herramienta de análisis estático (SLI-KUBE). Su aportación se circunscribe
+a la construcción del conjunto de datos y a la medición de la densidad de
+misconfiguraciones mediante reglas estáticas: no incluye ningún modelo de
+clasificación supervisada entrenado sobre ese corpus, por lo que no ofrece una
+cifra de rendimiento predictivo con la que contrastar directamente.
+% Verificado contra el resumen publicado (TOSEM 32(4), 2023): la metodología
+% declarada es «an empirical study with 2,039 Kubernetes manifests [...] and
+% constructs a static analysis tool called SLI-KUBE to quantify the frequency of
+% the identified security misconfigurations». No se entrena ni evalúa ningún
+% clasificador supervisado sobre el corpus.
+De ese trabajo, el presente sistema recupera y codifica 1.906 manifiestos de GitHub y
 GitLab como vectores de características binarias que indican la presencia o ausencia
 de cada patrón.
 
@@ -97,11 +114,14 @@ y \acs{CIS} \textit{Benchmarks}. Al igual que Checkov y kube-linter, sin embargo
 evalúa recursos de forma independiente y no construye ningún modelo del clúster como
 estructura relacional.
 
-La noción de \textit{Unified Misconfiguration Index} (\acs{UMI}), propuesta por
+La noción de un índice unificado de misconfiguraciones (\textit{unified
+misconfiguration index}), propuesta por
 \citeauthor{Malul2024} (\citeyear{Malul2024}) en \textit{GenKubeSec}, normaliza y
 unifica las etiquetas de múltiples herramientas de análisis basadas en reglas para
 poder compararlas, un problema afín al de generar un \textit{risk\_score} unificado
-como el de la Capa~1 del presente sistema. Su propuesta, que incorpora un modelo de
+como el de la Capa~1 del presente sistema; la fuente original emplea esa expresión
+descriptiva sin acuñar una sigla, por lo que la abreviatura \acs{UMI}\acused{UMI}
+que se usa en el resto de este documento es una convención propia. Su propuesta, que incorpora un modelo de
 lenguaje de gran escala (\acs{LLM}) para la clasificación, es complementaria a la de
 este trabajo, aunque opera en el mismo nivel de manifiesto individual.
 La limitación estructural común a estas herramientas es que ninguna aprende ni predice
@@ -114,6 +134,7 @@ razonar sobre la estructura del clúster como un todo.
 
 % -----------------------------------------------------------
 \section{Aprendizaje automático para detección de vulnerabilidades}
+\label{sec:ml_vulnerabilidades}
 % -----------------------------------------------------------
 
 El aprendizaje automático se ha aplicado a la detección de vulnerabilidades en
@@ -123,15 +144,26 @@ de decisión mediante \textit{bagging} y selección aleatoria de característica
 demostrado resultados robustos en escenarios de alta dimensionalidad y clases
 desbalanceadas, características típicas de los conjuntos de datos de seguridad; el
 desequilibrio se aborda además mediante la ponderación de clases que ofrece su
-implementación en \textit{scikit-learn} \citep{Pedregosa2011}. El ajuste de
-hiperparámetros suele realizarse mediante búsqueda en rejilla (\textit{grid search})
-con validación cruzada estratificada sobre parámetros como \texttt{n\_estimators},
-\texttt{max\_depth} y \texttt{min\_samples\_leaf}; los valores concretos explorados en
-este trabajo se detallan en el Capítulo~\ref{cap:herramienta}.
+implementación en \textit{scikit-learn} \citep{Pedregosa2011}. En la literatura, el
+ajuste de hiperparámetros de este tipo de clasificadores suele realizarse mediante
+búsqueda en rejilla (\textit{grid search}) con validación cruzada estratificada
+sobre parámetros como \texttt{n\_estimators} o \texttt{min\_samples\_leaf}. El
+presente trabajo no realiza tal búsqueda: emplea una única configuración fija de
+hiperparámetros, escogida para el escenario de clases desbalanceadas y documentada
+en el Capítulo~\ref{cap:herramienta}, de modo que los resultados de la Capa~1 no
+deben interpretarse como el óptimo de un espacio de hiperparámetros explorado.
 
 En el dominio de la detección de intrusiones en red, el conjunto de datos UNSW-NB15
 \citep{Moustafa2015} se ha convertido en un referente de evaluación para clasificadores
-supervisados. El conjunto de manifiestos de este trabajo presenta un desequilibrio
+supervisados. Conviene precisar el alcance de esa referencia: el trabajo que lo
+presenta es un artículo de construcción de conjunto de datos, y su evaluación
+comparativa se limita a la exactitud y la tasa de falsas alarmas de árboles de
+decisión, regresión logística, \textit{naïve Bayes}, redes neuronales artificiales
+y modelos de mezclas esperadas, sin reportar valores de F1 macro ni resultados de
+\textit{Random Forest}. No constituye, por tanto, una revisión del rendimiento de
+\textit{Random Forest} sobre ese conjunto ni permite derivar de él un rango de
+referencia para dicha métrica.
+El conjunto de manifiestos de este trabajo presenta un desequilibrio
 de clases moderado (56,3\,\% seguros vs.\ 43,7\,\% mal configurados); el
 desafío de desequilibrio más severo se concentra en las \textit{flags} de escape
 individuales, algunas presentes en menos del 1\,\% de los manifiestos reales.
@@ -158,9 +190,18 @@ fue marcado como de alto riesgo, la interpretabilidad del \textit{Random Forest}
 —mediante importancia de características y reglas de árbol legibles— representa una
 ventaja operacional significativa sobre los modelos de caja negra.
 
+La aplicación de técnicas de aprendizaje automático (\ac{ML}) a la predicción de
+vulnerabilidades en software es un enfoque consolidado que supera de forma
+consistente a los modelos estadísticos clásicos \citep{Jabeen2022}. Dentro de ese
+espacio, el \textit{Random Forest} resulta especialmente adecuado para el problema
+de la Capa~1 por su comportamiento sobre características binarias de alta dimensión
+con clases desbalanceadas. Ese comportamiento, unido a sus ventajas de
+interpretabilidad en auditorías de seguridad, motivó su adopción como componente
+de Capa~1 de \textit{kubescan}.
+
 La elección de \textit{Random Forest} sobre otros algoritmos clásicos para la
-clasificación de manifiestos \ac{IaC} responde a tres criterios documentados en la
-literatura de aprendizaje automático aplicado a la seguridad:
+clasificación de manifiestos \ac{IaC} responde a tres criterios derivados de la
+naturaleza de los datos del problema:
 
 \begin{enumerate}
 \raggedright
@@ -195,37 +236,28 @@ candidatos para la Capa~1.
 \label{tab:ml_comparison}
 \begin{tabular}{@{}p{2.7cm}cp{2.1cm}p{2cm}p{4.1cm}@{}}
 \toprule
-Algoritmo & Binario & Desequilibrio & Prob.\ calibrada & Observación \\
+Algoritmo & \shortstack{Sin norma-\\lización} & Desequilibrio & Prob.\ calibrada & Observación \\
 \midrule
 Random Forest & \checkmark & \checkmark & Buena & Adoptado (Capa~1) \\
-Árbol de Decisión & \checkmark & Parcial & Pobre & Alta varianza en grafos \\
-\ac{SVM} (RBF) & \checkmark & Parcial & Requiere Platt & Entrenamiento O(n\textsuperscript{2})--O(n\textsuperscript{3}); viable pero menos eficiente \\
-Red Neuronal (\acs{MLP}) & \checkmark & Con pesos & Variable & Requiere normalización \\
-\textit{k}-NN & \checkmark & No & Estimada & Costoso en inferencia \\
+Árbol de Decisión & \checkmark & Parcial & Pobre & Alta varianza \\
+\ac{SVM} (RBF) & No & Parcial & Requiere Platt & Entrenamiento O(n\textsuperscript{2})--O(n\textsuperscript{3}); viable pero menos eficiente \\
+Red Neuronal (\acs{MLP}) & No & Con pesos & Variable & Sensible a la escala de entrada \\
+\textit{k}-NN & No & No & Estimada & Costoso en inferencia \\
 \bottomrule
 \end{tabular}
 \fuentepropia
 \end{table}
 
-La aplicación de técnicas de \ac{ML} a la predicción de vulnerabilidades en software
-es un enfoque consolidado que supera de forma consistente a los modelos estadísticos
-clásicos \citep{Jabeen2022}. Dentro de este espacio, el \textit{Random Forest} resulta
-especialmente adecuado para el problema de la Capa~1 por sus propiedades sobre
-características binarias de alta dimensión con clases desbalanceadas —manejo nativo de
-datos dispersos, gestión intrínseca del desequilibrio y salidas probabilísticas
-utilizables como \textit{risk\_score}— que se detallan a continuación. Estas
-propiedades, combinadas con sus ventajas de interpretabilidad para auditorías de
-seguridad, motivaron su adopción como componente de Capa~1 de \textit{kubescan}.
-
 % -----------------------------------------------------------
 \section{Redes neuronales de grafos}
 % -----------------------------------------------------------
 
-Las redes neuronales de grafos (\acs{GNN}) han emergido como la herramienta principal para
+Las redes neuronales de grafos (\textit{Graph Neural Networks},
+\acs{GNN})\acused{GNN} han emergido como la herramienta principal para
 aprendizaje en datos con estructura relacional \citep{Zhou2020, Hamilton2020}. A
 diferencia de los clasificadores tabulares clásicos, las \acs{GNN}s operan directamente
 sobre la topología del grafo, propagando información entre vecinos mediante operaciones
-de paso de mensajes (\textit{message passing}). Formalmente, en una capa \ac{GNN} la
+de paso de mensajes (\textit{message passing}). Formalmente, en una capa \acs{GNN} la
 representación del nodo \(v\) se actualiza como:
 
 \begin{equation}
@@ -245,7 +277,7 @@ principales arquitecturas.
 
 Las arquitecturas más relevantes para este trabajo son:
 
-\textbf{Graph Convolutional Networks (\acs{GCN})} \citep{Kipf2017}: implementan AGGREGATE
+\textbf{Graph Convolutional Networks (\acs{GCN})}\acused{GCN} \citep{Kipf2017}: implementan AGGREGATE
 como la media ponderada de los estados de los vecinos normalizada por sus grados.
 Son eficientes, pero los pesos quedan fijados por la estructura del grafo (los grados
 de los nodos) y no se aprenden, sin distinción entre tipos de arista.
@@ -256,7 +288,7 @@ aparecen nuevos clústeres en producción. La inducción se logra aprendiendo fu
 de agregación en lugar de \textit{embeddings} fijos.
 
 \textbf{Graph Attention Networks (\acs{GAT})} \citep{Velickovic2018}: sustituyen la
-normalización fija de \ac{GCN} por coeficientes de atención aprendidos. Para cada par
+normalización fija de \acs{GCN} por coeficientes de atención aprendidos. Para cada par
 de nodos \((v, u)\) el coeficiente de atención es:
 
 \begin{equation}
@@ -293,13 +325,17 @@ crecimiento. \citeauthor{Bilot2023} (\citeyear{Bilot2023}) proporcionan una
 revisión exhaustiva de los enfoques basados en \ac{GNN} para la detección de
 intrusiones en red, organizada en torno a enfoques basados en red (grafos de flujo) y
 basados en host (grafos de procedencia). Una segunda revisión publicada
-en \textit{Computers and Security} en 2024 \citep{GNNSurvey2024} amplía esta
+en \textit{Computers \& Security} en 2024 \citep{GNNSurvey2024} amplía esta
 taxonomía y documenta un crecimiento sostenido de la investigación en el área en
 los últimos años.
 
 \textit{E-GraphSAGE} \citep{Lo2022} propone representar flujos de red como grafos de
 transacción para clasificación de intrusiones en \acs{IoT}, alcanzando tasas de detección
-superiores a los clasificadores tabulares clásicos en el conjunto de datos UNSW-NB15. La
+superiores a los clasificadores tabulares clásicos sobre las re-publicaciones en
+formato NetFlow de los conjuntos de referencia habituales del área
+(NF-UNSW-NB15-v2, NF-ToN-IoT y NF-BoT-IoT), y no sobre la versión original de
+UNSW-NB15.
+La
 analogía con el presente trabajo es directa: los manifiestos \textit{Kubernetes}
 son los nodos y las relaciones de privilegio y movimiento lateral son las aristas del
 grafo de amenaza. Una diferencia clave es que \textit{E-GraphSAGE} modela flujos de
@@ -360,7 +396,8 @@ opera sobre \textbf{manifiestos \acs{YAML} estáticos} antes del despliegue, int
 en el pipeline \acs{CICD} como un control de seguridad \textit{shift-left}. Además, ambas
 herramientas utilizan búsqueda de rutas mediante consultas ad-hoc en bases de datos
 de grafos, sin componente de aprendizaje automático supervisado; \textit{kubescan}
-es el primer sistema, según la revisión bibliográfica realizada en este trabajo (Sección~\ref{sec:sintesis}), que combina análisis estático
+es el primer sistema, según la revisión bibliográfica no sistemática realizada en
+este trabajo, que combina análisis estático
 de manifiestos con \acs{GNN}s para la predicción de cadenas de ataque como tarea de
 clasificación supervisada.
 

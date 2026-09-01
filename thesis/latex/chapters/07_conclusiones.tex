@@ -202,9 +202,18 @@ de organizaciones reales es la siguiente etapa crítica para confirmar la valide
 externa del sistema.
 
 \textbf{L5 — Etiquetado derivado de reglas sobre el mismo espacio de
-características.} Las etiquetas de grafo (clean / isolated / attack\_chain) se
+características.} Esta circularidad afecta a las dos capas de aprendizaje. Las
+etiquetas de grafo (clean / isolated / attack\_chain) se
 generan mediante una regla determinista definida sobre las mismas \textit{flags} y
-aristas que observan los modelos (Sección~\ref{sec:construccion_grafo}). El sistema aprende, por
+aristas que observan los modelos (Sección~\ref{sec:construccion_grafo}). En la
+Capa~1 la relación es aún más estrecha: sobre las 1.906~filas procedentes de
+Rahman et~al.\ la etiqueta binaria coincide exactamente con la disyunción de ocho
+de las características de entrada, de modo que reentrenar restringiéndose a esa
+fuente produce F1 macro\,=\,1,0000 (Sección~\ref{sec:rf_importance}). La F1 de
+0,9946 sobre el corpus completo mide, en consecuencia, con qué fidelidad el
+modelo recupera esa regla —y las etiquetas heterogéneas de las demás fuentes—
+bajo imputación y valores ausentes, no su capacidad de detectar
+misconfiguraciones con un criterio ajeno a ella. El sistema aprende, por
 tanto, una aproximación robusta de dicha regla bajo ruido, enmascaramiento y
 observabilidad parcial — no una noción de cadena de ataque independiente de la
 regla. Esta circularidad es común en la literatura de detección de

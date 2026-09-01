@@ -38,7 +38,13 @@ numerados OE1 a OE6, se detallan a continuación.
   \item[OE2.] Desarrollar una Capa~1 de clasificación de manifiestos individuales
     basada en \textit{Random Forest} con F1 macro superior a 0,85, que produzca
     \textit{risk scores} continuos en el rango [0,1] para usar como características
-    de nodo en la Capa~2.
+    de nodo en la Capa~2. El umbral de 0,85 se adopta como criterio de diseño
+    propio de este trabajo, no derivado de una referencia externa: la literatura
+    de detección de intrusiones sobre conjuntos comparables no reporta rangos de
+    F1 macro para \textit{Random Forest} que puedan trasladarse a este dominio
+    (Sección~\ref{sec:ml_vulnerabilidades}). La Sección~\ref{sec:layer1} sitúa
+    además el resultado obtenido frente a una línea de base trivial calculada
+    sobre el propio corpus, que constituye la comparación informativa.
 
   \item[OE3.] Diseñar un esquema de grafo de clúster con tipos de arista
     semánticamente significativos para el dominio \textit{Kubernetes}:
