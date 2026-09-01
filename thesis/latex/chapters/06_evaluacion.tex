@@ -578,31 +578,12 @@ como trabajo futuro (TF6, Sección~\ref{sec:trabajo_futuro}).
 \label{sec:multisemilla}
 
 Para acotar la dependencia del resultado respecto de la semilla de entrenamiento,
-la configuración final se reentrenó con tres semillas (7, 42, 123; Tabla~\ref{tab:multiseed}
-y Figura~\ref{fig:multiseed_folds}) manteniendo fijo
-el particionado (semilla~42): re-sortear también las particiones confundiría la
-varianza del modelo con la asignación de familias a pliegues, que la
-Sección~\ref{sec:layer2} muestra dominante. Las métricas de test de la tabla
-aplican la restricción de viabilidad estructural
+la configuración final se reentrenó con tres semillas (7, 42, 123;
+Figura~\ref{fig:multiseed_folds}) manteniendo fijo el particionado (semilla~42):
+re-sortear también las particiones confundiría la varianza del modelo con la
+asignación de familias a pliegues, que la Sección~\ref{sec:layer2} muestra
+dominante. Las métricas de test aplican la restricción de viabilidad estructural
 (Sección~\ref{sec:gate_estructural}).
-
-\begin{table}[htbp]
-\centering
-\caption{Robustez multi-semilla de la configuración final}
-\label{tab:multiseed}
-\begin{tabular}{@{}crrc@{}}
-\toprule
-Semilla & P@5 (\acs{CV}) & F1 macro (\acs{CV}) & Test P@1/P@3/P@5 \\
-\midrule
-42 (desplegada) & 0,720 \(\pm\) 0,160 & 0,803 & 1,00 / 1,00 / 0,80 \\
-7   & 0,640 \(\pm\) 0,265 & 0,853 & 1,00 / 1,00 / 0,80 \\
-123 & 0,680 \(\pm\) 0,204 & 0,857 & 1,00 / 1,00 / 1,00 \\
-\midrule
-\textbf{Media entre semillas} & \textbf{0,680 \(\pm\) 0,033} & 0,838 & — \\
-\bottomrule
-\end{tabular}
-\fuentepropia
-\end{table}
 
 Dos observaciones acotan la lectura del 0,72. Primera: la variación entre
 semillas se concentra íntegramente en el pliegue~1 (la familia
@@ -990,22 +971,6 @@ La Tabla~\ref{tab:usab_perfil} resume el perfil de los tres participantes expert
 seleccionados por su experiencia operando \textit{Kubernetes} y en seguridad de
 contenedores.
 
-\begin{table}[htbp]
-\centering
-\caption{Perfil de los participantes expertos}
-\label{tab:usab_perfil}
-\begin{tabular}{@{}lllll@{}}
-\toprule
-Participante & Rol & Años \textit{K8s} & \acs{CICD} & Seguridad \\
-\midrule
-P1 & Desarrollo/IA & 3--5 & Habitual & Alta \\
-P2 & DevOps/SRE    & 1--3 & Habitual & Alta \\
-P3 & Desarrollo/IA & 3--5 & Habitual & Media \\
-\bottomrule
-\end{tabular}
-\fuentepropia
-\end{table}
-
 \subsection{Éxito por tarea}
 
 Cada participante ejecutó cinco tareas: instalar la herramienta (T1), realizar un
@@ -1013,20 +978,6 @@ escaneo básico e identificar el veredicto (T2), interpretar el informe con
 \texttt{-{}-show-nodes} (T3), producir la salida \ac{JSON} (T4) y, opcionalmente,
 escanear un caso propio (T5). La Tabla~\ref{tab:usab_tareas} recoge la tasa de
 éxito (logrado = 1; logrado con ayuda = 0,5; no logrado = 0).
-
-\begin{table}[htbp]
-\centering
-\caption{Tasa de éxito por tarea (3 participantes)}
-\label{tab:usab_tareas}
-\begin{tabular}{@{}lccccc c@{}}
-\toprule
-Tarea & T1 & T2 & T3 & T4 & T5 & Global \\
-\midrule
-Éxito & 100\,\% & 100\,\% & 100\,\% & 83\,\% & 67\,\% & 90\,\% \\
-\bottomrule
-\end{tabular}
-\fuentepropia
-\end{table}
 
 El núcleo del flujo de trabajo —instalación, escaneo e interpretación del
 informe— se completó sin ayuda por los tres participantes. Las únicas fricciones

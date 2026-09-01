@@ -164,3 +164,69 @@ Nombre & Grupo & Rol en grafo & Descripción \\
 \end{tabular}
 \fuentepropia
 \end{table}
+
+\section*{Trazabilidad de requisitos}
+\addcontentsline{toc}{section}{Trazabilidad de requisitos}
+
+La Tabla~\ref{tab:trazabilidad} vincula cada requisito de la
+Sección~\ref{sec:requisitos} con la sección que aporta la evidencia de su
+verificación.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Trazabilidad de requisitos}
+\label{tab:trazabilidad}
+\begin{tabular}{@{}lp{5.1cm}ll@{}}
+\toprule
+ID & Requisito & Diseño & Verificación \\
+\midrule
+RF-1  & Misconfiguraciones individuales & \ref{sec:capa1_diseno}  & \ref{sec:layer1} \\
+RF-2  & Cadenas de ataque               & \ref{sec:capa2_diseno}  & \ref{sec:layer2} \\
+RF-3  & Interfaz de línea de comandos   & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
+RF-4  & Formatos de salida              & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
+RF-5  & Priorización de riesgos         & \ref{sec:capa3_diseno}  & \ref{sec:metrica_global} \\
+RNF-1 & Trazabilidad                    & \ref{sec:features_table} & \ref{sec:verificacion_requisitos} \\
+RNF-2 & Reproducibilidad                & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
+RNF-3 & Instalabilidad                  & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
+RNF-4 & Latencia                        & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
+\bottomrule
+\end{tabular}
+\fuentepropia
+\end{table}
+
+\section*{Materiales del estudio de usabilidad}
+\addcontentsline{toc}{section}{Materiales del estudio de usabilidad}
+
+Las tablas siguientes recogen el perfil de los tres participantes y su tasa de
+éxito por tarea, según el protocolo descrito en la
+Sección~\ref{sec:usabilidad}.
+
+\begin{table}[htbp]
+\centering
+\caption{Perfil de los participantes expertos}
+\label{tab:usab_perfil}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Participante & Rol & Años \textit{K8s} & \acs{CICD} & Seguridad \\
+\midrule
+P1 & Desarrollo/IA & 3--5 & Habitual & Alta \\
+P2 & DevOps/SRE    & 1--3 & Habitual & Alta \\
+P3 & Desarrollo/IA & 3--5 & Habitual & Media \\
+\bottomrule
+\end{tabular}
+\fuentepropia
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Tasa de éxito por tarea (3 participantes)}
+\label{tab:usab_tareas}
+\begin{tabular}{@{}lccccc c@{}}
+\toprule
+Tarea & T1 & T2 & T3 & T4 & T5 & Global \\
+\midrule
+Éxito & 100\,\% & 100\,\% & 100\,\% & 83\,\% & 67\,\% & 90\,\% \\
+\bottomrule
+\end{tabular}
+\fuentepropia
+\end{table}
