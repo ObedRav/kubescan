@@ -574,9 +574,14 @@ Arquitectura & F1 macro & P@5 \\
 \fuentepropia
 \end{table}
 
-La \ac{GAT} supera a la \ac{GCN} en F1 (+9,2~puntos) y en P@5 (+4~puntos),
-confirmando que la atención sobre tipos de arista aporta señal real tanto para la
-clasificación como para el ranking de cadenas. La comparación 2 vs.\ 3~capas es
+La \ac{GAT} supera a la \ac{GCN} en F1 (+9,2~puntos) y en P@5 (+4~puntos). Esa
+ventaja acredita la configuración adoptada en su conjunto, pero no permite
+atribuirla al esquema de tipos de arista por separado: la rama \ac{GCN} sustituye
+simultáneamente el mecanismo de agregación por atención y descarta el tensor
+\texttt{edge\_attr}, de modo que ambos factores varían a la vez. Aislar la
+contribución del tipado exigiría una tercera rama —\ac{GAT} sin tipos de arista—
+que no forma parte de las configuraciones entrenadas
+(Capítulo~\ref{cap:conclusiones}). La comparación 2 vs.\ 3~capas es
 menos concluyente: las medias de validación cruzada casi coinciden
 —P@5\,=\,0,720\,\(\pm\)\,0,160 en ambas configuraciones y F1 macro de 0,803
 frente a 0,800—, pero esa coincidencia agregada oculta un desacuerdo apreciable
@@ -718,7 +723,13 @@ P@3\,=\,1,00 y P@5\,=\,0,80: las cadenas ocupan las posiciones 1--4 y 6, y solo
 caen a P@1\,=\,0,00, P@3\,=\,0,33 y P@5\,=\,0,60 (Figura~\ref{fig:structural_gate}) — la regla es decisiva porque
 74 de los 86~grafos de test son de un solo nodo, y dos de ellos, con todas sus
 flags de escape activas, encabezarían el \textit{ranking} pese a no poder
-albergar una cadena. \ac{FPR}\_clean\,=\,0,00: ningún clúster limpio aparece
+albergar una cadena. Conviene precisar en consecuencia cuál es el conjunto sobre
+el que se ordena: la restricción deja 12~clústeres candidatos —las 5~cadenas,
+4~\textit{isolated} y 3~limpios—, de modo que las métricas de \textit{ranking} no
+se calculan sobre los 86~grafos sino sobre esos 12. Un ordenamiento aleatorio de
+ese conjunto obtendría un valor esperado de P@5 de \(5/12 \approx 0{,}42\), que
+es la línea de base frente a la que debe leerse el 0,80 obtenido.
+\ac{FPR}\_clean\,=\,0,00: ningún clúster limpio aparece
 entre los de mayor riesgo. La F1~macro por clasificación \textit{argmax} del
 ensemble de pliegues sobre el conjunto de test es 0,883 (F1 por clase:
 \textit{clean} 1,0; \textit{isolated} 0,981; \textit{attack\_chain} 0,667,
