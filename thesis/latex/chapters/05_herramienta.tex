@@ -606,11 +606,14 @@ herramientas integradas en un \textit{pipeline} de pre-commit y \acs{CICD}: (1)
 \textit{ruff}, linter y formateador de código Python con reglas de estilo y
 seguridad; (2) \textit{mypy} en modo estricto, para comprobación estática de
 tipos en todos los módulos del paquete; (3) \textit{pytest}, para la suite de
-tests unitarios e de integración del paquete; y (4) \textit{pre-commit hooks},
-que aplican automáticamente ruff y mypy en cada commit. La suite de tests cubre
-el parser de \acs{YAML} (\texttt{utils/yaml\_parser.py}), la construcción del
+tests unitarios y de integración del paquete; y (4) \textit{pre-commit hooks},
+que aplican automáticamente ruff y mypy en cada commit.
+
+{\raggedright
+La suite de tests cubre el parser de \acs{YAML}
+(\texttt{utils/yaml\_parser.py}), la construcción del
 grafo de clúster (\texttt{utils/graph\_builder.py}), el clasificador \ac{RF}
 (\texttt{model/rf\_classifier.py}) y el ensamblador \ac{GA}
 (\texttt{model/ga\_ensemble.py}); la verificación funcional de extremo a extremo
 que estos tests de integración realizan se reporta como parte de la evaluación
-del sistema en el Capítulo~\ref{cap:evaluacion}.
+del sistema en el Capítulo~\ref{cap:evaluacion}.\par}

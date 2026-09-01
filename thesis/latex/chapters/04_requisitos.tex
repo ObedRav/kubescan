@@ -57,8 +57,10 @@ justificación concreta de cada uno.
     operador, mientras que el formato \acs{JSON} permite el consumo automatizado
     del veredicto por otras herramientas del \textit{pipeline} de \acs{CICD}.
   \item[RF-5 — Priorización de riesgos.] El sistema debe producir una clasificación
-    ordenada de clústeres por puntuación de riesgo que maximice la Precisión@5, colocando las
-    cadenas de ataque reales en las primeras posiciones.
+    ordenada de clústeres por puntuación de riesgo con Precisión@5 superior a
+    0,70 (el mismo umbral cuantitativo de OE4, Capítulo~\ref{cap:objetivos}), de
+    modo que las cadenas de ataque reales queden situadas en las primeras
+    posiciones.
     \textit{Justificación:} un equipo de seguridad revisa manualmente un número
     reducido de alertas por jornada; un ranking que sitúe las cadenas reales en
     las primeras posiciones hace viable esa revisión sobre un volumen de
