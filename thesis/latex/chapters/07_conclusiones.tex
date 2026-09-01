@@ -62,7 +62,7 @@ tipos de arista, y que la profundidad (2 frente a 3~capas) no es el factor
 determinante del ranking. Esta equivalencia en la media no debe leerse como
 robustez frente a la profundidad: las dos configuraciones difieren por pliegue
 (+0,142 en el pliegue~3 y \(-\)0,191 en el~4) y solo coinciden al promediarse
-(Sección~\ref{sec:gnn_por_clase}).
+(Sección~\ref{sec:ablacion_arquitectura}).
 
 \textbf{C3 — El \textit{ensemble} final, combinado con la restricción de
 viabilidad estructural, mantiene un desempeño operacional sólido sobre el
@@ -232,8 +232,9 @@ para el 32,6\,\% de las filas y la salida de \textit{Checkov} las cubre para otr
 41,6\,\%, de modo que las 731~filas restantes (25,9\,\% del corpus) reciben la
 mediana de columna y ven diluida la señal de esas seis características
 (Sección~\ref{sec:construccion_dataset}). Una fracción de esa carencia es
-irreducible, pues 46~manifiestos del corpus de Rahman et~al.\ responden
-\texttt{404} o \texttt{403} en el servidor de origen y no admiten recuperación;
+irreducible, pues 54~manifiestos del corpus de Rahman et~al.\ resultaron
+inaccesibles en origen —33~respuestas \texttt{404} y 21~respuestas \texttt{403}—
+y no admiten recuperación;
 el resto depende de la cobertura alcanzable por las herramientas de escaneo sobre
 los manifiestos efectivamente disponibles. Un experimento de reescaneo sobre las
 filas recuperables acota el alcance de la limitación para la Capa~1: la F1 macro
@@ -410,7 +411,7 @@ hasta 0,40, de modo que la ausencia de clústeres limpios en la cabeza del
 \textit{ranking} de test no autoriza a afirmar que el sistema no producirá falsas
 alarmas sobre corpus mayores. A ello se suma la concentración por familias (L1): el
 tamaño muestral efectivo de la validación cruzada es el número de familias
-independientes por pliegue (1--3), no el número nominal de cadenas. Por su parte,
+independientes por pliegue (1, 1, 4, 5 y 5), no el número nominal de cadenas. Por su parte,
 L8 acota del mismo modo las cifras de usabilidad: con \(n=3\) participantes, la
 puntuación SUS de 88,3 y las medias de aplicabilidad son estimaciones indicativas,
 no medidas con precisión cuantificable.

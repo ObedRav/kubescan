@@ -43,18 +43,24 @@ evidencia de cumplimiento.
   \item[OE1.] Construir un conjunto de datos de manifiestos \textit{Kubernetes}
     etiquetados que combine múltiples fuentes públicas, contenga al menos
     2.000~manifiestos, y alcance una cobertura mínima del 2\,\% en la bandera de escape
-    \texttt{TRUE\_HOST\_PID}, superando el 0,3\,\% de los repositorios reales no
-    aumentados. Ambas cifras son criterios de diseño fijados en este trabajo: el
+    \texttt{TRUE\_HOST\_PID}, superando el 0,3\,\% que presentan los manifiestos
+    procedentes de repositorios reales. Ambas cifras son criterios de diseño
+    fijados en este trabajo: el
     mínimo de 2.000~manifiestos responde al tamaño necesario para sostener una
     validación cruzada de 5~pliegues manteniendo representación de la clase
     minoritaria en cada partición, y el suelo del 2\,\% se estableció para
     garantizar un número suficiente de manifiestos con capacidad de escape, dado
-    que la regla de etiquetado de grafos sólo marca un clúster como
-    \textit{attack\_chain} cuando existe una ruta de escalada de privilegios que
-    enlaza un nodo con bandera de escape activa con un nodo de movimiento lateral.
-    Con la cobertura del 0,3\,\% observada en los repositorios reales no aumentados
-    esa regla apenas llega a activarse, de modo que la clase minoritaria quedaría
-    sin ejemplos suficientes para entrenar la Capa~2. La composición final del
+    que la regla de etiquetado de grafos marca un clúster como
+    \textit{attack\_chain} en dos supuestos, ambos dependientes de la presencia de
+    nodos con capacidad de escape: cuando el clúster contiene dos o más nodos con
+    alguna bandera de escape activa —situación en la que la escalada compuesta es
+    posible sin necesidad de un salto lateral explícito— o cuando existe una ruta
+    de alcance sobre aristas de escalada que enlaza un nodo de escape con un nodo
+    de movimiento lateral. Con la cobertura del 0,3\,\% observada en los
+    repositorios reales sin aportación de fuentes intencionalmente vulnerables,
+    ninguno de los dos supuestos llega a activarse con frecuencia suficiente, de
+    modo que la clase minoritaria quedaría sin ejemplos bastantes para entrenar la
+    Capa~2. La composición final del
     conjunto y la cobertura alcanzada se detallan en la
     Sección~\ref{sec:construccion_dataset}.
 
