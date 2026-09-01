@@ -289,12 +289,10 @@ introducían los protocolos de particionado sucesivamente descartados.
 
 \subsection{Evolución por fase experimental}
 
-La Tabla~\ref{tab:gnn_evolution} muestra la evolución de los resultados de la \ac{GAT}
-a lo largo de las seis fases del desarrollo experimental. La
-Figura~\ref{fig:gnn_evolution} traza la trayectoria de las cuatro
-primeras fases y muestra cómo la aumentación de datos y la corrección del vector
-de escape \texttt{HOSTPATH\_MOUNT} contribuyeron de forma independiente y
-complementaria. La quinta fase corrige el protocolo de particionado: las fases~1--4
+La Tabla~\ref{tab:gnn_evolution} muestra la evolución de los resultados de la
+\ac{GAT} a lo largo de las seis fases del desarrollo experimental. En las cuatro
+primeras, la aumentación de datos y la corrección del vector de escape
+\texttt{HOSTPATH\_MOUNT} contribuyeron de forma independiente y complementaria. La quinta fase corrige el protocolo de particionado: las fases~1--4
 incluían en el entrenamiento variantes aumentadas derivadas de los
 clústeres de validación y test (fuga de datos por casi-duplicados), por lo que sus
 métricas están infladas de forma optimista. Esa quinta fase aplica el protocolo
@@ -358,19 +356,9 @@ y 5~cadenas respectivamente, por lo que el denominador es 5 en todos ellos y el
 techo 1,0 exige cinco aciertos en las cinco primeras posiciones; únicamente el
 pliegue~0 lo consigue.
 
-\begin{figure}[htbp]
-  \centering
-  \caption{Evolución de F1 macro y Precisión@5 de la Capa~2}
-  \label{fig:gnn_evolution}
-  \includegraphics[width=\textwidth]{fig_gnn_evolution}
-
-  \fuentepropia
-\end{figure}
-
-La Figura~\ref{fig:gnn_evolution} recorre las cuatro primeras fases experimentales
-(protocolo preliminar). Las líneas de puntos indican
-el objetivo de diseño de ranking (P@5\,>\,0,70) y, como referencia, el umbral de
-F1 fijado para la Capa~1 (0,85); las barras de error
+Las cuatro primeras fases de la Tabla~\ref{tab:gnn_evolution} corresponden al
+protocolo preliminar. El objetivo de diseño de ranking es P@5\,>\,0,70 y el umbral
+de F1 fijado para la Capa~1, tomado como referencia, 0,85; las desviaciones típicas
 representan la desviación estándar entre los 5~pliegues de validación cruzada. La
 fase final \textit{group-aware} no está incluida en el gráfico y se reporta en la
 Tabla~\ref{tab:gnn_evolution}.
@@ -507,18 +495,9 @@ diseñada para regímenes con miles de ejemplos por clase \citep{Lin2017}, adem�
 anula por completo la clasificación de la clase \textit{attack\_chain} en el
 conjunto de test (F1 de clase 0,0 frente a 0,667 con entropía cruzada). La
 configuración desplegada es, en consecuencia, entropía cruzada ponderada con
-selección por Precisión@5 (Figura~\ref{fig:loss_ablation}).
+selección por Precisión@5.
 
-\begin{figure}[htbp]
-  \centering
-  \caption{Precisión@5 de la ablación de pérdida y selección}
-  \label{fig:loss_ablation}
-  \includegraphics[width=0.82\textwidth]{fig_loss_ablation}
-
-  \fuentepropia
-\end{figure}
-
-La Figura~\ref{fig:loss_ablation} representa la Precisión@5 de validación cruzada
+La Tabla~\ref{tab:loss_ablation} recoge la Precisión@5 de validación cruzada
 (\(\pm\)\(\sigma\)) de las cuatro configuraciones; solo la desplegada —entropía
 cruzada ponderada con selección por Precisión@5— supera el objetivo de diseño.
 La distancia respecto de la segunda mejor configuración es, no obstante, estrecha
@@ -599,31 +578,12 @@ como trabajo futuro (TF6, Sección~\ref{sec:trabajo_futuro}).
 \label{sec:multisemilla}
 
 Para acotar la dependencia del resultado respecto de la semilla de entrenamiento,
-la configuración final se reentrenó con tres semillas (7, 42, 123; Tabla~\ref{tab:multiseed}
-y Figura~\ref{fig:multiseed_folds}) manteniendo fijo
-el particionado (semilla~42): re-sortear también las particiones confundiría la
-varianza del modelo con la asignación de familias a pliegues, que la
-Sección~\ref{sec:layer2} muestra dominante. Las métricas de test de la tabla
-aplican la restricción de viabilidad estructural
+la configuración final se reentrenó con tres semillas (7, 42, 123;
+Figura~\ref{fig:multiseed_folds}) manteniendo fijo el particionado (semilla~42):
+re-sortear también las particiones confundiría la varianza del modelo con la
+asignación de familias a pliegues, que la Sección~\ref{sec:layer2} muestra
+dominante. Las métricas de test aplican la restricción de viabilidad estructural
 (Sección~\ref{sec:gate_estructural}).
-
-\begin{table}[htbp]
-\centering
-\caption{Robustez multi-semilla de la configuración final}
-\label{tab:multiseed}
-\begin{tabular}{@{}crrc@{}}
-\toprule
-Semilla & P@5 (\acs{CV}) & F1 macro (\acs{CV}) & Test P@1/P@3/P@5 \\
-\midrule
-42 (desplegada) & 0,720 \(\pm\) 0,160 & 0,803 & 1,00 / 1,00 / 0,80 \\
-7   & 0,640 \(\pm\) 0,265 & 0,853 & 1,00 / 1,00 / 0,80 \\
-123 & 0,680 \(\pm\) 0,204 & 0,857 & 1,00 / 1,00 / 1,00 \\
-\midrule
-\textbf{Media entre semillas} & \textbf{0,680 \(\pm\) 0,033} & 0,838 & — \\
-\bottomrule
-\end{tabular}
-\fuentepropia
-\end{table}
 
 Dos observaciones acotan la lectura del 0,72. Primera: la variación entre
 semillas se concentra íntegramente en el pliegue~1 (la familia
@@ -751,17 +711,8 @@ P@5 \([0{,}60,\ 1{,}00]\), \ac{FPR}\_clean \([0{,}00,\ 0{,}40]\) y F1~macro
 \textit{consistentes con} los objetivos de diseño, no como demostraciones
 concluyentes; la ampliación adicional del corpus de test es la vía directa para
 estrechar estos intervalos (TF1, Sección~\ref{sec:trabajo_futuro}). La
-Figura~\ref{fig:ensemble_patk} resume las
-tres métricas de ranking del ensemble sobre el conjunto de test.
-
-\begin{figure}[htbp]
-  \centering
-  \caption{Precisión@k del ensemble sobre el conjunto de test}
-  \label{fig:ensemble_patk}
-  \includegraphics[width=0.6\textwidth]{fig_ensemble_pat_k}
-
-  \fuentepropia
-\end{figure}
+Tabla~\ref{tab:ensemble_ablation} recoge las tres métricas de ranking del
+\textit{ensemble} sobre el conjunto de test.
 
 La Tabla~\ref{tab:ensemble_ablation} desglosa la contribución de cada componente
 sobre el conjunto de test (86~grafos, 5~cadenas, techo P@5\,=\,1,00), con la
@@ -838,7 +789,6 @@ el que ordena los repositorios reales. Esta observación motiva el trabajo futur
 TF3 (análisis semántico de \ac{RBAC} completo,
 Sección~\ref{sec:trabajo_futuro}).
 
-
 % -----------------------------------------------------------
 \section{Validación con herramientas de análisis estático}
 \label{sec:validacion_externa}
@@ -883,8 +833,8 @@ capa por separado, mientras que el comportamiento del sistema de extremo a
 extremo —tal como lo experimenta un operador que confía en el \textit{ranking}
 final— se resume en una única métrica de proceso completo. Esa
 métrica es el conjunto Precisión@k / \ac{FPR}\_clean del sistema desplegado sobre
-el conjunto de test, ya reportado en la Sección~\ref{sec:layer3} y resumido en
-la Figura~\ref{fig:ensemble_patk}: P@1\,=\,1,00, P@3\,=\,1,00, P@5\,=\,0,80 y
+el conjunto de test, ya reportado en la Sección~\ref{sec:layer3} y recogido en
+la Tabla~\ref{tab:ensemble_ablation}: P@1\,=\,1,00, P@3\,=\,1,00, P@5\,=\,0,80 y
 \ac{FPR}\_clean\,=\,0,00 sobre 86~grafos con 5~cadenas de ataque de repositorios
 reales, genuinamente no vistos durante el desarrollo; dado el tamaño reducido de
 este conjunto, los intervalos de confianza al 95\,\% son amplios (P@5
@@ -949,11 +899,15 @@ verificado por la métrica global de la Sección~\ref{sec:metrica_global}. RF-3 
 RF-4 (interfaz de línea de comandos y formatos de salida) no admiten una
 métrica cuantitativa dedicada y se verifican operacionalmente a continuación.
 
-\paragraph{RF-3 — Interfaz de línea de comandos.} Los dos comandos definidos en
-la Sección~\ref{sec:implementacion} (\texttt{kubescan scan <dir>} y
-\texttt{kubescan live}) se ejercitaron exitosamente sobre los casos de uso
-documentados en el Apéndice~\ref{ap:guia_uso}, incluyendo el análisis de un
-directorio de manifiestos y la consulta directa a un clúster en ejecución.
+\paragraph{RF-3 — Interfaz de línea de comandos.} El comando
+\texttt{kubescan scan <dir>} se ejercitó sobre los casos de uso documentados en el
+Anexo~\ref{ap:guia_uso}, con las dos variantes de salida y las opciones que ese
+mismo anexo recoge en la Tabla~\ref{tab:cli_options}. El comando \texttt{kubescan live} comparte con
+él la ruta de análisis —difiere únicamente en el origen de los manifiestos, que
+vuelca del clúster a un directorio temporal— y su invocación queda documentada en
+el mismo anexo, si bien no se aporta una transcripción de ejecución sobre un
+clúster activo: la verificación de RF-3 se sustenta, por tanto, en la vía de
+análisis sobre manifiestos estáticos.
 
 \paragraph{RF-4 — Formatos de salida.} El comando \texttt{kubescan scan} produce
 tanto el informe en texto legible como la salida \acs{JSON} estructurada; el
@@ -1017,53 +971,25 @@ usabilidad en pruebas formativas \citep{Nielsen2000}.
 
 \subsection{Perfil de los participantes}
 
-La Tabla~\ref{tab:usab_perfil} resume el perfil de los tres participantes expertos,
+La Tabla~\ref{tab:usab_perfil} del Anexo~\ref{ap:repositorio} resume el perfil de
+los tres participantes expertos,
 seleccionados por su experiencia operando \textit{Kubernetes} y en seguridad de
 contenedores.
-
-\begin{table}[htbp]
-\centering
-\caption{Perfil de los participantes expertos}
-\label{tab:usab_perfil}
-\begin{tabular}{@{}lllll@{}}
-\toprule
-Participante & Rol & Años \textit{K8s} & \acs{CICD} & Seguridad \\
-\midrule
-P1 & Desarrollo/IA & 3--5 & Habitual & Alta \\
-P2 & DevOps/SRE    & 1--3 & Habitual & Alta \\
-P3 & Desarrollo/IA & 3--5 & Habitual & Media \\
-\bottomrule
-\end{tabular}
-\fuentepropia
-\end{table}
 
 \subsection{Éxito por tarea}
 
 Cada participante ejecutó cinco tareas: instalar la herramienta (T1), realizar un
 escaneo básico e identificar el veredicto (T2), interpretar el informe con
 \texttt{-{}-show-nodes} (T3), producir la salida \ac{JSON} (T4) y, opcionalmente,
-escanear un caso propio (T5). La Tabla~\ref{tab:usab_tareas} recoge la tasa de
+escanear un caso propio (T5). La Tabla~\ref{tab:usab_tareas} del
+Anexo~\ref{ap:repositorio} recoge la tasa de
 éxito (logrado = 1; logrado con ayuda = 0,5; no logrado = 0).
-
-\begin{table}[htbp]
-\centering
-\caption{Tasa de éxito por tarea (3 participantes)}
-\label{tab:usab_tareas}
-\begin{tabular}{@{}lccccc c@{}}
-\toprule
-Tarea & T1 & T2 & T3 & T4 & T5 & Global \\
-\midrule
-Éxito & 100\,\% & 100\,\% & 100\,\% & 83\,\% & 67\,\% & 90\,\% \\
-\bottomrule
-\end{tabular}
-\fuentepropia
-\end{table}
 
 El núcleo del flujo de trabajo —instalación, escaneo e interpretación del
 informe— se completó sin ayuda por los tres participantes. Las únicas fricciones
 fueron puntuales: un participante necesitó ayuda para extraer campos de la salida
 \ac{JSON} (T4) y la tarea opcional sobre un caso propio (T5) se completó con
-ayuda en dos casos. La tasa de éxito global del 90\,\% (Tabla~\ref{tab:usab_tareas})
+ayuda en dos casos. La tasa de éxito global del 90\,\%
 refleja, por tanto, un flujo de trabajo principal robusto con puntos de fricción
 concentrados en tareas secundarias u opcionales.
 

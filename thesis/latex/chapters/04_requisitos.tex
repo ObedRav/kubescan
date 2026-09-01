@@ -149,35 +149,14 @@ justificación concreta de cada uno.
 
 Cada requisito se materializa en una decisión de diseño concreta y se contrasta
 después con una evidencia experimental u operacional determinada. La
-Tabla~\ref{tab:trazabilidad} recoge esa correspondencia, indicando para cada
+Tabla~\ref{tab:trazabilidad} del Anexo~\ref{ap:repositorio} recoge esa
+correspondencia, indicando para cada
 identificador la sección del Capítulo~\ref{cap:herramienta} que describe el
 componente encargado de satisfacerlo y la sección del
 Capítulo~\ref{cap:evaluacion} que aporta la evidencia de su cumplimiento. Los
 requisitos que no admiten una métrica predictiva dedicada, como los de interfaz,
 formatos de salida y propiedades no funcionales, se concentran en la
 verificación operacional de la Sección~\ref{sec:verificacion_requisitos}.
-
-\begin{table}[htbp]
-\centering\small
-\caption{Trazabilidad de requisitos}
-\label{tab:trazabilidad}
-\begin{tabular}{@{}lp{5.1cm}ll@{}}
-\toprule
-ID & Requisito & Diseño & Verificación \\
-\midrule
-RF-1  & Misconfiguraciones individuales & \ref{sec:capa1_diseno}  & \ref{sec:layer1} \\
-RF-2  & Cadenas de ataque               & \ref{sec:capa2_diseno}  & \ref{sec:layer2} \\
-RF-3  & Interfaz de línea de comandos   & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
-RF-4  & Formatos de salida              & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
-RF-5  & Priorización de riesgos         & \ref{sec:capa3_diseno}  & \ref{sec:metrica_global} \\
-RNF-1 & Trazabilidad                    & \ref{sec:features_table} & \ref{sec:verificacion_requisitos} \\
-RNF-2 & Reproducibilidad                & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
-RNF-3 & Instalabilidad                  & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
-RNF-4 & Latencia                        & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
-\bottomrule
-\end{tabular}
-\fuentepropia
-\end{table}
 
 El índice de severidad exigido por RF-1 se verifica de forma diferenciada
 respecto de la clasificación binaria, mediante los resultados por clase de la
