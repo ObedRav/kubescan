@@ -224,36 +224,25 @@ efectivo por pliegue (número de familias, no de cadenas) es la limitación
 subyacente, y solo puede crecer incorporando repositorios de cadena
 estructuralmente independientes (TF1).
 
-\textbf{L2 — Cobertura del escaneo de características extendidas.} Seis de las
-siete características extendidas —todas salvo \texttt{HOSTPATH\_MOUNT}, poblada
-en las 2.827~filas— dependen de que el manifiesto de origen haya sido escaneado:
-el análisis sintáctico propio las obtiene para el 32,6\,\% de las filas, la
-salida de \textit{Checkov} las rellena para otro 41,6\,\% y las 731~filas
-restantes (25,9\,\%) se imputan por la mediana de columna, diluyendo su señal
-(Sección~\ref{sec:construccion_dataset}). La causa de esa carencia no reside en
-la disponibilidad de los datos: el registro de descarga del corpus de Rahman
-et~al.\ documenta 1.985~manifiestos obtenidos sobre los 2.039 referenciados
-(97,4\,\%), y los 54~fallos se reparten entre 33~respuestas \texttt{404 Not
-Found} y 21~respuestas \texttt{HTTP 403} emitidas por el servidor de origen. El
-origen real fue un defecto del \textit{pipeline} de extracción, ya corregido: la
-resolución de rutas de \texttt{scan\_security\_tools.py} reconocía únicamente el
-prefijo \texttt{GITLAB\_K8S\_REPOS\_RAW\_UNFILTERED/}, mientras que las filas del
-conjunto tabular emplean \texttt{GITLAB\_REPOS/}, de modo que las 396~filas
-procedentes de GitLab fallaban en la extracción de clave, nunca se escaneaban y
-recaían en la imputación por mediana. Tras corregir el defecto se recuperaron
-350 de esas 396~filas, y el reentrenamiento de la Capa~1 sobre el conjunto
-reescaneado deja la F1 macro inalterada (0,9946 antes y después,
-\(\Delta\)\,=\,0,0000), con una perturbación del \texttt{risk\_score} por fila de
-media 0,0030, mediana 0,0013, percentil~95 de 0,0117 y máximo 0,1104, y con solo
-2 de las 2.827~filas desplazándose más de 0,10. La brecha residual la componen
-335~filas de GitHub aún sin resolver y 46~manifiestos de GitLab genuinamente
-inaccesibles en origen —381~filas en total, el 13,5\,\% del corpus—, que siguen
-resolviéndose por mediana. El efecto medido sobre la Capa~1 es, por tanto, nulo,
-y la perturbación inducida en las características de nodo queda un orden de
+\textbf{L2 — Imputación por mediana de las características extendidas.} Seis de
+las siete características extendidas —todas salvo \texttt{HOSTPATH\_MOUNT},
+poblada en las 2.827~filas— sólo toman su valor real cuando el manifiesto de
+origen ha sido escaneado con éxito. El análisis sintáctico propio las obtiene
+para el 32,6\,\% de las filas y la salida de \textit{Checkov} las cubre para otro
+41,6\,\%, de modo que las 731~filas restantes (25,9\,\% del corpus) reciben la
+mediana de columna y ven diluida la señal de esas seis características
+(Sección~\ref{sec:construccion_dataset}). Una fracción de esa carencia es
+irreducible, pues 46~manifiestos del corpus de Rahman et~al.\ responden
+\texttt{404} o \texttt{403} en el servidor de origen y no admiten recuperación;
+el resto depende de la cobertura alcanzable por las herramientas de escaneo sobre
+los manifiestos efectivamente disponibles. Un experimento de reescaneo sobre las
+filas recuperables acota el alcance de la limitación para la Capa~1: la F1 macro
+permanece inalterada (0,9946, \(\Delta\)\,=\,0,0000) y la perturbación del
+\texttt{risk\_score} por fila presenta media 0,0030 y máximo 0,1104, un orden de
 magnitud por debajo de la variabilidad entre semillas documentada para la Capa~2
-(\(\sigma\)\,=\,0,033 en P@5, Sección~\ref{sec:multisemilla}); no se ha medido,
+(\(\sigma\)\,=\,0,033 en P@5, Sección~\ref{sec:multisemilla}). No se ha medido,
 en cambio, el efecto sobre las salidas de las Capas~2 y~3, cuya cuantificación
-exigiría reconstruir los grafos de clúster y reentrenar el conjunto completo.
+exigiría reconstruir los grafos de clúster y reentrenar el sistema completo.
 
 \textbf{L3 — Sesgo de muestreo en el dataset tabular.} Los 10 repositorios más
 representados suponen el 47,6\,\% del dataset, y \textit{gitcontroller} por sí solo
@@ -399,9 +388,10 @@ diseño experimental?): L7 impide atribuir diferencias entre fases experimentale
 al modelo, porque el protocolo de evaluación cambió entre ellas; la ablación
 factorial de la Sección~\ref{sec:ablacion_perdida} es el único contraste interno
 con protocolo constante. L2 acota la validez interna de las seis
-características extendidas que todavía se imputan por mediana en el 13,5\,\% de
-las filas frente a las obtenidas por escaneo directo del manifiesto, si bien el
-reescaneo de las filas recuperadas dejó la F1 macro de la Capa~1 sin variación. L9 añade una restricción del mismo orden:
+características extendidas que se imputan por mediana en el 25,9\,\% de las
+filas frente a las obtenidas por escaneo directo del manifiesto, si bien el
+reescaneo de las filas recuperables dejó la F1 macro de la Capa~1 sin
+variación. L9 añade una restricción del mismo orden:
 al haberse fijado los hiperparámetros a priori, las comparaciones entre
 configuraciones se establecen sobre un único punto del espacio de diseño y no sobre
 el óptimo de cada alternativa.
