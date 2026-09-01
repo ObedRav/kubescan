@@ -1004,7 +1004,7 @@ Sección~\ref{sec:verificacion_requisitos}, se realizó una evaluación de
 usabilidad y aplicabilidad de la herramienta con \textbf{usuarios expertos},
 siguiendo el protocolo descrito en el repositorio (Anexo~\ref{ap:repositorio}).
 Participaron \textbf{tres profesionales} con experiencia en \textit{Kubernetes} y
-CI/CD, a los que se entregó una guía de tareas con órdenes listas para ejecutar y
+\ac{CICD}, a los que se entregó una guía de tareas con órdenes listas para ejecutar y
 un cuestionario en línea, en formato autoservicio asíncrono (\(\approx\)10~minutos
 por participante). El instrumento se generó de forma reproducible mediante un
 \textit{script} versionado (véase Anexo~\ref{ap:repositorio}) y el protocolo se
@@ -1027,7 +1027,7 @@ contenedores.
 \label{tab:usab_perfil}
 \begin{tabular}{@{}lllll@{}}
 \toprule
-Participante & Rol & Años \textit{K8s} & CI/CD & Seguridad \\
+Participante & Rol & Años \textit{K8s} & \acs{CICD} & Seguridad \\
 \midrule
 P1 & Desarrollo/IA & 3--5 & Habitual & Alta \\
 P2 & DevOps/SRE    & 1--3 & Habitual & Alta \\
@@ -1083,7 +1083,7 @@ precisa del nivel de usabilidad percibida.
 \subsection{Aplicabilidad y análisis cualitativo}
 
 Los participantes valoraron cuatro afirmaciones de aplicabilidad (escala 1--5):
-integración en CI/CD o auditoría (A1), ajuste de la priorización de riesgo a su
+integración en \ac{CICD} o auditoría (A1), ajuste de la priorización de riesgo a su
 forma de auditar (A2), accionabilidad del informe (A3) y confianza en el
 veredicto (A4). Las medias fueron A1\,=\,4,3, A2\,=\,4,3, A4\,=\,4,3 y, como
 punto más bajo, A3\,=\,3,7. Con tres respuestas por ítem, estas medias son
@@ -1093,9 +1093,11 @@ media hasta 3,7 procede íntegramente de la valoración de un solo participante
 (P2), mientras que los otros dos se sitúan en el rango alto de la escala.
 Como fortaleza, un participante destacó exactamente la contribución central del
 trabajo: la herramienta «no solo te dice qué está mal en un manifiesto, sino que
-conecta varios problemas pequeños para mostrarte» una cadena de ataque, en lugar
-de fallos aislados; otros valoraron la interpretabilidad del informe y la
-rapidez del análisis. La debilidad más recurrente en las respuestas abiertas es
+conecta varios problemas pequeños para mostrarte si realmente forman un camino de
+ataque completo». Ese mismo participante resumió la propuesta, en el apartado de
+comentarios finales, como «pensar en cadenas de ataque en lugar de fallos
+aislados». Los otros dos destacaron, respectivamente, la interpretación de los
+resultados y la rapidez del análisis. La debilidad más recurrente en las respuestas abiertas es
 la \textbf{accionabilidad}: el informe comunica el riesgo pero no las acciones
 concretas de remediación ni las reglas subyacentes al veredicto. Dos
 participantes la mencionaron en el apartado abierto —uno expresó que el
@@ -1105,10 +1107,15 @@ concretas hay detrás»—, si bien sólo uno de ellos la trasladó a la escala
 numérica, ya que el segundo puntuó A3 con un 4. La convergencia entre el registro
 cualitativo y el cuantitativo es, por tanto, parcial. Esta limitación se recoge como
 línea de trabajo futuro (explicabilidad de reglas y recomendaciones de
-remediación) en el Capítulo~\ref{cap:conclusiones}. Los casos de uso propuestos
-—\textit{gate} en el \textit{pipeline} de CI/CD antes de desplegar a producción y
-auditoría de clústeres— coinciden con el paradigma \textit{shift-left} que motiva
-el trabajo.
+remediación) en el Capítulo~\ref{cap:conclusiones}. Los escenarios descritos en las
+respuestas abiertas fueron dispares: un participante propuso un \textit{gate}
+automático en el \textit{pipeline} de \ac{CICD} inmediatamente antes del despliegue
+a producción, otro relató haberla aplicado sobre un clúster propio de
+preproducción, y el tercero la consideró útil sin concretar un escenario. Sólo el
+primero de esos usos se corresponde con el paradigma \textit{shift-left} que motiva
+el trabajo; la auditoría de clústeres, que el enunciado del ítem~A1 menciona junto
+a la integración en \ac{CICD}, no fue propuesta de forma espontánea por ningún
+participante.
 
 \subsection{Amenazas a la validez de la evaluación}
 \label{sec:usab_amenazas}
