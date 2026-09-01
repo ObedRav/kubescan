@@ -10,8 +10,8 @@ los resultados obtenidos. Las conclusiones siguen el orden expositivo de los
 resultados del Capítulo~\ref{cap:evaluacion} —de la Capa~1 al sistema
 distribuible—, que no coincide con el orden numérico de los objetivos
 específicos del Capítulo~\ref{cap:objetivos}; cada conclusión declara
-explícitamente el objetivo que responde. Las limitaciones (L1--L9) y las líneas
-de trabajo futuro (TF1--TF8) llevan numeración propia, independiente de la de
+explícitamente el objetivo que responde. Las limitaciones (L1--L10) y las líneas
+de trabajo futuro (TF1--TF9) llevan numeración propia, independiente de la de
 las conclusiones.
 
 \section{Conclusiones}
@@ -241,9 +241,18 @@ filas recuperables acota el alcance de la limitación para la Capa~1: la F1 macr
 permanece inalterada (0,9946, \(\Delta\)\,=\,0,0000) y la perturbación del
 \texttt{risk\_score} por fila presenta media 0,0030 y máximo 0,1104, un orden de
 magnitud por debajo de la variabilidad entre semillas documentada para la Capa~2
-(\(\sigma\)\,=\,0,033 en P@5, Sección~\ref{sec:multisemilla}). No se ha medido,
-en cambio, el efecto sobre las salidas de las Capas~2 y~3, cuya cuantificación
-exigiría reconstruir los grafos de clúster y reentrenar el sistema completo.
+(\(\sigma\)\,=\,0,033 en P@5, Sección~\ref{sec:multisemilla}). El efecto sobre
+las Capas~2 y~3 está acotado por construcción. El constructor del grafo toma las
+características de nodo directamente de las columnas de \texttt{FEATURE\_COLS} e
+imputa como 0 toda celda vacía, sin consultar las columnas de diagnóstico
+\texttt{checkov\_*}: el relleno mediante \texttt{CHECKOV\_FILL} opera únicamente en
+la carga de la Capa~1 (Sección~\ref{sec:construccion_dataset}). Las seis
+características toman en consecuencia valor 0 en el vector de nodo de las
+1.906~filas procedentes de Rahman et~al., presentes en 62 de los 599~grafos
+originales, y la cobertura de escaneo no altera los grafos, sus etiquetas ni las
+salidas de las Capas~2 y~3. Esa invariancia acota la limitación y desplaza su
+coste: seis de las 25~banderas del vector de nodo carecen de señal para ese
+subconjunto de manifiestos.
 
 \textbf{L3 — Sesgo de muestreo en el dataset tabular.} Los 10 repositorios más
 representados suponen el 47,6\,\% del dataset, y \textit{gitcontroller} por sí solo
@@ -360,10 +369,23 @@ tanto, a una configuración razonable pero no optimizada, y no puede descartarse
 un barrido sistemático de hiperparámetros altere las comparaciones entre
 configuraciones sobre un conjunto de validación tan reducido (TF6).
 
+\textbf{L10 — El puente entre la Capa~1 y la Capa~2 no está efectivamente
+poblado.} El índice~25 del vector de nodo se describe en el diseño como el canal
+por el que la señal por manifiesto alcanza el razonamiento estructural. En el
+corpus construido ese canal contiene una suma ponderada determinista de las mismas
+banderas binarias que ocupan los índices 0--24, y está vacío —imputado como 0— en
+los 517~clústeres procedentes de repositorios de seguridad adicionales, es decir en
+el 86\,\% de los grafos. Una ablación sobre el conjunto de test que anula el
+índice~25 en los 86~grafos deja las métricas inalteradas (P@1\,=\,1,00,
+P@3\,=\,1,00, P@5\,=\,0,80, \ac{FPR}\_clean\,=\,0,00; F1 macro 0,8825, con
+matriz de confusión idéntica). El resultado no permite concluir que la Capa~1 sea
+prescindible para la Capa~2, sino que su aportación no ha llegado a evaluarse: el
+canal previsto para transmitirla no transportaba la salida del clasificador.
+
 \subsection{Amenazas a la validez}
 \label{sec:amenazas_validez}
 
-Las limitaciones L1--L9 se clasifican a continuación en cuatro categorías de
+Las limitaciones L1--L10 se clasifican a continuación en cuatro categorías de
 amenaza a la validez: de constructo, interna, de conclusión y externa. La
 clasificación no añade limitaciones a las ya enunciadas, sino que las agrupa por el
 tipo de amenaza metodológica que cada una representa. Una misma limitación puede
@@ -392,7 +414,11 @@ con protocolo constante. L2 acota la validez interna de las seis
 características extendidas que se imputan por mediana en el 25,9\,\% de las
 filas frente a las obtenidas por escaneo directo del manifiesto, si bien el
 reescaneo de las filas recuperables dejó la F1 macro de la Capa~1 sin
-variación. L9 añade una restricción del mismo orden:
+variación. En la Capa~2 la imputación es a 0 y alcanza a las 1.906~filas de Rahman
+et~al., pero no depende de la cobertura de escaneo, por lo que no compromete la
+comparabilidad entre configuraciones. L10 acota en cambio la interpretación de la
+arquitectura: la contribución de la Capa~1 a la Capa~2 no está medida, porque el
+atributo nodal previsto para transmitirla está vacío en el 86\,\% de los grafos. L9 añade una restricción del mismo orden:
 al haberse fijado los hiperparámetros a priori, las comparaciones entre
 configuraciones se establecen sobre un único punto del espacio de diseño y no sobre
 el óptimo de cada alternativa.
@@ -433,7 +459,7 @@ conclusiones de usabilidad a otros roles operativos.
 
 Los resultados de este trabajo permiten formular las siguientes recomendaciones de
 trabajo futuro, ordenadas por impacto esperado. La mayoría atiende a una o varias de
-las limitaciones L1--L9 de la Sección~\ref{sec:limitaciones}, referenciadas por su
+las limitaciones L1--L10 de la Sección~\ref{sec:limitaciones}, referenciadas por su
 identificador en el enunciado de cada recomendación. Las dos primeras (TF1 y TF2)
 son las de mayor impacto potencial sobre la validez de las métricas reportadas.
 
@@ -504,3 +530,10 @@ con recomendaciones de remediación por manifiesto (por ejemplo, la corrección 
 configuración asociada a cada \textit{flag} de escape detectada) y con una
 explicación de la contribución de cada capa al veredicto, reforzando la confianza
 del operador sin sacrificar la brevedad del \textit{ranking}.
+
+\textbf{TF9 — Poblar y evaluar el canal de puntuación por manifiesto.} Calcular el
+atributo nodal~25 con la salida del clasificador de la Capa~1 para todas las fuentes
+del corpus —no sólo para el subconjunto de Rahman et~al.— y repetir la ablación de
+L10 permitiría medir por primera vez si la señal por manifiesto aporta capacidad
+predictiva a la clasificación estructural, cuestión que el diseño actual deja
+abierta.
