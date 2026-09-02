@@ -29,8 +29,18 @@
   \renewcommand{\BOthers}[1]{et~al.\hbox{}}%
   \renewcommand{\BOthersPeriod}[1]{et~al.\hbox{}}%
 }
-% APA 7 sustituye el prefijo «doi:» por el DOI en forma de URL resoluble.
-\renewcommand{\doiprefix}{https://doi.org/}
+% APA 7 sustituye el prefijo «doi:» por el DOI en forma de URL resoluble. apacite
+% compone el prefijo como texto corriente y el identificador con \Url, en dos
+% cajas distintas: eso deja el prefijo en otra fuente que las URL y permite un
+% corte de línea entre ambos que inserta un espacio visible y rompe la cadena al
+% copiarla. Se traslada el prefijo a \UrlLeft, dentro del propio \Url, para que
+% todo el DOI sea una sola URL con la misma fuente y los cortes que url.sty
+% gestiona. No puede hacerse con \url{https://doi.org/#1} porque hay DOI con
+% guion bajo (10.1007/978-3-031-17140-6_29) que exigen la lectura de \Url.
+\renewcommand{\doiprefix}{}
+\AtBeginDocument{%
+  \renewcommand{\doi}{\begingroup\urlstyle{tt}\def\UrlLeft{https://doi.org/}\Url}%
+}
 % amsmath, graphicx y hyperref ya los carga estilo_unir-1, que se lee antes.
 \usepackage{bookmark}
 \hypersetup{hidelinks}  % enlaces navegables sin recuadros de color (aspecto elegante)

@@ -5,7 +5,7 @@
 
 La detección automática de vulnerabilidades en infraestructuras Kubernetes
 se encuentra en la intersección de cuatro áreas de investigación activa: el análisis
-de seguridad en infraestructura como código (\textit{Infrastructure as Code}, \acs{IaC}),
+de seguridad en infraestructura como código (\textit{Infrastructure as Code}, \acs{IaC}\acused{IaC}),
 el aprendizaje automático aplicado a la ciberseguridad, las redes neuronales de grafos
 para razonamiento estructural y la construcción de grafos de ataque para la
 identificación de rutas de explotación. Cada una de estas áreas aporta una pieza
@@ -41,8 +41,8 @@ producción puede conceder privilegios excesivos a un contenedor o exponer secre
 en texto plano. La flexibilidad de Kubernetes —que permite configurar desde
 el sistema de ficheros del anfitrión hasta los permisos de red a nivel de pod— implica
 que el número de vectores de ataque crece proporcionalmente con la riqueza del modelo
-de configuración. La Agencia de Seguridad Nacional de Estados Unidos (\acs{NSA}) y la Agencia de
-Ciberseguridad e Infraestructura (\acs{CISA}) publicaron en 2022 una guía técnica
+de configuración. La Agencia de Seguridad Nacional de Estados Unidos (\acs{NSA}\acused{NSA}) y la Agencia de
+Ciberseguridad e Infraestructura (\acs{CISA}\acused{CISA}) publicaron en 2022 una guía técnica
 \citep{NSA2022} que enumera las configuraciones erróneas más críticas: uso de
 \texttt{privileged: true}, montaje del socket de Docker, compartición del espacio de
 nombres de proceso del anfitrión (\textit{hostPID}) y automontaje de \textit{tokens} de cuenta
@@ -212,7 +212,7 @@ naturaleza de los datos del problema:
     presente trabajo son en su mayoría binarias (presencia/ausencia de una
     configuración errónea), con alta proporción de ceros. Los Random Forest
     manejan este tipo de datos de forma nativa sin requerir normalización, a diferencia
-    de las Máquinas de Vectores Soporte (\acs{SVM}) o las Redes Neuronales, sensibles
+    de las Máquinas de Vectores Soporte (\acs{SVM}\acused{SVM}) o las Redes Neuronales, sensibles
     a la escala de las características.
 
   \item \textbf{Gestión intrínseca del desequilibrio de clases.} El parámetro
@@ -242,7 +242,7 @@ candidatos para la Capa~1.
 \centering\small
 \caption{Comparativa de algoritmos de \acs{ML} para clasificación de manifiestos \ac{IaC}}
 \label{tab:ml_comparison}
-\begin{tabular}{@{}p{2.7cm}cp{2.1cm}p{2cm}p{4.1cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.7cm}c>{\raggedright\arraybackslash}p{2.1cm}>{\raggedright\arraybackslash}p{2cm}>{\raggedright\arraybackslash}p{4.1cm}@{}}
 \toprule
 Algoritmo & \shortstack{Sin norma-\\lización} & Desequilibrio & \shortstack{Puntuación\\continua} & Observación \\
 \midrule
@@ -379,7 +379,7 @@ secuenciales de una intrusión avanzada: reconocimiento, preparación del artefa
 acción. En el contexto de Kubernetes, esta cadena se concreta de forma más
 compacta: requiere como mínimo (1) un pod con capacidad de escape al anfitrión
 (\textit{TRUE\_HOST\_PID}, \textit{privileged: true}, montaje de \textit{hostPath}
-—un directorio del nodo anfitrión expuesto dentro del contenedor—, etc.) y (2) un
+—un directorio del nodo anfitrión expuesto dentro del contenedor\mbox{—,} etc.) y (2) un
 mecanismo de movimiento lateral hacia otros recursos del clúster (\textit{token} de cuenta
 de servicio con permisos excesivos, montaje de secretos en el manifiesto, etc.).
 En los últimos años han surgido dos herramientas de código abierto que abordan la

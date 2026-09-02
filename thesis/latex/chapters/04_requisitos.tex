@@ -31,7 +31,7 @@ justificación concreta de cada uno.
   \item[RF-1 — Detección de configuraciones erróneas individuales.] El sistema debe cumplir
     dos obligaciones separables sobre cada manifiesto \acs{YAML}. La primera es
     clasificarlo como seguro o mal configurado —\textit{misconfigured} en la
-    nomenclatura del modelo—. La segunda es producir un
+    nomenclatura del modelo\mbox{—.} La segunda es producir un
     índice de severidad en tres niveles (limpio, bajo-medio, alto-crítico)
     que ordene las configuraciones erróneas detectadas por gravedad.
     \textit{Criterio de aceptación:} ambas obligaciones se consideran satisfechas
@@ -40,7 +40,7 @@ justificación concreta de cada uno.
     (Capítulo~\ref{cap:objetivos}) y aplicado también al índice de severidad por
     tratarse del mismo clasificador sobre el mismo corpus.
     \textit{Justificación:} las herramientas de análisis estático existentes
-    (Checkov, kube-linter) ya cubren esta capacidad a nivel de
+    (Checkov, kube-linter) ya cubren esta capacidad por
     manifiesto individual (Sección~\ref{sec:iac}); el sistema debe igualarla como
     condición previa a razonar sobre la estructura del clúster, y el índice de
     severidad aporta priorización que las herramientas de reglas fijas no ofrecen.
@@ -122,7 +122,7 @@ justificación concreta de cada uno.
     mismo conjunto de pesos deben producir informes \acs{JSON} idénticos.
     \textit{Justificación:} un control de seguridad con salidas no deterministas
     no es fiable como \textit{gate} de \acs{CICD} —una comprobación que bloquea la
-    entrega si falla—, donde el mismo manifiesto debe
+    entrega si falla\mbox{—,} donde el mismo manifiesto debe
     producir siempre el mismo veredicto.
   \item[RNF-3 — Instalabilidad.] El sistema debe ser instalable mediante
     \texttt{pip install -e kubescan/} sin dependencias de compiladores externos.

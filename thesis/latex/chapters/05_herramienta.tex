@@ -176,7 +176,7 @@ manifiesto y está poblada para las 2.827~filas.
 La Capa~2 (\ac{GNN}) consume únicamente las 18~banderas Rahman y las 7~características extendidas
 (25 en total, \texttt{FEATURE\_COLS} en \texttt{yaml\_parser.py}) como vector de nodo,
 excluyendo las 3~características derivadas —agregados calculados a partir de las otras 25 que
-no aportan información estructural adicional al grafo—; ver
+no aportan información estructural adicional al grafo\mbox{—;} ver
 Sección~\ref{sec:features_table}. De estas 25, tres presentan varianza casi nula pero
 se mantienen en el entrenamiento, con importancia residual o nula
 (Sección~\ref{sec:rf_importance}): \texttt{SECCOMP\_UNCONFINED} (15/2.827 activa),
@@ -217,9 +217,9 @@ Tipo & Código & Dirección & Criterio \\
 \midrule
 Proximidad de directorio & 0 & Bidireccional & Mismos dos componentes finales de ruta \acs{YAML} \\
 Alcance de privilegio & 1 & Dirigida (escape\(\to\)mismo \textit{namespace}) & Bandera de escape activa \\
-Movimiento lateral \acs{SA} & 2 & Dirigida (lateral\(\to\)mismo \textit{namespace}) & Bandera de movimiento lateral \\
+Movimiento lateral \acs{SA}\acused{SA} & 2 & Dirigida (lateral\(\to\)mismo \textit{namespace}) & Bandera de movimiento lateral \\
 Co-espacio de nombres (\texttt{SEMANTIC\_NS}) & 3 & Bidireccional & Mismo \textit{namespace} K8s \\
-Escalada \ac{RBAC} & 4 & Dirigida (elevado\(\to\)mismo \textit{namespace}) & \ac{SA} vinculado a rol privilegiado \\
+Escalada \ac{RBAC} & 4 & Dirigida (elevado\(\to\)mismo \textit{namespace}) & \acs{SA} vinculado a rol privilegiado \\
 \bottomrule
 \end{tabular}
 \fuentepropia
@@ -510,7 +510,7 @@ constituiría fuga de datos.
 El particionado es además \textbf{consciente de familias de plantilla}: los
 clústeres originales que comparten una misma plantilla base (por ejemplo, las
 ocho variantes \texttt{badpods\_*}, que difieren únicamente en qué bandera de
-escape activan —salvo \texttt{badpods\_nothing-allowed}, que no activa ninguna—,
+escape activan —salvo \texttt{badpods\_nothing-allowed}, que no activa ninguna\mbox{—,}
 o las nueve \texttt{datadog\_*}) son casi duplicados entre sí, no
 muestras independientes. Cuando una familia contiene etiquetas mixtas, sus
 miembros se asignan como una unidad atómica a una única partición —nunca se
@@ -682,7 +682,7 @@ Sección~\ref{sec:verificacion_requisitos}.
 % -----------------------------------------------------------
 
 El catálogo completo de las 28~características, con su grupo de procedencia y su
-papel en el grafo —detección de escape (ESC) o de movimiento lateral (LAT)—, se
+papel en el grafo —detección de escape (ESC) o de movimiento lateral (LAT)\mbox{—,} se
 recoge en las Tablas~\ref{tab:features_a}, \ref{tab:features_a2}
 y~\ref{tab:features_b} del Anexo~\ref{ap:repositorio}. De las 28, las 25 que no
 son derivadas (18~Rahman + 7~extendidas) forman también el vector de nodo de la
