@@ -613,7 +613,7 @@ cuantifica el efecto de esta regla sobre las métricas de test).
 
 El sistema se distribuye como un paquete Python instalable mediante
 \texttt{pip install -e kubescan/}. La estructura del paquete sigue la convención
-\textit{src-layout} de \textit{setuptools}: el código fuente reside en
+\textit{src-layout} de \texttt{setuptools}: el código fuente reside en
 \texttt{kubescan/src/kubescan/} y los módulos se organizan en tres submódulos:
 \texttt{model/} (clasificadores Random Forest, \ac{GAT} y ensamblador \ac{GA}), \texttt{utils/}
 (\textit{parser} \acs{YAML} y constructor de grafos) y \texttt{cli.py} (interfaz de
@@ -710,17 +710,17 @@ orientadas a la producción. Cuatro herramientas integradas en un
 \textit{pipeline} de pre-commit y \acs{CICD} comprueban de forma automática el
 estilo, los tipos, el comportamiento y la complejidad del código, y bloquean la
 integración cuando alguna comprobación falla: (1)
-\textit{ruff}, linter y formateador de código Python con reglas de estilo y
-seguridad; (2) \textit{mypy} en modo estricto
+\texttt{ruff}, linter y formateador de código Python con reglas de estilo y
+seguridad; (2) \texttt{mypy} en modo estricto
 (\texttt{mypy kubescan/src -{}-strict}), para comprobación estática de tipos en
-todos los módulos del paquete; (3) \textit{pytest}, para la suite de tests
-unitarios y de integración del paquete; y (4) \textit{radon}, para el control de
+todos los módulos del paquete; (3) \texttt{pytest}, para la suite de tests
+unitarios y de integración del paquete; y (4) \texttt{radon}, para el control de
 la complejidad ciclomática. El reparto entre las dos etapas del \textit{pipeline}
 no es uniforme: los \textit{hooks} de pre-commit ejecutan únicamente
-\textit{ruff}, \textit{ruff-format} y comprobaciones de higiene del repositorio
+\texttt{ruff}, \texttt{ruff-format} y comprobaciones de higiene del repositorio
 (espacios finales, fin de fichero, validez de los \acs{YAML} de configuración y
-tamaño máximo de los ficheros añadidos), mientras que \textit{mypy},
-\textit{pytest} y \textit{radon} se ejecutan en el flujo de integración continua
+tamaño máximo de los ficheros añadidos), mientras que \texttt{mypy},
+\texttt{pytest} y \texttt{radon} se ejecutan en el flujo de integración continua
 de GitHub Actions sobre cada \textit{push} y cada \textit{pull request}.
 
 {\raggedright
@@ -735,7 +735,7 @@ sostienen la reproducibilidad y la seguridad de la carga: \texttt{set\_global\_s
 centraliza las semillas de \texttt{random}, NumPy y PyTorch;
 \texttt{resolve\_device} fija de forma determinista el \textit{backend} de
 cómputo; y la carga del clasificador valida los tipos declarados por el fichero
-\textit{skops} contra una lista blanca restringida a scikit-learn y
+\texttt{skops} contra una lista blanca restringida a scikit-learn y
 NumPy, de modo que un \textit{checkpoint} manipulado no pueda introducir
 tipos arbitrarios. En el lado de investigación, cada \acs{JSON} de resultados
 incorpora un bloque de procedencia con el \textit{commit}, las semillas y las

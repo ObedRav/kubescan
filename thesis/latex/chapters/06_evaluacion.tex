@@ -356,13 +356,6 @@ y 5~cadenas respectivamente, por lo que el denominador es 5 en todos ellos y el
 techo 1,0 exige cinco aciertos en las cinco primeras posiciones; únicamente el
 pliegue~0 lo consigue.
 
-% [CONSULTA AL AUTOR 2] La frase suprimida al final de este parrafo decia: «La
-% fase final group-aware no esta incluida en el grafico y se reporta en la
-% Tabla~\ref{tab:gnn_evolution}». Remitia a una figura que ya no forma parte del
-% documento (figures/fig_gnn_evolution.pdf existe pero no se incluye en ningun
-% \includegraphics) y ademas contradecia la propia tabla, cuya ultima fila SI
-% recoge la fase final. Si se desea restituir la figura, hay que reinsertarla y
-% devolver la frase; si no, esta version es la correcta.
 Las cuatro primeras fases de la Tabla~\ref{tab:gnn_evolution} corresponden al
 protocolo preliminar. El objetivo de diseño de \textit{ranking} es P@5\,>\,0,70 y el umbral
 de F1 fijado para la Capa~1, tomado como referencia, 0,85; las desviaciones típicas
@@ -680,11 +673,11 @@ La evaluación final se realiza sobre el conjunto de test (86~grafos: 3~limpios,
 particionado consciente de familias, las cinco cadenas son repositorios reales
 únicos —sin hermanos de plantilla en el entrenamiento— excluidos de los pliegues
 de validación cruzada, del ajuste de pesos del \ac{GA} y del entrenamiento con
-variantes aumentadas: genuinamente no vistos durante el desarrollo. Con la
+variantes aumentadas: no vistos en ningún momento del desarrollo. Con la
 restricción de viabilidad estructural aplicada al \textit{ranking}
 (Sección~\ref{sec:gate_estructural}), el \textit{ensemble} alcanza P@1\,=\,1,00,
 P@3\,=\,1,00 y P@5\,=\,0,80: las cadenas ocupan las posiciones 1--4 y 6, y solo
-\textit{minik8s-ctf} queda fuera del top-5. Sin la restricción, las métricas
+\texttt{minik8s-ctf} queda fuera del top-5. Sin la restricción, las métricas
 caen a P@1\,=\,0,00, P@3\,=\,0,33 y P@5\,=\,0,60 (Figura~\ref{fig:structural_gate}): la regla es decisiva porque
 74 de los 86~grafos de test son de un solo nodo, y dos de ellos, con todas sus
 banderas de escape activas, encabezarían el \textit{ranking} pese a no poder
@@ -787,8 +780,8 @@ conjunto de test y debe leerse con la cautela que impone ese tamaño.
 \end{figure}
 
 El único fallo de \textit{ranking} del conjunto de test ilustra el error sistemático del
-modelo: \textit{minik8s-ctf} (posición~6, tras el clúster \textit{isolated}
-multi-nodo \textit{kubernetes-extras}) es una cadena de 4~nodos cuya
+modelo: \texttt{minik8s-ctf} (posición~6, tras el clúster \textit{isolated}
+multi-nodo \texttt{kubernetes-extras}) es una cadena de 4~nodos cuya
 probabilidad \ac{GNN} es prácticamente nula (0,0003) y cuyo \textit{risk score}
 medio del Random Forest es 0,0; su única señal activa es la bandera binaria de escape (la mitad
 de sus nodos tienen capacidad de escape). Cuando la
@@ -849,7 +842,7 @@ métrica es el conjunto Precisión@k / \ac{FPR}\_clean del sistema desplegado so
 el conjunto de test, ya presentado en la Sección~\ref{sec:layer3} y recogido en
 la Tabla~\ref{tab:ensemble_ablation}: P@1\,=\,1,00, P@3\,=\,1,00, P@5\,=\,0,80 y
 \ac{FPR}\_clean\,=\,0,00 sobre 86~grafos con 5~cadenas de ataque de repositorios
-reales, genuinamente no vistos durante el desarrollo; dado el tamaño reducido de
+reales, no vistos durante el desarrollo; dado el tamaño reducido de
 este conjunto, los intervalos de confianza al 95\,\% son amplios (P@5
 \(\in\,[0{,}60,\ 1{,}00]\), \ac{FPR}\_clean \(\in\,[0{,}00,\ 0{,}40]\),
 Sección~\ref{sec:layer3}), por lo que la cifra debe leerse como indicativa.
