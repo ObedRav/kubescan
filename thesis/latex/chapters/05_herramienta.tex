@@ -694,29 +694,24 @@ Las 8~banderas de escape (ESC, \texttt{ESCAPE\_FLAGS} en \texttt{graph\_builder.
 \identcode{SEC\_CONT\_OVER\_PRIVIL} y \identcode{HOSTPATH\_MOUNT}. Las 4~banderas de movimiento
 lateral (LAT, \texttt{LATERAL\_FLAGS}) son \identcode{SA\_AUTOMOUNT\_TOKEN},
 \identcode{USES\_DEFAULT\_SA}, \identcode{WITHIN\_MANIFEST\_SECRET} y \identcode{ALLOW\_PRIVI}.
-Seis de las 7~características extendidas combinan tres vías de procedencia sobre las
-2.827~filas del corpus —analizador \acs{YAML} (921~filas), relleno desde
-Checkov sobre el subconjunto de GitHub (1.175) e imputación por mediana de
-columna (731)—, según detalla la Sección~\ref{sec:construccion_dataset}. La séptima,
-\identcode{HOSTPATH\_MOUNT}, se extrae del manifiesto en la totalidad de las filas.
+La procedencia de las 7~características extendidas —mixta en seis de ellas y
+siempre del propio manifiesto en \identcode{HOSTPATH\_MOUNT}— se detalla en la
+Sección~\ref{sec:construccion_dataset}.
 
 % -----------------------------------------------------------
 \section{Calidad de software y proceso de desarrollo}
 \label{sec:calidad}
 % -----------------------------------------------------------
 
-El desarrollo de kubescan sigue prácticas de ingeniería de software
-orientadas a la producción. Cuatro herramientas integradas en un
+Cuatro herramientas integradas en un
 \textit{pipeline} de pre-commit y \acs{CICD} comprueban de forma automática el
 estilo, los tipos, el comportamiento y la complejidad del código, y bloquean la
-integración cuando alguna comprobación falla: (1)
-\texttt{ruff}, linter y formateador de código Python con reglas de estilo y
-seguridad; (2) \texttt{mypy} en modo estricto
-(\texttt{mypy kubescan/src -{}-strict}), para comprobación estática de tipos en
-todos los módulos del paquete; (3) \texttt{pytest}, para la suite de tests
-unitarios y de integración del paquete; y (4) \texttt{radon}, para el control de
-la complejidad ciclomática. El reparto entre las dos etapas del \textit{pipeline}
-no es uniforme: los \textit{hooks} de pre-commit ejecutan únicamente
+integración cuando alguna comprobación falla: (1) \texttt{ruff}, linter y
+formateador con reglas de estilo y seguridad; (2) \texttt{mypy} en modo estricto
+(\texttt{mypy kubescan/src -{}-strict}), para el tipado estático de todo el
+paquete; (3) \texttt{pytest}, para las pruebas unitarias y de integración; y
+(4) \texttt{radon}, para la complejidad ciclomática. El reparto entre ambas
+etapas no es uniforme: los \textit{hooks} de pre-commit ejecutan únicamente
 \texttt{ruff}, \texttt{ruff-format} y comprobaciones de higiene del repositorio
 (espacios finales, fin de fichero, validez de los \acs{YAML} de configuración y
 tamaño máximo de los ficheros añadidos), mientras que \texttt{mypy},
