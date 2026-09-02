@@ -3,7 +3,7 @@
 \label{ap:guia_uso}
 % ============================================================
 
-La instalación de \textit{kubescan}, la interpretación del informe que produce
+La instalación de kubescan, la interpretación del informe que produce
 sobre un caso real y la reproducción del \textit{pipeline} de entrenamiento de
 investigación descrito en el Capítulo~\ref{cap:herramienta} requieren los pasos
 concretos que se detallan en los apartados siguientes. Los criterios de diseño
@@ -32,11 +32,11 @@ en la Sección~\ref{sec:verificacion_requisitos} (RNF-3).
 
 El comando \texttt{kubescan scan} analiza un directorio de manifiestos \acs{YAML}
 de forma recursiva. A modo de ejemplo, se analiza un directorio con dos
-manifiestos: un \textit{pod} con montaje del sistema de ficheros del anfitrión
+manifiestos: un pod con montaje del sistema de ficheros del anfitrión
 y contenedor privilegiado (\texttt{pod-privilegiado.yaml}, adaptado de
-\textit{BishopFox BadPods}), y un \textit{Deployment} sin
+\textit{BishopFox BadPods}), y un Deployment sin
 \texttt{securityContext} ni \texttt{NetworkPolicy} definidos
-(\texttt{deployment-web.yaml}, adaptado de \textit{Kubernetes Goat}).
+(\texttt{deployment-web.yaml}, adaptado de Kubernetes Goat).
 
 La Figura~\ref{fig:cli_pipeline} traza el recorrido completo de esta
 invocación: extracción de características, construcción del grafo, las tres
@@ -57,7 +57,7 @@ Como se observa en la Figura~\ref{fig:cli_pipeline}, las tres señales
 convergen ponderadas por \(w_{\text{rf}}\), \(w_{\text{gnn}}\) y
 \(w_{\text{esc}}\) (optimizados por el \ac{GA}) en un único
 \textit{ensemble\_score}; en este caso, la
-presencia de un nodo con flags de escape activas
+presencia de un nodo con banderas de escape activas
 (\texttt{pod-privilegiado.yaml}) lo sitúa muy por encima del umbral de 0,60,
 lo que da como resultado el veredicto \texttt{ATTACK\_CHAIN}. La transcripción
 completa de esta ejecución es la siguiente:
@@ -93,11 +93,11 @@ fuente monoespaciada de esta memoria; el resto de los caracteres reproduce
 literalmente la salida de \texttt{cli.py}.
 
 El indicador \texttt{--show-nodes} añade un desglose por manifiesto con tres
-columnas: el \textit{risk score} del \ac{RF}, la columna \texttt{Type} y las
-flags activas. La columna \texttt{Type} no contiene el \textit{kind} del recurso
+columnas: el \textit{risk score} del Random Forest, la columna \texttt{Type} y las
+banderas activas. La columna \texttt{Type} no contiene el \textit{kind} del recurso
 de Kubernetes, sino las etiquetas de capacidad del nodo derivadas de la
 taxonomía de la Sección~\ref{sec:features_table}: \texttt{ESC} cuando el manifiesto
-activa alguna flag de escape, \texttt{LAT} cuando activa alguna flag de
+activa alguna bandera de escape, \texttt{LAT} cuando activa alguna bandera de
 movimiento lateral, y \texttt{ESCLAT} cuando concurren ambas. El indicador
 \texttt{--format json} produce el mismo informe en formato \ac{JSON}
 estructurado para integración con otras herramientas; la salida de
@@ -135,9 +135,9 @@ junto con el repositorio completo.
 \subsection{Análisis de un clúster en ejecución}
 
 El comando \texttt{kubescan live} aplica el mismo \textit{pipeline} sobre el
-estado actual de un clúster accesible mediante \textit{kubectl}, sin necesidad
-de exportar manifiestos manualmente. La herramienta invoca \textit{kubectl} para
-volcar \textit{pods}, \textit{deployments}, \textit{daemonsets},
+estado actual de un clúster accesible mediante \texttt{kubectl}, sin necesidad
+de exportar manifiestos manualmente. La herramienta invoca \texttt{kubectl} para
+volcar pods, \textit{deployments}, \textit{daemonsets},
 \textit{statefulsets}, \textit{replicasets}, \textit{jobs}, \textit{cronjobs},
 \textit{roles} y \textit{rolebindings} a un directorio temporal, y a partir de
 ahí ejecuta la misma cadena de extracción, construcción del grafo y puntuación
@@ -157,15 +157,15 @@ temporal en el que se vuelca el estado del clúster. Por
 esa razón no se reproduce aquí una transcripción independiente, cuyos valores
 dependerían del clúster concreto sobre el que se ejecute.
 
-Este comando requiere \textit{kubectl} configurado con permisos de lectura
+Este comando requiere \texttt{kubectl} configurado con permisos de lectura
 sobre \textit{workloads} y recursos \ac{RBAC} en el clúster objetivo.
 
 % -----------------------------------------------------------
-\section{Reproducción del pipeline de investigación}
+\section{Reproducción del \textit{pipeline} de investigación}
 % -----------------------------------------------------------
 
 {\raggedright
-El pipeline de entrenamiento se ejecuta mediante los objetivos definidos en el
+El \textit{pipeline} de entrenamiento se ejecuta mediante los objetivos definidos en el
 \texttt{Makefile} de la raíz del repositorio. Los pasos de adquisición y
 extracción (\texttt{research/scripts/01\_acquire/}, con
 \texttt{download\_github\_manifests.py} e \texttt{ingest\_attack\_repos.py}; y
@@ -174,7 +174,7 @@ y \texttt{build\_graphs.py}) son intensivos en red y no están automatizados en
 el \texttt{Makefile}; se ejecutan manualmente una única vez y producen los
 grafos de clúster en \texttt{research/data/graphs/*.npz}.\par}
 
-A partir de ahí, el resto del pipeline es reproducible con dos objetivos:
+A partir de ahí, el resto del \textit{pipeline} es reproducible con dos objetivos:
 
 {\footnotesize\begin{verbatim}
 make data       # aumentacion -> cache de grafos -> splits group-aware
@@ -195,25 +195,25 @@ la ejecución. Las variables \texttt{GNN\_FOCAL} y \texttt{GNN\_SELECT\_BY} del
 \texttt{Makefile} permiten reproducir las ramas de la ablación de la
 Sección~\ref{sec:ablacion_perdida}, y el cuaderno parametrizado
 \texttt{research/notebooks/colab\_reproduce.ipynb} ofrece la misma cadena para
-entornos \textit{Google Colab} con GPU. El objetivo
-\texttt{reproduce-ablations} reentrena las variantes de arquitectura reportadas
+entornos Google Colab con GPU. El objetivo
+\texttt{reproduce-ablations} reentrena las variantes de arquitectura recogidas
 en la Tabla~\ref{tab:arch_ablation} (\ac{GAT} de 2~capas y \ac{GCN} de
 3~capas) con la misma configuración de pérdida y selección que el modelo
 desplegado.\par}
 
 \begin{table}[htbp]
 \centering\small
-\caption{Opciones de la interfaz de línea de comandos de \textit{kubescan}}
+\caption{Opciones de la interfaz de línea de comandos de kubescan}
 \label{tab:cli_options}
 \begin{tabular}{@{}p{3.9cm}p{2.5cm}p{6.2cm}@{}}
 \toprule
 Opción & Ámbito & Efecto \\
 \midrule
 \texttt{-{}-format \{text,json\}} & \texttt{scan}, \texttt{live} & Formato de salida; \texttt{text} por defecto \\
-\texttt{-{}-show-nodes} & \texttt{scan}, \texttt{live} & Desglose de riesgo por manifiesto (sólo formato texto) \\
+\texttt{-{}-show-nodes} & \texttt{scan}, \texttt{live} & Desglose de riesgo por manifiesto (solo formato texto) \\
 \texttt{-{}-cluster-name}, \texttt{-n}\(^{*}\) & \texttt{scan}, \texttt{live} & Nombre legible del clúster en el informe \\
 \texttt{-{}-checkpoints-dir}, \texttt{-c} & \texttt{scan}, \texttt{live} & Directorio de \textit{checkpoints} del modelo \\
-\texttt{-{}-namespace}, \texttt{-n} & \texttt{live} & \textit{Namespace} consultado vía \textit{kubectl} \\
+\texttt{-{}-namespace}, \texttt{-n} & \texttt{live} & Namespace consultado vía \texttt{kubectl} \\
 \texttt{-{}-all-namespaces}, \texttt{-A} & \texttt{live} & Consulta todos los \textit{namespaces} \\
 \texttt{-{}-verbose}, \texttt{-v} & Grupo raíz & Registro en nivel \texttt{DEBUG} \\
 \texttt{-{}-version} & Grupo raíz & Versión instalada del paquete \\

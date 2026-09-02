@@ -1,11 +1,11 @@
 % ============================================================
 \chapter{Resumen}
 
-Las herramientas de análisis estático de \textit{Kubernetes} detectan
+Las herramientas de análisis estático de Kubernetes detectan
 configuraciones inseguras aisladas, pero no si se encadenan en una ruta de
 ataque viable. El objetivo de este trabajo es identificar automáticamente esas
 cadenas a partir de manifiestos estáticos, sin acceso a un clúster activo.
-\textit{kubescan} combina un clasificador \textit{Random Forest} (Capa~1), una
+kubescan combina un clasificador Random Forest (Capa~1), una
 red de atención sobre grafos (\textit{Graph Attention Network},
 \acs{GAT}\acused{GAT}) (Capa~2) y pesos de \textit{ensemble} optimizados por
 Algoritmo Genético (Capa~3).
@@ -31,11 +31,18 @@ otorgan 88,3 de media en la escala de usabilidad del sistema
 (\acs{SUS}\acused{SUS}), «excelente».
 
 El análisis estático de manifiestos basta, por tanto, para situar las cadenas
-de ataque en cabeza del ranking. \textit{kubescan} es viable como control
+de ataque en cabeza del \textit{ranking}. kubescan es viable como control
 preventivo integrable en flujos de integración y entrega continua
 (\acs{CICD}\acused{CICD}), antes de que las configuraciones de riesgo lleguen a
 producción.
 
+% [SUGERENCIA] Simetria con la limitacion L5 (circularidad del etiquetado). Si se
+% decide recogerla aqui, la frase minima seria, tras «...caen a 0,00 y 0,33.»:
+%   «Las etiquetas de grafo se derivan de reglas definidas sobre el mismo espacio
+%   de caracteristicas que observan los modelos, por lo que las cifras deben
+%   leerse como indicativas de la separabilidad del criterio, no como validacion
+%   externa.»
+% Requiere recortar en otro punto: el Resumen esta ya en el limite de extension.
 \medskip
 \noindent\textbf{Palabras clave:} Kubernetes, Graph Neural Networks, Random Forest,
 cadenas de ataque, infraestructura como código.
@@ -44,11 +51,11 @@ cadenas de ataque, infraestructura como código.
 \chapter{Abstract}
 % ============================================================
 
-Static analysis tools for \textit{Kubernetes} detect isolated insecure settings,
+Static analysis tools for Kubernetes detect isolated insecure settings,
 but not whether they chain into a viable attack path. The objective of this work
 is to identify such chains automatically from static manifests, without access
-to a live cluster. \textit{kubescan} combines a Random Forest classifier
-(Layer~1), a \textit{Graph Attention Network} (\acs{GAT}) (Layer~2) and
+to a live cluster. kubescan combines a Random Forest classifier
+(Layer~1), a Graph Attention Network (\acs{GAT}) (Layer~2) and
 ensemble weights optimised by a Genetic Algorithm (Layer~3).
 
 The corpus assembled —2,827 manifests from five complementary public sources—
@@ -70,10 +77,15 @@ feasibility constraint is decisive: without it P@1 and P@3 fall to 0.00 and
 88.3, an ``excellent'' rating.
 
 Static analysis of manifests therefore suffices to place attack chains at the
-top of the risk ranking. \textit{kubescan} is viable as a preventive control
+top of the risk ranking. kubescan is viable as a preventive control
 integrable into Continuous Integration / Continuous Delivery (\acs{CICD})
 pipelines, before risky configurations reach production.
 
+% [SUGERENCIA] Counterpart of the Spanish note above (limitation L5). Minimal
+% sentence, after «...fall to 0.00 and 0.33.»:
+%   «Graph labels are derived from rules defined over the same feature space the
+%   models observe, so the figures should be read as indicative of the
+%   separability of that criterion, not as external validation.»
 \medskip
 \noindent\textbf{Keywords:} Kubernetes, Graph Neural Networks, Random Forest,
 attack chains, infrastructure as code.

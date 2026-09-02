@@ -6,6 +6,7 @@ Ejecutar desde: /Users/obedrayo/Documents/UNIR/TFE/
     python3 thesis/generate_figures.py
 """
 import json
+import locale
 import os
 import matplotlib
 matplotlib.use('Agg')
@@ -14,6 +15,11 @@ import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch, RegularPolygon, Circle, Rectangle, Polygon
 import numpy as np
 
+def _num(value: float, decimals: int = 2) -> str:
+    """Formatea un numero con coma decimal, como el resto del documento."""
+    return f"{value:.{decimals}f}".replace(".", ",")
+
+
 OUT = os.path.join(os.path.dirname(__file__), "figures")
 os.makedirs(OUT, exist_ok=True)
 
@@ -21,7 +27,16 @@ CHECKPOINTS = os.path.join(
     os.path.dirname(__file__), "..", "research", "models", "checkpoints"
 )
 
+# Localizacion espanola: coma decimal en los ejes, igual que en el texto.
+for _loc in ('es_ES.UTF-8', 'es_ES', 'es_ES.utf8'):
+    try:
+        locale.setlocale(locale.LC_NUMERIC, _loc)
+        break
+    except locale.Error:
+        continue
+
 plt.rcParams.update({
+    'axes.formatter.use_locale': True,
     'font.family': 'DejaVu Sans',
     'font.size': 9,
     'axes.titlesize': 11,
@@ -303,12 +318,12 @@ bars = ax.barh(features[::-1], importances[::-1], color=colors[::-1],
 ax.set_xlabel('Importancia (%)')
 for bar, val in zip(bars, importances[::-1]):
     ax.text(bar.get_width()+0.3, bar.get_y()+bar.get_height()/2,
-            f'{val:.2f}%', va='center', fontsize=8.5)
+            _num(val) + '%', va='center', fontsize=8.5)
 ax.set_xlim(0, 38)
 ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
 ax.tick_params(axis='y', labelsize=8.5)
 ax.legend(handles=[mpatches.Patch(color='#c0392b', label='Top-2 discriminadores'),
-                   mpatches.Patch(color='#2980b9', label='Restantes features')],
+                   mpatches.Patch(color='#2980b9', label='Resto de características')],
           fontsize=8, loc='lower right')
 plt.tight_layout()
 plt.savefig(os.path.join(OUT, 'fig_rf_importance.pdf'), bbox_inches='tight')
@@ -317,7 +332,7 @@ print("fig_rf_importance.pdf OK")
 
 # ── FIG 5.2  GNN evolution ───────────────────────────────────────────────────
 # Datos reales: Tabla 5.2 del capitulo de resultados
-phases   = ['Linea\nbase', 'Tras\naugmentacion', 'Correccion\nHOSTPATH', 'Dataset\nextendido']
+phases   = ['Línea\nbase', 'Tras\naumentación', 'Corrección\nHOSTPATH', 'Conjunto\nextendido']
 f1_macro = [0.829, 0.915, 0.915, 0.917]
 p_at_5   = [0.400, 0.520, 0.600, 0.880]
 f1_err   = [0.098, 0.059, 0.050, 0.065]
@@ -326,16 +341,16 @@ p5_err   = [0.179, 0.098, 0.000, 0.098]
 x = np.arange(len(phases))
 fig, ax = plt.subplots(figsize=(7, 3.8))
 ax.errorbar(x, f1_macro, yerr=f1_err, marker='o', linewidth=2,
-            color='#2980b9', capsize=4, label='F1 macro (+/-sigma)', markersize=6)
+            color='#2980b9', capsize=4, label='F1 macro (±σ)', markersize=6)
 ax.errorbar(x, p_at_5, yerr=p5_err, marker='s', linewidth=2,
-            color='#e74c3c', capsize=4, label='Precision@5 (+/-sigma)',
+            color='#e74c3c', capsize=4, label='Precisión@5 (±σ)',
             markersize=6, linestyle='--')
 ax.axhline(y=0.70, color='#e74c3c', linestyle=':', linewidth=1.2, alpha=0.7,
-           label='Objetivo P@5 = 0.70')
+           label='Objetivo P@5 = 0,70')
 ax.axhline(y=0.85, color='#2980b9', linestyle=':', linewidth=1.2, alpha=0.7,
-           label='Objetivo F1 = 0.85')
+           label='Objetivo F1 = 0,85')
 ax.set_xticks(x); ax.set_xticklabels(phases, fontsize=9)
-ax.set_ylim(0.25, 1.02); ax.set_ylabel('Valor de la metrica')
+ax.set_ylim(0.25, 1.02); ax.set_ylabel('Valor de la métrica')
 ax.legend(fontsize=8.5, loc='lower right')
 ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
 plt.tight_layout()
@@ -350,13 +365,13 @@ with open(os.path.join(os.path.dirname(__file__), '..', 'research', 'models',
                        'checkpoints', 'rf_results.json')) as _f:
     _rf = _json.load(_f)
 cm = np.array(_rf['binary']['test_metrics']['confusion_matrix'])
-labels = ['Seguro', 'Misconfigured']
+labels = ['Seguro', 'Mal configurado']
 fig, ax = plt.subplots(figsize=(4.5, 3.8))
 im = ax.imshow(cm, cmap='Blues', vmin=0)
 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 ax.set_xticks([0, 1]); ax.set_yticks([0, 1])
 ax.set_xticklabels(labels, fontsize=9); ax.set_yticklabels(labels, fontsize=9)
-ax.set_xlabel('Prediccion', fontsize=9); ax.set_ylabel('Etiqueta real', fontsize=9)
+ax.set_xlabel('Predicción', fontsize=9); ax.set_ylabel('Etiqueta real', fontsize=9)
 for i in range(2):
     for j in range(2):
         ax.text(j, i, str(cm[i,j]), ha='center', va='center', fontsize=14,
@@ -372,11 +387,11 @@ print("fig_rf_confusion.pdf OK")
 fig, ax = plt.subplots(figsize=(4.5, 3.2))
 bars = ax.bar(['P@1', 'P@3', 'P@5'], [1.00, 1.00, 0.80],
               color=['#27ae60','#f39c12','#2980b9'], edgecolor='white', width=0.5)
-ax.axhline(y=0.70, color='#e74c3c', linestyle='--', linewidth=1.5, label='Objetivo P@5 = 0.70')
-ax.set_ylim(0, 1.32); ax.set_ylabel('Precision@k')
+ax.axhline(y=0.70, color='#e74c3c', linestyle='--', linewidth=1.5, label='Objetivo P@5 = 0,70')
+ax.set_ylim(0, 1.32); ax.set_ylabel('Precisión@k')
 for bar, val in zip(bars, [1.00, 1.00, 0.80]):
     ax.text(bar.get_x()+bar.get_width()/2, bar.get_height()+0.02,
-            f'{val:.2f}', ha='center', va='bottom', fontsize=11, fontweight='bold')
+            _num(val), ha='center', va='bottom', fontsize=11, fontweight='bold')
 ax.legend(fontsize=9, loc='upper right')
 ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
 plt.tight_layout()
@@ -543,17 +558,17 @@ _la_err_p5 = [0.204, 0.160]
 x = np.arange(len(_la_labels)); w = 0.36
 fig, ax = plt.subplots(figsize=(6.2, 3.7))
 b1 = ax.bar(x - w/2, _la_p5_f1, w, yerr=_la_err_f1, capsize=4, color='#95a5a6',
-            edgecolor='white', label='Seleccion por F1 macro')
+            edgecolor='white', label='Selección por F1 macro')
 b2 = ax.bar(x + w/2, _la_p5_p5, w, yerr=_la_err_p5, capsize=4, color='#2980b9',
-            edgecolor='white', label='Seleccion por P@5')
+            edgecolor='white', label='Selección por P@5')
 ax.axhline(0.70, color='#e74c3c', linestyle='--', linewidth=1.3,
-           label='Objetivo P@5 = 0.70')
+           label='Objetivo P@5 = 0,70')
 for bars, vals in ((b1, _la_p5_f1), (b2, _la_p5_p5)):
     for bar, v in zip(bars, vals):
-        ax.text(bar.get_x() + bar.get_width()/2, v + 0.015, f'{v:.2f}',
+        ax.text(bar.get_x() + bar.get_width()/2, v + 0.015, _num(v),
                 ha='center', va='bottom', fontsize=8.5)
 ax.set_xticks(x); ax.set_xticklabels(_la_labels, fontsize=9)
-ax.set_ylabel('Precision@5 (validacion cruzada)'); ax.set_ylim(0, 1.05)
+ax.set_ylabel('Precisión@5 (validación cruzada)'); ax.set_ylim(0, 1.05)
 ax.legend(fontsize=8, loc='upper left')
 ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
 plt.tight_layout()
@@ -570,17 +585,17 @@ _gated   = [_g['precision_at_1'], _g['precision_at_3'], _g['precision_at_5']]
 x = np.arange(len(_metrics)); w = 0.36
 fig, ax = plt.subplots(figsize=(6.2, 3.7))
 b1 = ax.bar(x - w/2, _ungated, w, color='#95a5a6', edgecolor='white',
-            label='Sin restriccion estructural')
+            label='Sin restricción estructural')
 b2 = ax.bar(x + w/2, _gated, w, color='#27ae60', edgecolor='white',
-            label='Con restriccion estructural')
+            label='Con restricción estructural')
 ax.axhline(0.70, color='#e74c3c', linestyle='--', linewidth=1.2, alpha=0.7,
-           label='Objetivo P@5 = 0.70')
+           label='Objetivo P@5 = 0,70')
 for bars, vals in ((b1, _ungated), (b2, _gated)):
     for bar, v in zip(bars, vals):
-        ax.text(bar.get_x() + bar.get_width()/2, v + 0.015, f'{v:.2f}',
+        ax.text(bar.get_x() + bar.get_width()/2, v + 0.015, _num(v),
                 ha='center', va='bottom', fontsize=8.5)
 ax.set_xticks(x); ax.set_xticklabels(_metrics); ax.set_ylim(0, 1.32)
-ax.set_ylabel('Precision (conjunto de test)')
+ax.set_ylabel('Precisión (conjunto de test)')
 ax.legend(fontsize=8, loc='upper left')
 ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
 plt.tight_layout()
@@ -604,13 +619,13 @@ for s in (42, 7, 123):
     ax.plot(_folds, _seed_folds[s], marker=_mk[s], color=_col[s], linewidth=1.6,
             markersize=7, alpha=0.85, label=f'Semilla {s}')
 ax.axhline(0.70, color='#7f8c8d', linestyle=':', linewidth=1.0,
-           label='Objetivo P@5 = 0.70')
-ax.annotate('unico pliegue con varianza\nentre semillas',
+           label='Objetivo P@5 = 0,70')
+ax.annotate('único pliegue con varianza\nentre semillas',
             xy=(1, 0.4), xytext=(1.35, 0.17), fontsize=8, color='#555',
             arrowprops=dict(arrowstyle='->', color='#888', lw=1))
 ax.set_xticks(_folds)
 ax.set_xticklabels([f'Pliegue {i}' for i in range(5)], fontsize=8.5)
-ax.set_ylabel('Precision@5'); ax.set_ylim(0, 1.1)
+ax.set_ylabel('Precisión@5'); ax.set_ylim(0, 1.1)
 ax.legend(fontsize=8, ncol=2, loc='lower right')
 ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
 plt.tight_layout()
@@ -626,7 +641,7 @@ im = ax.imshow(_cm, cmap='Blues', vmin=0)
 fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 ax.set_xticks(range(3)); ax.set_yticks(range(3))
 ax.set_xticklabels(_cls, fontsize=9); ax.set_yticklabels(_cls, fontsize=9)
-ax.set_xlabel('Prediccion', fontsize=9); ax.set_ylabel('Etiqueta real', fontsize=9)
+ax.set_xlabel('Predicción', fontsize=9); ax.set_ylabel('Etiqueta real', fontsize=9)
 _thr = _cm.max() / 2.0
 for i in range(3):
     for j in range(3):
