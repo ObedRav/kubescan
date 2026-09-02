@@ -208,7 +208,7 @@ un solo falso positivo ni falso negativo. Reentrenar la misma configuración
 restringida a esas filas produce, consecuentemente, F1 macro\,=\,1,0000. La Capa~1
 aprende por tanto una aproximación robusta de una regla determinista definida
 sobre su propio espacio de características —bajo imputación, valores ausentes y
-las etiquetas heterogéneas del resto de fuentes—, no una noción de
+las etiquetas heterogéneas del resto de fuentes\mbox{—,} no una noción de
 configuración errónea independiente de dicha regla. Esta limitación, análoga a la que
 afecta al etiquetado de grafos, se analiza en la limitación~L5 del
 Capítulo~\ref{cap:conclusiones}.
@@ -254,7 +254,7 @@ debajo del de \textit{high-critical} (0,9789). La causa no es una dificultad
 intrínseca de la clase intermedia, cuyo \textit{recall} es de 0,9934, sino su
 papel de sumidero de los errores del modelo: absorbe los seis manifiestos mal
 asignados del conjunto de test —tres procedentes de \textit{clean} y tres de
-\textit{high-critical}—, lo que rebaja su precisión a 0,9615. La clase
+\textit{high-critical}\mbox{—,} lo que rebaja su precisión a 0,9615. La clase
 \textit{high-critical} (96~muestras de test, que representan manifiestos con
 banderas de escape activas como \texttt{TRUE\_HOST\_PID} o
 \texttt{SEC\_CONT\_OVER\_PRIVIL}) comete 3~errores, los tres clasificados como
@@ -369,12 +369,12 @@ los pliegues de validación cruzada particionan los 513~grafos originales no
 reservados para test (32~cadenas). El modelo obtiene
 P@5\,=\,0,720\,\(\pm\)\,0,160, alcanzando el objetivo con la semilla de
 entrenamiento desplegada (42); en las tres semillas (7, 42, 123) la media es
-de 0,68\,\(\pm\)\,0,033\footnote{Las desviaciones típicas de las métricas del modelo
+de 0,68\,\(\pm\)\,0,033, con el objetivo dentro de una desviación típica de la
+media\footnote{Las desviaciones típicas de las métricas del modelo
 se expresan como desviación poblacional (\(\text{ddof}=0\)), coherente con la
 instrumentación de NumPy empleada en la validación cruzada; la del \ac{SUS}
 (Sección~\ref{sec:usabilidad}) sigue la convención muestral (\(n-1\)) habitual en su
-literatura.}, con el objetivo dentro de una desviación típica de la
-media (Sección~\ref{sec:multisemilla}).
+literatura.} (Sección~\ref{sec:multisemilla}).
 
 Alcanzar esta cifra exigió diagnosticar una regresión aparente: la primera
 configuración entrenada sobre el corpus completo con familias atómicas empleaba
@@ -382,7 +382,7 @@ configuración entrenada sobre el corpus completo con familias atómicas empleab
 P@5\,=\,0,480\,\(\pm\)\,0,271, muy por debajo tanto del objetivo como de la
 fase~5. La ablación factorial de la Sección~\ref{sec:ablacion_perdida} mostró
 que la caída se debía a las elecciones de función de pérdida y de criterio de
-selección —no al corpus ni al protocolo de particionado—, y que revertir a
+selección —no al corpus ni al protocolo de particionado\mbox{—,} y que revertir a
 entropía cruzada ponderada y seleccionar por Precisión@5 recupera el objetivo
 sobre el mismo particionado honesto. La varianza entre pliegues
 (\(\sigma\)\,=\,0,160, frente a 0,098 en la fase~5) refleja en gran medida la
@@ -439,7 +439,7 @@ contiene ninguna de las cuatro familias de plantilla, sino exclusivamente
 repositorios únicos. El número de familias independientes portadoras de cadena
 por pliegue es, en consecuencia, de 1, 1, 4, 5 y 5. Cada pliegue mide, por tanto,
 la capacidad del modelo de generalizar a un número reducido de familias no vistas
-—un tamaño muestral efectivo menor que el número nominal de cadenas—, lo que
+—un tamaño muestral efectivo menor que el número nominal de cadenas\mbox{—,} lo que
 explica que la varianza
 (\(\sigma\)\,=\,0,160) sea mayor que bajo protocolos con fuga y constituye una
 amenaza a la validez de conclusión que se documenta en el
@@ -455,9 +455,9 @@ atribuir el efecto se completó la matriz factorial 2\(\times\)2 —función de
 pérdida (entropía cruzada ponderada frente a \textit{focal loss},
 \(\gamma\)\,=\,2) por criterio de selección de \textit{checkpoints} (F1 macro
 frente a Precisión@5)— con particionado, semilla y arquitectura idénticos
-(Tabla~\ref{tab:loss_ablation}).\footnote{Las cuatro configuraciones son reproducibles
+(Tabla~\ref{tab:loss_ablation})\footnote{Las cuatro configuraciones son reproducibles
 mediante \texttt{make reproduce GNN\_FOCAL=\{0,1\} GNN\_SELECT\_BY=\{p5,f1\}}; solo se
-conserva el \textit{checkpoint} de la configuración finalmente desplegada.}
+conserva el \textit{checkpoint} de la configuración finalmente desplegada.}.
 
 \begin{table}[htbp]
 \centering
@@ -560,12 +560,13 @@ que no forma parte de las configuraciones entrenadas
 (Capítulo~\ref{cap:conclusiones}). La comparación entre 2 y 3~capas es
 menos concluyente: las medias de validación cruzada casi coinciden
 —P@5\,=\,0,720\,\(\pm\)\,0,160 en ambas configuraciones y F1 macro de 0,803
-frente a 0,800—, pero esa coincidencia agregada oculta un desacuerdo apreciable
+frente a 0,800\mbox{—,} pero esa coincidencia agregada oculta un desacuerdo apreciable
 pliegue a pliegue, con diferencias de F1 de \(+\)0,142 en el pliegue~3 y
 \(-\)0,191 en el pliegue~4 que se cancelan al promediar y dejan una brecha media
 de solo 0,003. Dos modelos que difieren en esa magnitud sobre pliegues concretos
-no evidencian robustez de la arquitectura frente a la profundidad, sino que la
-profundidad no determina el nivel medio de las métricas sobre este corpus. Se
+no evidencian robustez de la arquitectura frente a la profundidad; lo que
+muestran es que la profundidad no determina el nivel medio de las métricas sobre
+este corpus. Se
 mantiene la configuración de 3~capas como desplegada por su ventaja marginal en
 F1 macro y por coherencia con el resto de resultados presentados. La
 ablación de \textit{pooling} (\textit{mean}-only frente a \textit{mean+max}) queda
@@ -594,7 +595,7 @@ el experimento sí establece es que cuatro quintas partes del particionado son
 invariantes a la semilla y que la incertidumbre residual de la estimación de
 validación cruzada se localiza en una sola familia de plantilla. Segunda: las
 métricas de test del despliegue son estables —P@1\,=\,1,00 y
-P@3\,=\,1,00 con las tres semillas, y P@5 entre 0,80 y 1,00—, de modo que la
+P@3\,=\,1,00 con las tres semillas, y P@5 entre 0,80 y 1,00\mbox{—,} de modo que la
 sensibilidad a la semilla afecta a la estimación de validación cruzada, no al
 comportamiento observable del sistema sobre repositorios reales no vistos.
 
@@ -682,7 +683,7 @@ caen a P@1\,=\,0,00, P@3\,=\,0,33 y P@5\,=\,0,60 (Figura~\ref{fig:structural_gat
 banderas de escape activas, encabezarían el \textit{ranking} pese a no poder
 albergar una cadena. Procede delimitar, en consecuencia, cuál es el conjunto sobre
 el que se ordena: la restricción deja 12~clústeres candidatos —las 5~cadenas,
-4~\textit{isolated} y 3~limpios—, de modo que las métricas de \textit{ranking} no
+4~\textit{isolated} y 3~limpios\mbox{—,} de modo que las métricas de \textit{ranking} no
 se calculan sobre los 86~grafos sino sobre esos 12. Un ordenamiento aleatorio de
 ese conjunto obtendría un valor esperado de P@5 de \(5/12 \approx 0{,}42\), que
 es la línea de base frente a la que debe leerse el 0,80 obtenido.
@@ -950,7 +951,7 @@ Core i7 de octava generación sin GPU. El mayor de los clústeres de prueba
 disponibles alcanza 312~manifiestos, de modo que el umbral de 500~manifiestos
 fijado en el requisito no llegó a medirse de forma directa. La progresión
 observada es aproximadamente lineal —en torno a 23\,ms por manifiesto en el punto
-de mayor carga—, por lo que la extrapolación a 500~manifiestos sitúa el tiempo
+de mayor carga\mbox{—,} por lo que la extrapolación a 500~manifiestos sitúa el tiempo
 esperado en torno a 12\,s, muy por debajo del límite de 60\,s; el cumplimiento de
 RNF-4 se sostiene, por tanto, sobre una extrapolación y no sobre una medición en
 el tamaño nominal del requisito.
@@ -1036,7 +1037,7 @@ concretas de remediación ni las reglas subyacentes al veredicto. Dos
 participantes la mencionaron en el apartado abierto —uno expresó que el
 \ac{JSON} «muestra el estado actual pero no las acciones que debería tomar» y
 otro la dificultad de «confiar en un puntaje sin conocer bien qué reglas
-concretas hay detrás»—, si bien solo uno de ellos la trasladó a la escala
+concretas hay detrás»\mbox{—,} si bien solo uno de ellos la trasladó a la escala
 numérica, ya que el segundo puntuó A3 con un 4. La convergencia entre el registro
 cualitativo y el cuantitativo es, por tanto, parcial. Esta limitación se recoge como
 línea de trabajo futuro (explicabilidad de reglas y recomendaciones de

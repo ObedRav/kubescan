@@ -4,7 +4,7 @@
 % ============================================================
 
 Las conclusiones siguen el orden expositivo de los resultados del
-Capítulo~\ref{cap:evaluacion} —de la Capa~1 al sistema distribuible—, que no
+Capítulo~\ref{cap:evaluacion} —de la Capa~1 al sistema distribuible\mbox{—,} que no
 coincide con el orden numérico de los objetivos específicos; cada conclusión
 declara el objetivo al que responde. Las limitaciones (L1--L10) y las líneas de
 trabajo futuro (TF1--TF9) llevan numeración propia.
@@ -19,7 +19,7 @@ OE4, OE1, OE5, OE3 y OE6 definidos en el Capítulo~\ref{cap:objetivos}; C3 no ci
 objetivo propio, sino que aporta evidencia complementaria sobre el impacto operativo
 del resultado de C2. En conjunto, estas conclusiones sostienen el objetivo general
 planteado en el Capítulo~\ref{cap:objetivos} —complementar el análisis estático por
-manifiesto individual con el contexto estructural del clúster—, cuya evidencia
+manifiesto individual con el contexto estructural del clúster\mbox{—,} cuya evidencia
 directa es la ablación de componentes recogida en C5: la configuración que emplea
 únicamente la señal por manifiesto de la Capa~1 desciende de P@1\,=\,1,00 a
 P@1\,=\,0,00 sobre el conjunto de test, de modo que el contexto de grafo no es un
@@ -30,7 +30,7 @@ conclusiones principales son:
 Random Forest alcanza F1 macro\,=\,0,9946 y \ac{AUC}-\ac{ROC}\,=\,0,9986 en test, superando
 el umbral objetivo del 0,85 en 14,5 puntos porcentuales. El modelo de severidad de
 tres clases logra F1\,macro\,=\,0,9838, con la clase \textit{high-critical} (96~muestras
-de test) en 0,9789 —el resultado más débil de los tres, aunque por encima de 0,95—;
+de test) en 0,9789 —el resultado más débil de los tres, aunque por encima de 0,95\mbox{—;}
 sus 3~errores se clasifican todos como \textit{low-medium}, sin ningún manifiesto
 crítico degradado a \textit{clean}.
 
@@ -93,7 +93,7 @@ el conjunto de test (Tabla~\ref{tab:ensemble_ablation}) confirma que el
 componente \ac{GNN} es indispensable: la configuración con solo Random Forest colapsa el
 \textit{ranking} (P@1 de 1,00 a 0,00; P@5 de 0,80 a 0,40) porque el \textit{risk score}
 medio por clúster de los repositorios reales de cadena es \(\approx\)0 —la media
-se diluye entre manifiestos mayoritariamente benignos—,
+se diluye entre manifiestos mayoritariamente benignos\mbox{—,}
 mientras que \ac{FPR}\_clean\,=\,0,00 se mantiene en todas las configuraciones.
 Los criterios de OE5 se cumplen: \ac{FPR}\_clean\,=\,0 y P@5 del \textit{ensemble} igual
 a la del mejor componente individual (0,80). Debe señalarse que los pesos
@@ -340,7 +340,7 @@ la regla que la genera, y la equivalencia entre las métricas presentadas y las 
 una réplica en otro \textit{backend}. A ellas se añade una cuestión propia de la
 métrica \ac{FPR}\_clean: mide la fracción de clústeres limpios en el top-\(k\), no
 una tasa de falsos positivos en sentido estricto —que normalizaría por el total de
-clústeres limpios—, de modo que el valor 0,00 invocado en C3 y C5 significa
+clústeres limpios\mbox{—,} de modo que el valor 0,00 invocado en C3 y C5 significa
 ausencia de clústeres limpios en la cabeza del \textit{ranking}, no ausencia de
 falsas alarmas sobre el conjunto completo (Sección~\ref{sec:metricas}).
 
@@ -359,7 +359,7 @@ puntuales?): el tamaño del conjunto de test (86~grafos, 5~cadenas) y del
 \textit{pool out-of-fold} (513~grafos, 32~cadenas) produce los intervalos amplios
 de la Sección~\ref{sec:layer3} —al 95\,\%, P@5\,\(\in\,[0{,}60;\ 1{,}00]\),
 \ac{FPR}\_clean\,\(\in\,[0{,}00;\ 0{,}40]\) y
-F1~macro\,\(\in\,[0{,}66;\ 1{,}00]\)—, que limitan cualquier comparación puntual
+F1~macro\,\(\in\,[0{,}66;\ 1{,}00]\)\mbox{—,} que limitan cualquier comparación puntual
 entre configuraciones (C5). El intervalo de \ac{FPR}\_clean merece atención
 específica: el valor 0,00 es compatible con tasas de hasta 0,40, por lo que no
 autoriza a afirmar que el sistema no producirá falsas alarmas sobre corpus
