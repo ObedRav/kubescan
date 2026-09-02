@@ -81,14 +81,14 @@ la industria.
 % -----------------------------------------------------------
 
 El análisis estático de manifiestos \ac{IaC} cuenta con una larga trayectoria en la
-literatura. Rahman et~al.\ \citep{Rahman2022} construyeron un conjunto de datos
+literatura. \citet{Rahman2022} construyeron un conjunto de datos
 de referencia para manifiestos Kubernetes extraídos de repositorios
 públicos, con 2.039 manifiestos de 92 repositorios etiquetados en 11 categorías de
 \textit{misconfiguration} identificadas mediante análisis cualitativo y cuantificadas
 con su herramienta de análisis estático (SLI-KUBE). Su aportación se circunscribe
 a la construcción del conjunto de datos y a la medición de la densidad de
 configuraciones erróneas mediante reglas estáticas: no incluye ningún modelo de
-clasificación supervisada entrenado sobre ese corpus, por lo que no ofrece una
+clasificación supervisada entrenado sobre ese corpus, por lo que no ofrecen una
 cifra de rendimiento predictivo con la que contrastar directamente.
 % Verificado contra el resumen publicado (TOSEM 32(4), 2023): la metodología
 % declarada es «an empirical study with 2,039 Kubernetes manifests [...] and
@@ -210,7 +210,7 @@ naturaleza de los datos del problema:
 \raggedright
   \item \textbf{Robustez ante datos binarios y escasos.} Las características del
     presente trabajo son en su mayoría binarias (presencia/ausencia de una
-    configuración errónea), con alta proporción de ceros. Los Random Forests
+    configuración errónea), con alta proporción de ceros. Los Random Forest
     manejan este tipo de datos de forma nativa sin requerir normalización, a diferencia
     de las Máquinas de Vectores Soporte (\acs{SVM}) o las Redes Neuronales, sensibles
     a la escala de las características.
@@ -386,7 +386,7 @@ En los últimos años han surgido dos herramientas de código abierto que aborda
 detección de rutas de ataque en Kubernetes mediante grafos:
 KubeHound \citep{KubeHound2023} e IceKube \citep{IceKube2023}.
 
-\textbf{KubeHound} (Datadog, 2023) construye un grafo de ataque del clúster a partir
+\textbf{KubeHound} \citep{KubeHound2023} construye un grafo de ataque del clúster a partir
 de la consulta directa al servidor \ac{API} de Kubernetes, almacena el resultado
 en JanusGraph y permite explorar las rutas de ataque más cortas mediante el lenguaje
 de consulta Gremlin. El proyecto fue motivado por la misma intuición que subyace al
@@ -401,10 +401,10 @@ amplio conjunto de técnicas de ataque como relaciones en el grafo y puede encon
 rutas desde cualquier identidad de bajo privilegio hasta \textit{cluster-admin}.
 La diferencia fundamental entre estas herramientas y kubescan es de
 paradigma: KubeHound e IceKube operan sobre un \textbf{clúster activo}, requiriendo
-acceso con privilegios elevados a \texttt{kubectl}. kubescan, en cambio,
+acceso con privilegios elevados a \texttt{kubectl}. La herramienta kubescan, en cambio,
 opera sobre \textbf{manifiestos \acs{YAML} estáticos} antes del despliegue, integrándose
 en el \textit{pipeline} \acs{CICD} como un control de seguridad \textit{shift-left}. Además, ambas
-herramientas utilizan búsqueda de rutas mediante consultas ad-hoc en bases de datos
+herramientas utilizan búsqueda de rutas mediante consultas \textit{ad hoc} en bases de datos
 de grafos, sin componente de aprendizaje automático supervisado; kubescan
 es el primer sistema, según la revisión bibliográfica no sistemática realizada en
 este trabajo, que combina análisis estático
@@ -459,7 +459,7 @@ El sistema kubescan presentado en este trabajo responde a las tres carencias
 identificadas: adopta una arquitectura de grafo heterogéneo con tipos de arista
 semánticamente significativos para el dominio Kubernetes, combina el análisis
 estático (Capa~1) con el razonamiento estructural (Capa~2) en un \textit{ensemble}
-optimizado (Capa~3), y contribuye un conjunto de datos de 599~grafos de clúster
+optimizado (Capa~3), y aporta un conjunto de datos de 599~grafos de clúster
 originales con etiquetas de cadena de ataque derivadas de reglas de seguridad
 explícitas y auditables. Al operar sobre manifiestos \acs{YAML} sin requerir acceso
 al clúster, kubescan se posiciona como un control preventivo integrable en

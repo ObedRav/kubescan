@@ -23,14 +23,14 @@ manifiesto individual con el contexto estructural del clúster—, cuya evidenci
 directa es la ablación de componentes recogida en C5: la configuración que emplea
 únicamente la señal por manifiesto de la Capa~1 desciende de P@1\,=\,1,00 a
 P@1\,=\,0,00 sobre el conjunto de test, de modo que el contexto de grafo no es un
-añadido marginal sino la componente que ordena los clústeres de cadena real. Las
+añadido marginal, sino el componente que ordena los clústeres de cadena real. Las
 conclusiones principales son:
 
 \textbf{C1 — La Capa~1 supera ampliamente el objetivo de diseño (OE2).} El clasificador
 Random Forest alcanza F1 macro\,=\,0,9946 y \ac{AUC}-\ac{ROC}\,=\,0,9986 en test, superando
 el umbral objetivo del 0,85 en 14,5 puntos porcentuales. El modelo de severidad de
 tres clases logra F1\,macro\,=\,0,9838, con la clase \textit{high-critical} (96~muestras
-de test) en 0,9789 — el resultado más débil de los tres, aunque por encima de 0,95—;
+de test) en 0,9789 —el resultado más débil de los tres, aunque por encima de 0,95—;
 sus 3~errores se clasifican todos como \textit{low-medium}, sin ningún manifiesto
 crítico degradado a \textit{clean}.
 
@@ -41,7 +41,7 @@ el particionado consciente de familias sobre el corpus completo (599~grafos,
 37~cadenas), alcanza P@5\,=\,0,720\,\(\pm\)\,0,160 y
 F1~macro\,=\,0,803\,\(\pm\)\,0,137 en los 5~pliegues, superando el objetivo de
 diseño con la semilla desplegada. Dos matices lo acotan: a través de tres semillas
-la media es 0,68\,\(\pm\)\,0,03 —objetivo dentro de una desviación típica, con la
+la media es 0,68\,\(\pm\)\,0,033 —objetivo dentro de una desviación típica, con la
 variación concentrada en el pliegue de la familia \texttt{badpods\_*}— y alcanzarlo
 exigió diagnosticar mediante una ablación factorial 2\(\times\)2 que una primera
 configuración con \textit{focal loss} y selección por F1 macro atribuía
@@ -67,14 +67,14 @@ resultado operativo lo sostiene el componente \ac{GNN} y el \textit{ensemble}
 lo iguala sin superarlo (C5). P@1 y P@3 se mantienen idénticos (1,00) a través de
 las tres semillas de entrenamiento evaluadas, con P@5 entre 0,80 y 1,00. Parte esencial del resultado es la
 restricción de viabilidad estructural (un clúster de un solo manifiesto no puede
-albergar una cadena multi-salto, Sección~\ref{sec:gate_estructural}): sin ella
+albergar una cadena multisalto, Sección~\ref{sec:gate_estructural}): sin ella
 las métricas de \textit{ranking} caen a P@1\,=\,0,00 y P@5\,=\,0,60, porque 74 de los
 86~grafos de test son de un solo nodo. El tamaño reducido del conjunto de test
-(intervalo de confianza al 95\,\% de P@5: \([0{,}60,\ 1{,}00]\)) limita la
+(intervalo de confianza al 95\,\% de P@5: \([0{,}60;\ 1{,}00]\)) limita la
 confianza que puede depositarse en cualquier comparación puntual.
 
 \textbf{C4 — La construcción del corpus y su protocolo de particionado
-anti-fuga son la contribución metodológica central (OE1).} El conjunto final
+antifuga son la contribución metodológica central (OE1).} El conjunto final
 satisface los criterios cuantitativos de OE1: 2.827~manifiestos y una prevalencia
 de \texttt{TRUE\_HOST\_PID} del 3,78\,\%. Su evolución en seis fases
 (Tabla~\ref{tab:gnn_evolution}) enseña dos lecciones metodológicas. Primera: la
@@ -148,7 +148,7 @@ limitación L8 y como línea TF8. Con \(n=3\), estas cifras son indicativas
 \section{Consideraciones éticas y uso responsable}
 \label{sec:etica}
 
-kubescan es una herramienta de uso dual: aunque su propósito es defensivo
+La herramienta kubescan es de uso dual: aunque su propósito es defensivo
 —detectar cadenas de ataque potenciales antes de que sean explotadas— la información
 que produce (identificación de pods con banderas de escape, rutas de privilegio \ac{RBAC})
 podría ser utilizada con fines ofensivos si cayera en manos de un actor no autorizado.
@@ -173,7 +173,7 @@ composición del corpus, el protocolo de evaluación, la definición de las etiq
 el entorno de cómputo y el alcance de la evaluación con usuarios. Cada limitación se
 enuncia con la evidencia cuantitativa que la sustenta y con la línea de trabajo
 futuro que la atiende, cuando existe. La Sección~\ref{sec:amenazas_validez} reagrupa
-las nueve según el tipo de amenaza a la validez que representan.
+las diez según el tipo de amenaza a la validez que representan.
 
 \textbf{L1 — Concentración por familias y varianza entre pliegues.} El
 particionado consciente de familias, al mantener cada familia de plantilla como
@@ -183,7 +183,7 @@ unidad atómica, concentra las cadenas de validación de cada pliegue en 1, 1, 4
 \texttt{badpods\_*} (F1\,=\,0,58), de modo que la varianza entre pliegues
 (\(\sigma\)\,=\,0,137 para F1; 0,160 para P@5) mide en gran parte la dispersión
 de dificultad entre familias, no inestabilidad del modelo: el análisis
-multi-semilla (Sección~\ref{sec:multisemilla}) muestra que cuatro de los cinco
+multisemilla (Sección~\ref{sec:multisemilla}) muestra que cuatro de los cinco
 pliegues puntúan de forma idéntica con las tres semillas. El tamaño muestral
 efectivo por pliegue (número de familias, no de cadenas) es la limitación
 subyacente, y solo puede crecer incorporando repositorios de cadena
@@ -208,7 +208,7 @@ consultar las columnas \texttt{checkov\_*}, pues \texttt{CHECKOV\_FILL} opera so
 en la carga de la Capa~1, de modo que la cobertura de escaneo no altera los
 grafos, sus etiquetas ni las salidas de las Capas~2 y~3. Esa invariancia desplaza
 el coste de la limitación: seis de las 25~banderas del vector de nodo carecen de
-señal en las 1.906~filas de Rahman et~al., presentes en 62 de los 599~grafos.
+señal en las 1.906~filas de \citet{Rahman2022}, presentes en 82 de los 599~grafos.
 
 \textbf{L3 — Sesgo de muestreo en el conjunto de datos tabular.} Los 10 repositorios más
 representados suponen el 47,6\,\% del conjunto de datos, y \texttt{gitcontroller} por sí solo
@@ -357,9 +357,9 @@ Capa~2 no llega a medirse.
 \textbf{Validez de conclusión} (¿son estadísticamente fiables las estimaciones
 puntuales?): el tamaño del conjunto de test (86~grafos, 5~cadenas) y del
 \textit{pool out-of-fold} (513~grafos, 32~cadenas) produce los intervalos amplios
-de la Sección~\ref{sec:layer3} —al 95\,\%, P@5\,\(\in\,[0{,}60,\ 1{,}00]\),
-\ac{FPR}\_clean\,\(\in\,[0{,}00,\ 0{,}40]\) y
-F1~macro\,\(\in\,[0{,}66,\ 1{,}00]\)—, que limitan cualquier comparación puntual
+de la Sección~\ref{sec:layer3} —al 95\,\%, P@5\,\(\in\,[0{,}60;\ 1{,}00]\),
+\ac{FPR}\_clean\,\(\in\,[0{,}00;\ 0{,}40]\) y
+F1~macro\,\(\in\,[0{,}66;\ 1{,}00]\)—, que limitan cualquier comparación puntual
 entre configuraciones (C5). El intervalo de \ac{FPR}\_clean merece atención
 específica: el valor 0,00 es compatible con tasas de hasta 0,40, por lo que no
 autoriza a afirmar que el sistema no producirá falsas alarmas sobre corpus
