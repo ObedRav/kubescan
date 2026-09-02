@@ -79,7 +79,7 @@ de clúster construido en la Sección~\ref{sec:construccion_grafo}.
 \label{sec:fuentes_datos}
 
 El conjunto de datos tabular final contiene 2.827~filas y 58~columnas, combinando
-cinco fuentes (agrupadas en cuatro categorías, dado que Rahman et~al.\ aporta dos
+cinco fuentes (agrupadas en cuatro categorías, dado que \citet{Rahman2022} aportan dos
 plataformas distintas con características de distribución diferentes; ver Tabla~\ref{tab:dataset}):
 
 \begin{table}[htbp]
@@ -90,11 +90,11 @@ plataformas distintas con características de distribución diferentes; ver Tabl
 \toprule
 Fuente & Filas & Rol \\
 \midrule
-Rahman et~al.\ \citep{Rahman2022} — GitHub & 1.510 & Manifiestos reales, etiquetados \\
-Rahman et~al.\ \citep{Rahman2022} — GitLab & 396 & Ídem, plataforma distinta \\
+\citet{Rahman2022} — GitHub & 1.510 & Manifiestos reales, etiquetados \\
+\citet{Rahman2022} — GitLab & 396 & Ídem, plataforma distinta \\
 BishopFox BadPods \citep{BishopFox2021} & 128 & Pods vulnerables intencionales \\
 Kubernetes Goat \citep{KubernetesGoat} & 14 & Escenarios de vulnerabilidad \\
-Repositorios de seguridad adicionales & 779 & CTFs, \textit{fixtures} de herramientas, labs; etiqueta derivada por regla \\
+Repositorios de seguridad adicionales & 779 & CTF, \textit{fixtures} de herramientas, labs; etiqueta derivada por regla \\
 \midrule
 \textbf{Total} & \textbf{2.827} & \\
 \bottomrule
@@ -104,7 +104,7 @@ Repositorios de seguridad adicionales & 779 & CTFs, \textit{fixtures} de herrami
 
 La procedencia de la etiqueta binaria no es homogénea entre las fuentes de la
 Tabla~\ref{tab:dataset}, y esa heterogeneidad condiciona la interpretación de los
-resultados de la Capa~1. Las 1.906~filas de Rahman et~al.\ \citep{Rahman2022}
+resultados de la Capa~1. Las 1.906~filas de \citet{Rahman2022}
 conservan la anotación \textit{INSECURE} del corpus original, ajena al extractor
 de características de este trabajo: solo 245 de las 1.510~filas de GitHub y 87 de
 las 396 de GitLab coinciden con la disyunción de las columnas de configuración errónea
@@ -128,7 +128,7 @@ evaluación presentan un desequilibrio de clases del mismo orden de magnitud que
 este trabajo (56,3\,\% seguros frente a 43,7\,\% mal configurados). El conjunto GenKubeSec
 \citep{Malul2024}, publicado en 2024, no estaba disponible durante el desarrollo de
 este trabajo; en su lugar se empleó Checkov \citep{Checkov2021} directamente
-sobre los ficheros \acs{YAML} descargados como fuente de validación multi-herramienta
+sobre los ficheros \acs{YAML} descargados como fuente de validación multiherramienta
 equivalente.
 
 \subsection{Características extraídas}
@@ -141,10 +141,10 @@ El extractor de características aplica 28 reglas de análisis estático a cada 
   \item \textbf{18 banderas Rahman} (subconjunto del trabajo original): \texttt{TRUE\_HOST\_PID},
     \texttt{CAP\_SYS\_ADMIN}, \texttt{SEC\_CONT\_OVER\_PRIVIL}, \texttt{INSECURE\_HTTP},
     etc.
-  \item \textbf{3 features derivadas}: \texttt{cap\_misuse} (OR de las dos banderas de
+  \item \textbf{3 características derivadas}: \texttt{cap\_misuse} (OR de las dos banderas de
     capacidades de sistema), \texttt{all\_secrets} (OR de los indicadores de exposición
     de secretos), \texttt{total\_misconfigs} (suma de todas las banderas activas).
-  \item \textbf{7 features extendidas}: \texttt{NO\_RUN\_AS\_NON\_ROOT},
+  \item \textbf{7 características extendidas}: \texttt{NO\_RUN\_AS\_NON\_ROOT},
     \texttt{IMAGE\_USES\_LATEST}, \texttt{SA\_AUTOMOUNT\_TOKEN}, \texttt{HOSTPATH\_MOUNT},
     etc. Seis de ellas presentan una procedencia mixta de valores; la séptima,
     \texttt{HOSTPATH\_MOUNT}, se extrae siempre del propio manifiesto.
@@ -165,7 +165,7 @@ tabular e imputa como 0 toda celda vacía, sin consultar las columnas
 \texttt{checkov\_*}, por lo que las seis características valen 0 en el vector de
 nodo de las 1.906~filas procedentes de Rahman et~al. La cobertura de
 Checkov tampoco es un mecanismo general aplicable a toda fila con
-\acs{YAML} disponible, sino específica de la fuente: Checkov se ejecutó únicamente sobre el subconjunto de
+\acs{YAML} disponible, sino específico de la fuente: Checkov se ejecutó únicamente sobre el subconjunto de
 GitHub —1.175 de sus 1.510~filas— y no produjo salida alguna para los
 repositorios de seguridad adicionales, GitLab, BadPods ni Kubernetes Goat, cuyas
 filas se resuelven por el analizador \acs{YAML} o por mediana. La séptima
@@ -173,9 +173,9 @@ característica extendida queda al margen de este esquema, ya que
 \texttt{HOSTPATH\_MOUNT} se deriva por completo del análisis estático del
 manifiesto y está poblada para las 2.827~filas.
 
-La Capa~2 (\ac{GNN}) consume únicamente las 18~banderas Rahman y las 7~features extendidas
+La Capa~2 (\ac{GNN}) consume únicamente las 18~banderas Rahman y las 7~características extendidas
 (25 en total, \texttt{FEATURE\_COLS} en \texttt{yaml\_parser.py}) como vector de nodo,
-excluyendo las 3~features derivadas —agregados calculados a partir de las otras 25 que
+excluyendo las 3~características derivadas —agregados calculados a partir de las otras 25 que
 no aportan información estructural adicional al grafo—; ver
 Sección~\ref{sec:features_table}. De estas 25, tres presentan varianza casi nula pero
 se mantienen en el entrenamiento, con importancia residual o nula
@@ -187,7 +187,7 @@ registradas por el modelo Random Forest confirman ese aporte marginal:
 \texttt{VALID\_TAINT\_SECRET} y \(2{,}4\times10^{-5}\) para
 \texttt{NO\_NETWORK\_POLICY}. Se conservan para preservar la estabilidad del
 contrato de características (\texttt{FEATURE\_COLS}) y la correspondencia exacta
-con el conjunto de banderas de Rahman et~al.\ \citep{Rahman2022}; no se ha realizado
+con el conjunto de banderas de \citet{Rahman2022}; no se ha realizado
 un estudio de ablación que cuantifique el efecto de su eliminación.
 
 % -----------------------------------------------------------
@@ -259,7 +259,7 @@ que componen ese \textit{pool}, solo 390 entran efectivamente en el entrenamient
 165~restantes derivan de clústeres asignados a validación o test y quedan excluidos por
 la regla de asignación consciente de grupos descrita en la
 Sección~\ref{sec:aumentacion}. Esta cifra incorpora el corpus
-completo de Rahman et~al.\ \citep{Rahman2022}, cuyos \textit{namespaces} cruzados
+completo de \citet{Rahman2022}, cuyos \textit{namespaces} cruzados
 se resolvieron mediante descarga autenticada desde GitHub, lo que amplió
 sustancialmente el número de clústeres \textit{isolated} respecto a las fases
 experimentales preliminares descritas en la Sección~\ref{sec:layer2} del
@@ -294,7 +294,7 @@ una arista dirigida desde cada nodo lateral hacia los demás nodos de su mismo
 La convivencia de los cinco tipos sobre un mismo par de nodos se resuelve por orden de
 inserción y no por una jerarquía explícita de prioridades. Las aristas se añaden en la
 secuencia proximidad de directorio (tipo~0), alcance de privilegio (tipo~1), movimiento
-lateral (tipo~2), co-espacio de nombres (tipo~3) y escalada \ac{RBAC} (tipo~4). Las de
+lateral (tipo~2), coespacio de nombres (tipo~3) y escalada \ac{RBAC} (tipo~4). Las de
 alcance de privilegio son las únicas que sobrescriben incondicionalmente cualquier
 etiqueta previa, de modo que un nodo con capacidad de escape nunca queda degradado a
 mero vecino; los cuatro tipos restantes se emiten bajo la guarda \texttt{not
@@ -463,9 +463,9 @@ minoría a ser la mayoría en el conjunto de entrenamiento. Los tres recuentos v
 un pliegue a otro, ya que las variantes de los clústeres reservados para validación se
 excluyen en cada iteración: entre 360 y 405~grafos de \textit{attack\_chain} aumentados
 frente a 17--18 \textit{clean} y 361--371 \textit{isolated}. La
-Ecuación~\ref{eq:class_weights} se auto-adapta a esta nueva distribución
+Ecuación~\ref{eq:class_weights} se autoadapta a esta nueva distribución
 asignando mayor peso a \textit{clean} e \textit{isolated}, y menor peso a
-\textit{attack\_chain}, compensando el efecto de la sobre-representación creada por
+\textit{attack\_chain}, compensando el efecto de la sobrerrepresentación creada por
 la aumentación.
 
 \subsection{Aumentación de datos}
@@ -504,7 +504,7 @@ La asignación de variantes a particiones es \textbf{consciente de grupos}
 (\textit{group-aware}): una variante aumentada solo puede entrar en una partición
 de entrenamiento si su grafo base pertenece a esa misma partición. Las variantes
 derivadas de clústeres de validación o de test se excluyen del entrenamiento por
-completo, ya que entrenar con casi-duplicados de un grafo de evaluación
+completo, ya que entrenar con casi duplicados de un grafo de evaluación
 constituiría fuga de datos.
 
 El particionado es además \textbf{consciente de familias de plantilla}: los
@@ -561,10 +561,10 @@ La selección se realiza mediante torneo de tamaño~3, con elitismo del 10\,\%; 
 es aritmético (media de los dos padres) con probabilidad 0,7; la mutación combina
 perturbación gaussiana (\(\sigma\,=\,0{,}08\), tasa del 15\,\%) con una mutación de
 frontera (tasa del 5\,\%) que salta a los vértices del símplex, seguida de
-re-proyección al dominio válido (\(w_{\text{rf}} \geq 0\)); la población inicial se
+reproyección al dominio válido (\(w_{\text{rf}} \geq 0\)); la población inicial se
 siembra con los vértices y puntos medios del símplex y con muestreo de Dirichlet, y el
 criterio de parada es 150~generaciones.
-Como \textit{baseline} determinístico, antes de la optimización genética se
+Como \textit{baseline} determinista, antes de la optimización genética se
 ejecuta una búsqueda en rejilla 2D con paso \(1/20\) (231~evaluaciones); la
 comparación de su óptimo con el resultado del \ac{GA} se discute en la
 Sección~\ref{sec:layer3}.
@@ -590,7 +590,7 @@ Permiten al operador interpretar directamente la puntuación: cualquier clúster
 \subsection{Restricción de viabilidad estructural}
 \label{sec:gate_estructural}
 
-Una cadena de ataque multi-salto requiere, por definición, alcanzabilidad entre al
+Una cadena de ataque multisalto requiere, por definición, alcanzabilidad entre al
 menos dos manifiestos; un grafo de clúster con un único nodo no puede albergarla.
 Esta propiedad, verificada sobre el corpus completo (los 592~grafos de cadena
 —37 originales y 555 variantes aumentadas— tienen \(\geq\)2 nodos y \(\geq\)1 arista,

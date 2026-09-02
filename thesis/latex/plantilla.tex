@@ -21,6 +21,16 @@
 \documentclass[12pt,a4paper,spanish,oneside]{book}
 \usepackage{estilo_unir-1}
 \usepackage[natbibapa]{apacite}  % natbibapa enables \citep, \citet etc.
+% --- Ajustes APA 7 sobre apacite -------------------------------------------
+% apacite implementa APA 6 y, con el fichero de idioma español (spanish.apc),
+% abrevia «et al.» como «y cols.». APA 7 en español mantiene «et al.», de modo
+% que se restituye tras cargar el idioma.
+\AtBeginDocument{%
+  \renewcommand{\BOthers}[1]{et~al.\hbox{}}%
+  \renewcommand{\BOthersPeriod}[1]{et~al.\hbox{}}%
+}
+% APA 7 sustituye el prefijo «doi:» por el DOI en forma de URL resoluble.
+\renewcommand{\doiprefix}{https://doi.org/}
 % amsmath, graphicx y hyperref ya los carga estilo_unir-1, que se lee antes.
 \usepackage{bookmark}
 \hypersetup{hidelinks}  % enlaces navegables sin recuadros de color (aspecto elegante)
@@ -95,6 +105,12 @@
 %\includeonly{chapters/06_evaluacion}
 
 \begin{document}
+% APA 7 abrevia con «et al.» desde la primera cita en los trabajos de tres o más
+% autores, a diferencia de APA 6 —que apacite implementa— y que desglosaba todos
+% los autores la primera vez. \shortcites fuerza la forma breve en esos trabajos.
+\shortcites{Velickovic2018,Hamilton2017,Xu2019,Zhou2020,Pedregosa2011,Rahman2022,%
+Malul2024,Bilot2023,Lo2022,Li2022,Hagberg2008,Paszke2019,Jabeen2022,Hutchins2011,%
+GNNSurvey2024,Lin2017,Bangor2009}
 \renewcommand{\listfigurename}{Índice de figuras}
 \renewcommand{\listtablename}{Índice de tablas}
 \renewcommand{\contentsname}{Índice de contenidos}

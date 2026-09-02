@@ -161,7 +161,7 @@ arrow(ax, 1.75, 2.9, 2.2)
 box(ax, 2.2, 1.15, 1.75, 3.5, None, None, _A_BLUE)
 ax.text(3.075, 4.35, 'CAPA 1', ha='center', fontsize=9.5, fontweight='bold', color='white', zorder=4)
 tree_glyph(ax, 3.075, 3.55, _A_BLUE)
-ax.text(3.075, 2.55, 'Random Forest\n500 árboles\n25 features', ha='center', va='center',
+ax.text(3.075, 2.55, 'Random Forest\n500 árboles\n28 características', ha='center', va='center',
         fontsize=9, color='#ecf0f1', zorder=4)
 range_bar(ax, 2.55, 1.35, 1.05, 0.16, _A_BLUE, 'risk_score')
 arrow(ax, 3.95, 2.9, 4.4)
@@ -179,7 +179,7 @@ arrow(ax, 6.1, 2.9, 6.55)
 box(ax, 6.55, 1.15, 1.75, 3.5, None, None, _A_GREEN)
 ax.text(7.425, 4.35, 'CAPA 2', ha='center', fontsize=9.5, fontweight='bold', color='white', zorder=4)
 mini_graph(ax, 7.425, 3.55, _A_GREEN, attention=True)
-ax.text(7.425, 2.55, 'GAT\n3 capas, 4 heads\npooling mean+max', ha='center', va='center',
+ax.text(7.425, 2.55, 'GAT\n3 capas, 4 cabezas\npooling mean+max', ha='center', va='center',
         fontsize=9, color='#ecf0f1', zorder=4)
 range_bar(ax, 6.9, 1.35, 1.05, 0.16, _A_GREEN, 'p_chain')
 arrow(ax, 8.3, 2.9, 8.75)
@@ -505,7 +505,7 @@ _file_stack(ax, 6.1, 9.55, GRAY, n=3, label='N manifiestos\nYAML')
 ax.plot([5.0, 6.1], [9.95, 9.95], color=GRAY, lw=1.2, linestyle=(0, (2, 1.5)), zorder=2)
 
 _box(ax, 3.4, 7.85, 3.2, 0.9, 'extract_cluster_features()',
-     'yaml_parser.py  ·  26 features/nodo', GRAY, fs=9.5)
+     'yaml_parser.py  ·  26 características/nodo', GRAY, fs=9.5)
 _varrow(ax, 5.0, 7.85, 6.95)
 
 _box(ax, 3.4, 6.05, 3.2, 0.9, 'build_cluster_graph()',
@@ -520,9 +520,9 @@ _box(ax, 0.5, y_branch, 2.2, 0.9, 'Capa 1 · RF', 'predict_risk_scores()', BLUE,
 _box(ax, 3.9, y_branch, 2.2, 0.9, 'Capa 2 · GAT', 'run_gnn_ensemble()', GREEN, fs=9.5)
 _box(ax, 7.3, y_branch, 2.2, 0.9, 'Señal de escape', 'compute_escape_signal()', RED, fs=9.5)
 
-ax.text(1.6, y_branch - 0.26, 'mean_rf_risk = 0,996', ha='center', fontsize=9,
+ax.text(1.6, y_branch - 0.26, 'mean_rf_risk = 0,9997', ha='center', fontsize=9,
         color=BLUE, style='italic')
-ax.text(5.0, y_branch - 0.26, 'chain_probability = 0,710', ha='center', fontsize=9,
+ax.text(5.0, y_branch - 0.26, 'chain_probability = 0,5445', ha='center', fontsize=9,
         color=GREEN, style='italic')
 ax.text(8.4, y_branch - 0.26, 'escape_signal = 1,0', ha='center', fontsize=9,
         color=RED, style='italic')
@@ -538,7 +538,7 @@ _varrow(ax, fx, fy - 0.95, 0.75)
 _gauge(ax, 2.2, -0.05, 5.6, 0.5, score=0.947)
 _varrow(ax, fx, -0.15, -0.95)
 
-_box(ax, 3.3, -1.45, 3.4, 0.9, 'ATTACK_CHAIN', 'informe text / JSON', RED, fs=9.5)
+_box(ax, 3.3, -1.45, 3.4, 0.9, 'ATTACK_CHAIN', 'informe de texto / JSON', RED, fs=9.5)
 
 plt.tight_layout()
 plt.savefig(os.path.join(OUT, 'fig_cli_pipeline.pdf'), bbox_inches='tight')

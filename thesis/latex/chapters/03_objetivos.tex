@@ -4,7 +4,7 @@
 % ============================================================
 
 Este capítulo define los objetivos del trabajo y describe la metodología seguida
-para alcanzarlos. En primer lugar se formula el objetivo general y los objetivos
+para alcanzarlos. En primer lugar se formulan el objetivo general y los objetivos
 específicos; los de naturaleza cuantificable incorporan criterios de éxito
 medibles. A continuación se describen las seis etapas del proceso de trabajo
 que estructuran el resto del documento. Estas etapas son independientes de las
@@ -81,8 +81,8 @@ evidencia de cumplimiento.
   \item[OE3.] Diseñar un esquema de grafo de clúster con tipos de arista
     semánticamente significativos para el dominio Kubernetes:
     proximidad de directorio, alcance de privilegio, movimiento lateral mediante
-    cuenta de servicio, co-espacio de nombres semántico y escalada \ac{RBAC}. El
-    criterio de éxito se formula a nivel de arquitectura: la configuración
+    cuenta de servicio, coespacio de nombres semántico y escalada \ac{RBAC}. El
+    criterio de éxito se formula en el plano de la arquitectura: la configuración
     adoptada —\ac{GAT} con \textit{embedding} de tipos de arista— debe igualar o
     superar en F1 macro y Precisión@5 a una \ac{GCN} sin tipado de arista bajo
     idéntico protocolo de evaluación. Este contraste varía simultáneamente el
@@ -153,7 +153,7 @@ continuación en el orden en que se ejecutaron:
 \textbf{Etapa~1 — Adquisición de datos.} Descarga y normalización de manifiestos
 Kubernetes de cinco fuentes públicas complementarias (agrupadas en
 cuatro categorías): el conjunto de datos
-de Rahman et~al.\ \citep{Rahman2022} (repositorios reales etiquetados), BishopFox
+de \citet{Rahman2022} (repositorios reales etiquetados), BishopFox
 BadPods \citep{BishopFox2021} (pods intencionadamente vulnerables), Kubernetes
 Goat \citep{KubernetesGoat} (escenarios de vulnerabilidad) y repositorios de
 seguridad adicionales (CTF, laboratorios y \textit{fixtures}). El criterio de
@@ -165,7 +165,7 @@ clase \textit{attack\_chain} bajo la regla de etiquetado empleada, de modo que s
 incorporación aumentaría el volumen del conjunto sin aportar ejemplos de la clase
 minoritaria que la Capa~2 debe aprender a discriminar. La contrapartida es un sesgo
 de muestreo que se documenta como decisión de selección deliberada: los
-779~manifiestos incorporados por esta vía sobre-representan configuraciones
+779~manifiestos incorporados por esta vía sobrerrepresentan configuraciones
 vulnerables respecto de la distribución esperable en un clúster de producción, por
 lo que las tasas de prevalencia del corpus no admiten lectura como estimaciones
 poblacionales. Las fuentes de repositorios reales se incorporaron sin aplicar este
@@ -173,7 +173,7 @@ filtro, lo que acota el sesgo a una fracción identificable del conjunto.
 
 \textbf{Etapa~2 — Extracción de características y construcción del grafo.} Extracción
 de 28 características por manifiesto (25 indicadores binarios y 3 agregados
-derivados) mediante análisis estático multi-herramienta
+derivados) mediante análisis estático multiherramienta
 (Sección~\ref{sec:features_table}) y construcción del grafo de
 clúster con cinco tipos de arista (Tabla~\ref{tab:edge_types}). En esta etapa se
 realizó también la validación de cobertura de la bandera \texttt{HOSTPATH\_MOUNT},
@@ -200,7 +200,7 @@ del \textit{ensemble} de tres componentes (Random Forest, \ac{GNN}, señal de es
 Algoritmo Genético sobre las predicciones \textit{out-of-fold} de la validación
 cruzada de la Capa~2, aplicación de una restricción de viabilidad estructural en el
 \textit{ranking} final (un grafo de un solo nodo no puede albergar una cadena de
-ataque multi-salto) y evaluación final sobre el conjunto de test reservado desde
+ataque multisalto) y evaluación final sobre el conjunto de test reservado desde
 el inicio y no utilizado en ninguna etapa de entrenamiento ni selección de
 hiperparámetros.
 

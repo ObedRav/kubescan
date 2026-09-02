@@ -32,7 +32,7 @@ justificación concreta de cada uno.
     dos obligaciones separables sobre cada manifiesto \acs{YAML}. La primera es
     clasificarlo como seguro o mal configurado —\textit{misconfigured} en la
     nomenclatura del modelo—. La segunda es producir un
-    índice de severidad en tres niveles (limpio, bajo\,--\,medio, alto\,--\,crítico)
+    índice de severidad en tres niveles (limpio, bajo-medio, alto-crítico)
     que ordene las configuraciones erróneas detectadas por gravedad.
     \textit{Criterio de aceptación:} ambas obligaciones se consideran satisfechas
     cuando cada una de las dos clasificaciones alcanza F1 macro superior a 0,85
@@ -86,9 +86,9 @@ justificación concreta de cada uno.
     umbral pero no protocolo de cálculo.
     \textit{Precisión estadística:} el tamaño del conjunto de test reservado
     (86~grafos, 5~cadenas) hace que el intervalo de confianza \textit{bootstrap}
-    al 95\,\% de la Precisión@5 abarque \([0{,}60,\ 1{,}00]\) y por tanto contenga
+    al 95\,\% de la Precisión@5 abarque \([0{,}60;\ 1{,}00]\) y por tanto contenga
     el propio umbral, de modo que la superación del criterio debe leerse como
-    consistente con el objetivo de diseño y no como una garantía estadística.
+    coherente con el objetivo de diseño y no como una garantía estadística.
     \textit{Justificación:} un equipo de seguridad revisa manualmente un número
     reducido de alertas por jornada; un \textit{ranking} que sitúe las cadenas reales en
     las primeras posiciones hace viable esa revisión sobre un volumen de
@@ -179,7 +179,7 @@ análisis estático como vía principal responde al principio \textit{shift-left
 security}: detectar una cadena de ataque antes del despliegue evita el coste de
 remediarla en producción, mientras que las herramientas de grafo de ataque sobre
 clúster activo (KubeHound \citep{KubeHound2023}, IceKube
-\citep{IceKube2023}) solo pueden operar \textit{a posteriori} del despliegue y
+\citep{IceKube2023}) solo pueden operar con posterioridad al despliegue y
 requieren acceso con privilegios elevados a \texttt{kubectl} sobre un clúster ya
 en ejecución. La vía de consulta directa se mantiene
 como capacidad complementaria para auditorías puntuales sobre clústeres ya
@@ -201,11 +201,11 @@ tolerancia al desequilibrio de clases y la granularidad de la puntuación contin
 que produce, requisito este último derivado de que dicha salida se emplea como
 característica de nodo en la Capa~2.
 
-A las tres capas se añade una cuarta componente arquitectónica: la restricción
+A las tres capas se añade un cuarto componente arquitectónico: la restricción
 de viabilidad estructural descrita en la Sección~\ref{sec:gate_estructural}, que
 excluye del \textit{ranking} de riesgo aquellos clústeres cuya topología no
 puede albergar una cadena de ataque, como los compuestos por un único recurso.
-Su inclusión no responde a una preferencia de diseño sino a una necesidad
+Su inclusión no responde a una preferencia de diseño, sino a una necesidad
 verificada empíricamente: sin ella, la Precisión@1 sobre el conjunto de test
 reservado cae a 0,00 y la Precisión@5 a 0,60, valor este último situado por
 debajo del umbral que el propio RF-5 fija como criterio de aceptación. La
@@ -295,8 +295,8 @@ Capa~2. La F1 macro calcula la media no ponderada de la F1 de cada clase, otorga
 importancia a las clases minoritarias (configuraciones erróneas críticas) que a las
 mayoritarias (manifiestos seguros). Esta propiedad es fundamental en conjuntos de datos de
 seguridad desequilibrados, donde la exactitud (\textit{accuracy}) sería una métrica
-engañosa —sobre el conjunto de test de la Capa~1 (566~muestras), un clasificador
-que predice siempre «seguro» obtendría una exactitud del 56,3\,\% pero F1 macro
+engañosa: sobre el conjunto de test de la Capa~1 (566~muestras), un clasificador
+que predice siempre «seguro» obtendría una exactitud del 56,4\,\% pero F1 macro
 del 36,0\,\%.
 
 \paragraph{\ac{AUC}-\acs{ROC}.} Se aplica al modelo binario de la Capa~1 y mide
@@ -317,6 +317,7 @@ presentes en el conjunto evaluado:
        {\min(k,\, n_{\text{pos}})}
   \label{eq:precision_at_k}
 \end{equation}
+\addequationtoindex{Precisión@\textit{k} normalizada}
 
 Esta definición coincide con la fracción convencional sobre \(k\) únicamente
 cuando el conjunto evaluado contiene al menos \(k\) cadenas; cuando contiene

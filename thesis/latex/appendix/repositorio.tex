@@ -87,7 +87,7 @@ se reproduce mediante los objetivos del \texttt{Makefile} (\texttt{make data},
 
 El estudiante es el único autor de todos los \textit{commits} del repositorio.
 Los datos públicos utilizados provienen de las fuentes citadas en la
-Sección~\ref{sec:fuentes_datos} (Rahman et~al., BishopFox BadPods, Kubernetes Goat y repositorios
+Sección~\ref{sec:fuentes_datos} (\citealp{Rahman2022}; BishopFox BadPods, Kubernetes Goat y repositorios
 de seguridad adicionales de dominio público).
 
 \section*{Catálogo de características del clasificador}
@@ -159,7 +159,7 @@ Nombre & Grupo & Rol en grafo & Descripción \\
 \texttt{USES\_DEFAULT\_SA} & Extendida & LAT & Usa la ServiceAccount \texttt{default} del \textit{namespace} \\
 \texttt{UNTRUSTED\_REGISTRY} & Extendida & — & Imagen proveniente de un registro no confiable \\
 \texttt{HOSTPATH\_MOUNT} & Extendida & ESC & Monta ruta del sistema de ficheros del anfitrión \\
-\texttt{risk\_score} & Nodo (Capa~2) & — & Probabilidad Random Forest de clase misconfigured \(\in [0,1]\) \\
+\texttt{risk\_score} & Nodo (Capa~2) & — & Puntuación de severidad por manifiesto \(\in [0,1]\): heurística determinista en el corpus, probabilidad del Random Forest en inferencia (L10) \\
 \bottomrule
 \end{tabular}
 \fuentepropia

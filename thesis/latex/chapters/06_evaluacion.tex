@@ -36,7 +36,7 @@ con esta línea de base se presentan en las secciones siguientes.
 
 \subsection{Capa 1 en contexto}
 
-Rahman et~al.\ \citep{Rahman2022}, cuyos datos forman la base del presente
+\citet{Rahman2022}, cuyos datos forman la base del presente
 trabajo, no publican modelos de clasificación supervisada sobre el mismo
 conjunto: el objetivo de su trabajo era la construcción del conjunto de datos y el
 análisis de la densidad de configuraciones erróneas, no la predicción, por lo que no
@@ -65,7 +65,7 @@ Kubernetes mediante \acs{GNN}, por lo que la Capa~2 no dispone de una
 línea de base directamente comparable. Las referencias más cercanas son los
 trabajos de \acs{GNN} para \ac{IDS} en red, como E-GraphSAGE
 \citep{Lo2022}, que documenta tasas de detección superiores a las de
-clasificadores tabulares clásicos sobre las re-publicaciones en formato NetFlow
+clasificadores tabulares clásicos sobre las republicaciones en formato NetFlow
 de los conjuntos de referencia del área; y la literatura que documenta la
 escasez de conjuntos de datos de grafos etiquetados en ciberseguridad
 \citep{GNNSurvey2024}. Cabe puntualizar que esta última no establece un régimen
@@ -76,7 +76,7 @@ ventaja del componente estructural
 se mide sobre el conjunto de test genuinamente no visto: P@5 pasa de 0,40
 (solo Random Forest) a 0,80 (configuraciones con \ac{GNN}) y P@1 de 0,00 a 1,00
 (Tabla~\ref{tab:ensemble_ablation}; Sección~\ref{sec:layer2} y siguientes),
-indicando que la información estructural del grafo es decisiva para identificar
+lo que indica que la información estructural del grafo es decisiva para identificar
 cadenas de ataque reales. La varianza entre pliegues de la fase final
 (\(\sigma\)\,=\,0,160 para P@5) no se contrasta aquí con ninguna cota externa,
 al no disponerse de una referencia que la establezca para conjuntos de este
@@ -85,7 +85,7 @@ particionado por familias concentra las cadenas de validación de cada pliegue e
 1, 1, 4, 5 y 5~familias independientes respectivamente
 (Sección~\ref{sec:layer2}), de modo que la desviación estándar entre pliegues
 mide en buena parte la dispersión de dificultad entre familias. El análisis
-multi-semilla (Sección~\ref{sec:multisemilla}) matiza esa lectura: cuatro de los
+multisemilla (Sección~\ref{sec:multisemilla}) matiza esa lectura: cuatro de los
 cinco pliegues puntúan de forma idéntica con las tres semillas ensayadas, pero el
 único que varía —el pliegue~1, correspondiente a la familia
 \texttt{badpods\_*}— es también el que más contribuye a esa desviación. En ese
@@ -151,7 +151,7 @@ La ausencia de falsos negativos es la propiedad más crítica para seguridad ope
 significa que ningún manifiesto con configuraciones erróneas reales escapa al filtrado de
 la Capa~1, independientemente de cuántas banderas estén activas o de su rareza en el
 conjunto de datos. Los 3~falsos positivos corresponden a manifiestos seguros que acumulan varias
-features de riesgo de severidad media (por ejemplo, \texttt{NO\_RUN\_AS\_NON\_ROOT}
+características de riesgo de severidad media (por ejemplo, \texttt{NO\_RUN\_AS\_NON\_ROOT}
 y \texttt{IMAGE\_USES\_LATEST} simultáneamente), pero que no tienen ninguna
 bandera de escape activa; el operador de seguridad puede descartarlos rápidamente
 inspeccionando el campo \texttt{flags} de la salida \ac{JSON}.
@@ -166,7 +166,7 @@ la señal transmitida a la \ac{GNN} no es un bit binario sino una puntuación
 continua que ordena los manifiestos por densidad de configuraciones erróneas. No se
 aplica ninguna técnica de calibración de probabilidades, por lo que el valor no
 debe interpretarse como una probabilidad calibrada en sentido estricto; el
-ordenamiento resultante es, en cambio, consistente con la matriz de confusión de
+ordenamiento resultante es, en cambio, coherente con la matriz de confusión de
 la Figura~\ref{fig:rf_confusion}.
 
 \begin{figure}[htbp]
@@ -190,7 +190,7 @@ rareza en el conjunto de datos, pero son identificadas correctamente cuando est�
 como confirma la ausencia de falsos negativos en la clasificación binaria. Las
 dos primeras características de la Figura~\ref{fig:rf_importance} (en rojo)
 concentran el 48\,\% de la capacidad discriminativa total del modelo. Un estudio
-de ablación eliminando \texttt{total\_misconfigs} produce F1 idéntico y la misma
+de ablación que elimina \texttt{total\_misconfigs} produce F1 idéntico y la misma
 matriz de confusión, lo que confirma que el modelo no depende de esa
 característica derivada: su señal es recuperable a partir de las banderas que la
 componen.
@@ -294,7 +294,7 @@ La Tabla~\ref{tab:gnn_evolution} muestra la evolución de los resultados de la
 primeras, la aumentación de datos y la corrección del vector de escape
 \texttt{HOSTPATH\_MOUNT} contribuyeron de forma independiente y complementaria. La quinta fase corrige el protocolo de particionado: las fases~1--4
 incluían en el entrenamiento variantes aumentadas derivadas de los
-clústeres de validación y test (fuga de datos por casi-duplicados), por lo que sus
+clústeres de validación y test (fuga de datos por casi duplicados), por lo que sus
 métricas están infladas de forma optimista. Esa quinta fase aplica el protocolo
 \textit{group-aware} descrito en el Capítulo~\ref{cap:herramienta} (las variantes acompañan a su
 clúster base y los clústeres de test quedan fuera de los pliegues) e incorpora el
@@ -356,8 +356,7 @@ y 5~cadenas respectivamente, por lo que el denominador es 5 en todos ellos y el
 techo 1,0 exige cinco aciertos en las cinco primeras posiciones; únicamente el
 pliegue~0 lo consigue.
 
-Las cuatro primeras fases de la Tabla~\ref{tab:gnn_evolution} corresponden al
-protocolo preliminar. El objetivo de diseño de \textit{ranking} es P@5\,>\,0,70 y el umbral
+El objetivo de diseño de \textit{ranking} es P@5\,>\,0,70 y el umbral
 de F1 fijado para la Capa~1, tomado como referencia, 0,85; las desviaciones típicas
 representan la desviación estándar entre los 5~pliegues de validación cruzada.
 
@@ -370,8 +369,8 @@ los pliegues de validación cruzada particionan los 513~grafos originales no
 reservados para test (32~cadenas). El modelo obtiene
 P@5\,=\,0,720\,\(\pm\)\,0,160, alcanzando el objetivo con la semilla de
 entrenamiento desplegada (42); en las tres semillas (7, 42, 123) la media es
-de 0,68\,\(\pm\)\,0,03\footnote{Las desviaciones típicas de las métricas del modelo
-se expresan como desviación poblacional (\(\text{ddof}=0\)), consistente con la
+de 0,68\,\(\pm\)\,0,033\footnote{Las desviaciones típicas de las métricas del modelo
+se expresan como desviación poblacional (\(\text{ddof}=0\)), coherente con la
 instrumentación de NumPy empleada en la validación cruzada; la del \ac{SUS}
 (Sección~\ref{sec:usabilidad}) sigue la convención muestral (\(n-1\)) habitual en su
 literatura.}, con el objetivo dentro de una desviación típica de la
@@ -524,7 +523,7 @@ primera conecta directamente nodos de escape con el resto del clúster, mientras
 la segunda simplemente refleja la organización de directorios del repositorio.
 \ac{GAT} puede aprender esta distinción durante el entrenamiento, mientras que \ac{GCN} asigna
 pesos uniformes a todos los vecinos, diluyendo la señal de escape con ruido de
-co-localización.
+colocalización.
 
 Esta hipótesis se cuantifica empíricamente mediante un experimento de ablación
 controlado sobre el corpus completo, con particionado, semilla, función de
@@ -578,7 +577,7 @@ como trabajo futuro (TF6, Sección~\ref{sec:trabajo_futuro}).
 Para acotar la dependencia del resultado respecto de la semilla de entrenamiento,
 la configuración final se reentrenó con tres semillas (7, 42, 123;
 Figura~\ref{fig:multiseed_folds}) manteniendo fijo el particionado (semilla~42):
-re-sortear también las particiones confundiría la varianza del modelo con la
+resortear también las particiones confundiría la varianza del modelo con la
 asignación de familias a pliegues, que la Sección~\ref{sec:layer2} muestra
 dominante. Las métricas de test aplican la restricción de viabilidad estructural
 (Sección~\ref{sec:gate_estructural}).
@@ -594,7 +593,7 @@ entrenamiento quedan confundidas y no pueden separarse con tres semillas. Lo que
 el experimento sí establece es que cuatro quintas partes del particionado son
 invariantes a la semilla y que la incertidumbre residual de la estimación de
 validación cruzada se localiza en una sola familia de plantilla. Segunda: las
-métricas de test a nivel de despliegue son estables —P@1\,=\,1,00 y
+métricas de test del despliegue son estables —P@1\,=\,1,00 y
 P@3\,=\,1,00 con las tres semillas, y P@5 entre 0,80 y 1,00—, de modo que la
 sensibilidad a la semilla afecta a la estimación de validación cruzada, no al
 comportamiento observable del sistema sobre repositorios reales no vistos.
@@ -627,9 +626,9 @@ corrección sembró los vértices y aristas del símplex en la población inicia
 añadió una mutación de salto de frontera de baja probabilidad; con este cambio,
 el \ac{GA} pasó a converger de forma determinista, en las 5~semillas
 independientes probadas, al mismo punto que una búsqueda en rejilla
-determinística (Sección~\ref{sec:capa3_diseno}, 231~evaluaciones): el vértice de
+determinista (Sección~\ref{sec:capa3_diseno}, 231~evaluaciones): el vértice de
 señal de escape pura (\(w_{\text{esc}}=1\), \textit{objective}\,=\,0,86),
-confirmando que la función objetivo tenía un óptimo global único y alcanzable, no
+lo que confirma que la función objetivo tenía un óptimo global único y alcanzable, no
 una meseta degenerada. Sin embargo, ese óptimo \textit{out-of-fold} no
 generalizaba: al puntuar únicamente por la señal binaria de escape, el \textit{ranking} se
 colapsaba a un grupo de empates que fallaba estructuralmente ante cualquier
@@ -703,10 +702,10 @@ con 3 de las 5~cadenas correctamente clasificadas).
 \end{figure}
 
 Dado el tamaño del conjunto de test, estas estimaciones llevan asociados
-intervalos de confianza amplios (bootstrap de 10\,000 remuestreos, 95\,\%):
-P@5 \([0{,}60,\ 1{,}00]\), \ac{FPR}\_clean \([0{,}00,\ 0{,}40]\) y F1~macro
-\([0{,}66,\ 1{,}00]\). Los valores puntuales deben interpretarse como
-\textit{consistentes con} los objetivos de diseño, no como demostraciones
+intervalos de confianza amplios (\textit{bootstrap} de 10.000 remuestreos, 95\,\%):
+P@5 \([0{,}60;\ 1{,}00]\), \ac{FPR}\_clean \([0{,}00;\ 0{,}40]\) y F1~macro
+\([0{,}66;\ 1{,}00]\). Los valores puntuales deben interpretarse como
+\textit{coherentes con} los objetivos de diseño, no como demostraciones
 concluyentes; la ampliación adicional del corpus de test es la vía directa para
 estrechar estos intervalos (TF1, Sección~\ref{sec:trabajo_futuro}). La
 Tabla~\ref{tab:ensemble_ablation} recoge las tres métricas de \textit{ranking} del
@@ -781,7 +780,7 @@ conjunto de test y debe leerse con la cautela que impone ese tamaño.
 
 El único fallo de \textit{ranking} del conjunto de test ilustra el error sistemático del
 modelo: \texttt{minik8s-ctf} (posición~6, tras el clúster \textit{isolated}
-multi-nodo \texttt{kubernetes-extras}) es una cadena de 4~nodos cuya
+multinodo \texttt{kubernetes-extras}) es una cadena de 4~nodos cuya
 probabilidad \ac{GNN} es prácticamente nula (0,0003) y cuyo \textit{risk score}
 medio del Random Forest es 0,0; su única señal activa es la bandera binaria de escape (la mitad
 de sus nodos tienen capacidad de escape). Cuando la
@@ -844,7 +843,7 @@ la Tabla~\ref{tab:ensemble_ablation}: P@1\,=\,1,00, P@3\,=\,1,00, P@5\,=\,0,80 y
 \ac{FPR}\_clean\,=\,0,00 sobre 86~grafos con 5~cadenas de ataque de repositorios
 reales, no vistos durante el desarrollo; dado el tamaño reducido de
 este conjunto, los intervalos de confianza al 95\,\% son amplios (P@5
-\(\in\,[0{,}60,\ 1{,}00]\), \ac{FPR}\_clean \(\in\,[0{,}00,\ 0{,}40]\),
+\(\in\,[0{,}60;\ 1{,}00]\), \ac{FPR}\_clean \(\in\,[0{,}00;\ 0{,}40]\),
 Sección~\ref{sec:layer3}), por lo que la cifra debe leerse como indicativa.
 
 Esta cifra es la calidad global de la herramienta porque resume, en un único
@@ -1004,10 +1003,12 @@ concentrados en tareas secundarias u opcionales.
 La usabilidad se midió con la escala \acs{SUS} de diez ítems
 \citep{Brooke1996}, que produce una puntuación en el rango
 0--100. La media obtenida fue de \textbf{88,3\,\(\pm\)\,10,4} (puntuaciones
-individuales de 100, 80 y 85), consistente con la media de referencia del sector
+individuales de 100, 80 y 85), coherente con la media de referencia del sector
 (68) y situada en la banda cualitativa «excelente» de la escala de adjetivos de
 \citet{Bangor2009}. Con \(n=3\), sin embargo, el intervalo de confianza al 95\,\%
-de la media abarca \([62{,}5;\ 114{,}2]\) y contiene ese valor de referencia, por
+de la media abarca \([62{,}5;\ 114{,}2]\) —su extremo superior rebasa el máximo
+de la escala, artefacto de la aproximación normal con una muestra tan reducida— y
+contiene ese valor de referencia, por
 lo que los datos no permiten afirmar que la herramienta se sitúe por encima de
 él. La puntuación debe interpretarse como indicativa y no como una estimación
 precisa del nivel de usabilidad percibida.
