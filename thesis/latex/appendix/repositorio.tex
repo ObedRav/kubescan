@@ -3,7 +3,7 @@
 \label{ap:repositorio}
 % ============================================================
 
-El código fuente completo del sistema \textit{kubescan}, incluyendo los
+El código fuente completo del sistema kubescan, incluyendo los
 \textit{scripts} de adquisición de datos, entrenamiento de modelos,
 construcción de grafos y la interfaz de línea de comandos, se encuentra
 disponible en el siguiente repositorio de GitHub:
@@ -22,27 +22,27 @@ El repositorio incluye los siguientes componentes:
     \texttt{test\_graph\_builder.py}, \texttt{test\_gat\_encoder.py},
     \texttt{test\_rf\_classifier.py}, \texttt{test\_ga\_ensemble.py},
     \texttt{test\_device\_utils.py} y \texttt{test\_properties.py}, este último
-    basado en pruebas de propiedades con \textit{Hypothesis}) y una prueba de
+    basado en pruebas de propiedades con Hypothesis) y una prueba de
     integración de extremo a extremo sobre la \ac{CLI}
     (\texttt{integration/test\_cli\_scan.py}).
   \item \textbf{\texttt{research/scripts/}}: \textit{scripts} de adquisición y
     preprocesamiento de los manifiestos \ac{YAML} (fases 1 y 2).
   \item \textbf{\texttt{research/models/}}: código de entrenamiento del Random
-    Forest (\texttt{train\_rf.py}), de la \ac{GAT} (\texttt{train\_gnn.py}), y del
+    Forest (\texttt{train\_rf.py}), de la \ac{GAT} (\texttt{train\_gnn.py}) y del
     Algoritmo Genético (\texttt{run\_ga\_ensemble.py}), junto a los \textit{scripts}
     de verificación que reproducen las comprobaciones citadas en el
     Capítulo~\ref{cap:conclusiones}: \texttt{verify\_label\_circularity.py}, que
     contrasta la etiqueta de la Capa~1 con la disyunción de las columnas de
-    misconfiguración, y \texttt{verify\_risk\_score\_channel.py}, que documenta la
+    configuración errónea, y \texttt{verify\_risk\_score\_channel.py}, que documenta la
     procedencia y la cobertura del atributo nodal~25 y ejecuta su ablación sobre
     el conjunto de test.
   \item \textbf{\texttt{research/data/}}: los grafos de clúster en formato
     \texttt{.npz} (NumPy, con campos \texttt{x}, \texttt{edge\_index},
     \texttt{edge\_attr}, \texttt{y}, \texttt{node\_labels} y \texttt{risk\_scores})
-    y el dataset tabular en formato \texttt{.csv}.
+    y el conjunto de datos tabular en formato \texttt{.csv}.
   \item \textbf{\texttt{research/models/checkpoints/}}: \textit{checkpoints}
     de los 5~modelos \ac{GAT} entrenados en validación cruzada y el modelo
-    \ac{RF} (disponible también como enlace simbólico en
+    Random Forest (disponible también como enlace simbólico en
     \texttt{kubescan/checkpoints/trained/}).
   \item \textbf{\texttt{thesis/usability-study/}}: protocolo, cuestionario e
     instrumentos del estudio de usabilidad descrito en la
@@ -63,7 +63,7 @@ nuevo del repositorio puede ejecutar \texttt{kubescan scan} sin reentrenar
 ningún modelo. El directorio \texttt{research/models/checkpoints/} contiene los
 cinco \textit{checkpoints} de validación cruzada
 (\texttt{gnn\_fold\_0.pt}--\texttt{gnn\_fold\_4.pt}), el \textit{checkpoint}
-\texttt{gnn\_best.pt}, los dos modelos \ac{RF} serializados en formato
+\texttt{gnn\_best.pt}, los dos modelos Random Forest serializados en formato
 \texttt{.skops} (\texttt{rf\_model.skops} y \texttt{rf\_severity.skops}), los
 pesos del \textit{ensemble} en \texttt{ga\_weights.json} y los ficheros de
 métricas (\texttt{cv\_results.json}, \texttt{rf\_results.json},
@@ -75,7 +75,7 @@ Para garantizar la reproducibilidad, los resultados finales de esta memoria se
 entrenaron y evaluaron sobre una GPU NVIDIA~T4 (CUDA) con Python~3.12, PyTorch~2.11
 (CUDA~12.8), PyTorch Geometric~2.8, scikit-learn~1.6 y NumPy~2.0. Esa
 configuración corresponde al entorno de entrenamiento e investigación, que exige
-GPU y las dependencias completas de \textit{PyTorch Geometric}; el paquete
+GPU y las dependencias completas de PyTorch Geometric; el paquete
 distribuible admite un rango de instalación más amplio y su instalación se
 verificó también en entornos Python~3.10 y~3.11, según se detalla en la
 Sección~\ref{sec:verificacion_requisitos} (RNF-3). Las versiones
@@ -99,14 +99,14 @@ describe en la Sección~\ref{sec:construccion_dataset}.
 
 \begin{table}[htbp]
 \centering\small
-\caption{Características del clasificador \ac{RF} — grupo Rahman (1/3)}
+\caption{Características del clasificador Random Forest — grupo Rahman (1/3)}
 \label{tab:features_a}
 \begin{tabular}{@{}p{4.7cm}llp{4.5cm}@{}}
 \toprule
 Nombre & Grupo & Rol en grafo & Descripción \\
 \midrule
-\texttt{TRUE\_HOST\_PID} & Rahman & ESC & Comparte PID namespace del anfitrión \\
-\texttt{TRUE\_HOST\_IPC} & Rahman & ESC & Comparte IPC namespace del anfitrión \\
+\texttt{TRUE\_HOST\_PID} & Rahman & ESC & Comparte PID \textit{namespace} del anfitrión \\
+\texttt{TRUE\_HOST\_IPC} & Rahman & ESC & Comparte IPC \textit{namespace} del anfitrión \\
 \texttt{TRUE\_HOST\_NET} & Rahman & ESC & Comparte red del anfitrión \\
 \texttt{DOCKERSOCK\_PATH} & Rahman & ESC & Monta socket de Docker \\
 \texttt{CAP\_SYS\_ADMIN} & Rahman & ESC & Capacidad \texttt{SYS\_ADMIN} activa \\
@@ -121,7 +121,7 @@ Nombre & Grupo & Rol en grafo & Descripción \\
 
 \begin{table}[htbp]
 \centering\small
-\caption{Características del clasificador \ac{RF} — grupo Rahman (2/3)}
+\caption{Características del clasificador Random Forest — grupo Rahman (2/3)}
 \label{tab:features_a2}
 \begin{tabular}{@{}p{4.7cm}llp{4.5cm}@{}}
 \toprule
@@ -143,7 +143,7 @@ Nombre & Grupo & Rol en grafo & Descripción \\
 
 \begin{table}[htbp]
 \centering\small
-\caption{Características del clasificador \ac{RF} — grupos derivado y extendido, y nodo (3/3)}
+\caption{Características del clasificador Random Forest — grupos derivado y extendido, y nodo (3/3)}
 \label{tab:features_b}
 \begin{tabular}{@{}p{4.7cm}llp{4.5cm}@{}}
 \toprule
@@ -151,15 +151,15 @@ Nombre & Grupo & Rol en grafo & Descripción \\
 \midrule
 \texttt{cap\_misuse} & Derivada & — & OR lógico de \texttt{CAP\_SYS\_ADMIN} y \texttt{CAP\_SYS\_MODULE} \\
 \texttt{all\_secrets} & Derivada & — & OR de los indicadores de exposición de secretos \\
-\texttt{total\_misconfigs} & Derivada & — & Suma de todas las flags activas \\
+\texttt{total\_misconfigs} & Derivada & — & Suma de todas las banderas activas \\
 \texttt{NO\_RUN\_AS\_NON\_ROOT} & Extendida & — & Sin restricción de usuario no root \\
 \texttt{NO\_READ\_ONLY\_ROOT\_FS} & Extendida & — & Sistema de ficheros raíz con escritura \\
 \texttt{IMAGE\_USES\_LATEST} & Extendida & — & Imagen con \texttt{tag: latest} \\
-\texttt{SA\_AUTOMOUNT\_TOKEN} & Extendida & LAT & \textit{ServiceAccount} con token automontado \\
-\texttt{USES\_DEFAULT\_SA} & Extendida & LAT & Usa la \textit{ServiceAccount} \texttt{default} del \textit{namespace} \\
+\texttt{SA\_AUTOMOUNT\_TOKEN} & Extendida & LAT & ServiceAccount con \textit{token} automontado \\
+\texttt{USES\_DEFAULT\_SA} & Extendida & LAT & Usa la ServiceAccount \texttt{default} del \textit{namespace} \\
 \texttt{UNTRUSTED\_REGISTRY} & Extendida & — & Imagen proveniente de un registro no confiable \\
 \texttt{HOSTPATH\_MOUNT} & Extendida & ESC & Monta ruta del sistema de ficheros del anfitrión \\
-\texttt{risk\_score} & Nodo (Capa~2) & — & Probabilidad \ac{RF} clase misconfigured \(\in [0,1]\) \\
+\texttt{risk\_score} & Nodo (Capa~2) & — & Probabilidad Random Forest de clase misconfigured \(\in [0,1]\) \\
 \bottomrule
 \end{tabular}
 \fuentepropia
@@ -180,7 +180,7 @@ verificación.
 \toprule
 ID & Requisito & Diseño & Verificación \\
 \midrule
-RF-1  & Misconfiguraciones individuales & \ref{sec:capa1_diseno}  & \ref{sec:layer1} \\
+RF-1  & Configuraciones erróneas individuales & \ref{sec:capa1_diseno}  & \ref{sec:layer1} \\
 RF-2  & Cadenas de ataque               & \ref{sec:capa2_diseno}  & \ref{sec:layer2} \\
 RF-3  & Interfaz de línea de comandos   & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
 RF-4  & Formatos de salida              & \ref{sec:implementacion} & \ref{sec:verificacion_requisitos} \\
@@ -207,7 +207,7 @@ Sección~\ref{sec:usabilidad}.
 \label{tab:usab_perfil}
 \begin{tabular}{@{}lllll@{}}
 \toprule
-Participante & Rol & Años \textit{K8s} & \acs{CICD} & Seguridad \\
+Participante & Rol & Años K8s & \acs{CICD} & Seguridad \\
 \midrule
 P1 & Desarrollo/IA & 3--5 & Habitual & Alta \\
 P2 & DevOps/SRE    & 1--3 & Habitual & Alta \\

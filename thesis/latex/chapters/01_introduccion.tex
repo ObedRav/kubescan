@@ -3,9 +3,10 @@
 \label{cap:introduccion}
 % ============================================================
 
-La seguridad de una infraestructura \textit{Kubernetes} queda determinada, en
+La seguridad de una infraestructura Kubernetes queda determinada, en
 buena medida, antes de que el clúster llegue a existir: son los manifiestos
-declarativos los que fijan los privilegios de cada carga de trabajo, los
+declarativos —los ficheros \ac{YAML} que describen el estado deseado de cada
+recurso— los que fijan los privilegios de cada carga de trabajo, los
 montajes que expone al nodo anfitrión y las relaciones de acceso entre recursos.
 Esa configuración se revisa habitualmente recurso a recurso, comprobando cada
 manifiesto contra un catálogo de reglas de buenas prácticas. El resultado es una
@@ -15,41 +16,45 @@ menores se encadenan a través de la estructura del clúster.
 
 \section{Motivación}
 
-La adopción masiva de \textit{Kubernetes} como plataforma de orquestación de
-contenedores ha transformado la manera en que las organizaciones despliegan y gestionan
-sus aplicaciones. La encuesta anual de 2021 de la \ac{CNCF} reporta que el 96\,\%
-de las organizaciones utilizan o evalúan \textit{Kubernetes} \citep{CNCF2022}, y
-el informe sectorial \textit{State of Kubernetes Security} de Red Hat de 2024 documenta que
-el 89\,\% de las organizaciones sufrió al menos un incidente de seguridad relacionado
-con \textit{Kubernetes} durante el último año \citep{RedHat2024}. Sin embargo, esta proliferación ha ampliado considerablemente la
+La adopción masiva de Kubernetes como plataforma de orquestación de
+contenedores ha transformado la manera en que las organizaciones despliegan y
+gestionan sus aplicaciones. La encuesta anual de 2021 de la \ac{CNCF} recoge que
+el 96\,\% de las organizaciones utilizan o evalúan Kubernetes \citep{CNCF2022}.
+El informe sectorial \textit{State of Kubernetes Security} de Red Hat de 2024
+documenta, por su parte, que el 89\,\% de las organizaciones sufrió al menos un
+incidente de seguridad relacionado con Kubernetes durante el último año
+\citep{RedHat2024}. Esa proliferación ha ampliado considerablemente la
 superficie de ataque: una sola configuración insegura en un manifiesto \ac{YAML} puede habilitar
 la escalada de privilegios desde un contenedor comprometido hasta el nodo anfitrión
 del clúster o, en casos extremos, hasta la infraestructura subyacente completa
 \citep{NSA2022}.
 
-Los enfoques de análisis estático tradicionales —herramientas como \textit{Checkov}
-\citep{Checkov2021} o \textit{kube-linter} \citep{KubeLinter2021}— detectan
-configuraciones incorrectas aisladas en manifiestos individuales. \textit{Checkov}
+Los enfoques de análisis estático tradicionales —herramientas como Checkov
+\citep{Checkov2021} o kube-linter \citep{KubeLinter2021}— detectan
+configuraciones incorrectas aisladas en manifiestos individuales. Checkov
 incorpora además comprobaciones basadas en grafos sobre las dependencias entre recursos,
 pero se trata de reglas declarativas escritas manualmente: ninguna de estas herramientas
 dispone de un modelo aprendido de la estructura del clúster ni predice de forma
 supervisada la existencia de una cadena de ataque.
-Un único indicador de privilegio en un pod no es
-suficiente para determinar si existe una cadena de ataque viable; es la combinación de nodos de
-escape con recursos de movimiento lateral la que habilita rutas de explotación
-completas, siguiendo la lógica de encadenamiento de etapas del modelo de
-\textit{kill chain} de Hutchins, Cloppert y Amin (\citeyear{Hutchins2011}); las
-técnicas concretas de escalada de privilegios en contenedores están catalogadas
-en el marco MITRE ATT\&CK for Containers \citep{MITRE2021Containers}.
+Un único indicador de privilegio en un pod —la unidad mínima de despliegue de
+Kubernetes, que agrupa uno o varios contenedores— no es suficiente para
+determinar si existe una cadena de ataque viable. Lo que habilita rutas de
+explotación completas es la combinación de nodos con capacidad de escape, esto
+es, de salir del contenedor hacia el nodo anfitrión, con recursos que permiten el
+movimiento lateral hacia otras cargas de trabajo del clúster. Esa combinación
+sigue la lógica de encadenamiento de etapas del modelo de \textit{kill chain} de
+Hutchins, Cloppert y Amin (\citeyear{Hutchins2011}). Las técnicas concretas de
+escalada de privilegios en contenedores están catalogadas en el marco MITRE
+ATT\&CK for Containers \citep{MITRE2021Containers}.
 
-Herramientas más recientes como \textit{KubeHound} \citep{KubeHound2023} e
-\textit{IceKube} \citep{IceKube2023} abordan este problema construyendo grafos de
-ataque sobre clústeres activos. Sin embargo, requieren recolectar el estado de un
-clúster activo mediante acceso de lectura amplio a su servidor \acs{API} de
-\textit{Kubernetes}, lo que limita su aplicabilidad como control
-preventivo en el proceso de \acs{CICD}, conforme al principio conocido como
-\textit{shift-left security}, que consiste en adelantar los controles de seguridad a
-las etapas más tempranas del desarrollo. Este trabajo aborda ese vacío: construir
+Herramientas más recientes como KubeHound \citep{KubeHound2023} e
+IceKube \citep{IceKube2023} abordan este problema construyendo grafos de
+ataque sobre clústeres activos. Requieren, sin embargo, recolectar el estado del
+clúster mediante acceso de lectura amplio a su servidor \acs{API} de Kubernetes.
+Esa exigencia limita su aplicabilidad como control preventivo en el proceso de
+\acs{CICD}, conforme al principio de \textit{shift-left security}, que adelanta
+los controles de seguridad a las etapas más tempranas del desarrollo. Este
+trabajo aborda ese vacío: construir
 un sistema capaz de razonar sobre la \emph{estructura} del clúster a partir de
 manifiestos \acs{YAML} estáticos, sin requerir un clúster activo, para identificar
 automáticamente cadenas de ataque potenciales antes de que sean desplegadas.
@@ -57,53 +62,55 @@ automáticamente cadenas de ataque potenciales antes de que sean desplegadas.
 \section{Planteamiento del trabajo}
 
 Formalmente, dado un conjunto de manifiestos \acs{YAML} que describen un clúster
-\textit{Kubernetes}, el problema consiste en:
+Kubernetes, el problema consiste en:
 
 \begin{enumerate}
   \item Clasificar cada manifiesto individual como seguro o mal configurado (Capa~1).
   \item Modelar el clúster como un grafo heterogéneo y clasificarlo en una de tres
-        categorías: \textit{clean} (sin misconfiguraciones relevantes),
-        \textit{isolated} (misconfiguraciones sin cadena viable) o \textit{attack\_chain}
+        categorías: \textit{clean} (sin configuraciones erróneas relevantes),
+        \textit{isolated} (configuraciones erróneas sin cadena viable) o \textit{attack\_chain}
         (existe una ruta de escalada de privilegios hasta movimiento lateral) (Capa~2).
   \item Combinar las señales de ambas capas, junto con una señal binaria de escape
-        derivada de las características de nodo, mediante una función de puntuación con
-        pesos optimizados por Algoritmo Genético para maximizar la Precisión@5 —la
-        fracción de clústeres de cadena de ataque en el top-5 del ranking— minimizando
-        falsos positivos, y aplicar una restricción de viabilidad estructural sobre el
-        ranking final (Capa~3).
+        derivada de las características de nodo, mediante una función de puntuación
+        con pesos optimizados por Algoritmo Genético. El criterio de optimización es
+        maximizar la Precisión@5 —la fracción de clústeres de cadena de ataque en el
+        top-5 del \textit{ranking}— minimizando los falsos positivos. Sobre el
+        \textit{ranking} final se aplica además una restricción de viabilidad
+        estructural (Capa~3).
 \end{enumerate}
 
 La capacidad de operar sobre manifiestos \acs{YAML} estáticos —sin requerir acceso al
 clúster activo— es un requisito de diseño explícito que diferencia el presente trabajo
 de las soluciones de grafo de ataque existentes y lo posiciona como un control de
-seguridad integrable en pipelines \acs{CICD}. En términos generales, el objetivo es
-diseñar, implementar y evaluar un sistema de detección de
-cadenas de ataque en \textit{Kubernetes} que complemente los enfoques de análisis
-estático por manifiesto individual con el contexto estructural del clúster, mediante
-la combinación de aprendizaje automático clásico y aprendizaje sobre grafos, operando
-principalmente sobre manifiestos \acs{YAML} estáticos, si bien incorpora opcionalmente
-una vía de consulta directa a un clúster activo. Los objetivos específicos que
+seguridad integrable en \textit{pipelines} \acs{CICD}. En términos generales, el
+objetivo es diseñar, implementar y evaluar un sistema de detección de cadenas de
+ataque en Kubernetes que complemente los enfoques de análisis estático por
+manifiesto individual con el contexto estructural del clúster, mediante la
+combinación de aprendizaje automático clásico y aprendizaje sobre grafos. El
+sistema opera principalmente sobre manifiestos \acs{YAML} estáticos, si bien
+incorpora de forma opcional una vía de consulta directa a un clúster activo. Los
+objetivos específicos que
 concretan este planteamiento general, junto con la metodología de seis fases
 seguida para alcanzarlos, se detallan en el Capítulo~\ref{cap:objetivos}.
 
 \section{Estructura del trabajo}
 
 El trabajo se organiza en siete capítulos. El Capítulo~\ref{cap:estado} revisa el
-estado del arte en seguridad de \textit{Kubernetes}, herramientas de análisis
+estado del arte en seguridad de Kubernetes, herramientas de análisis
 estático y grafos de ataque, redes neuronales de grafos y detección de cadenas
 de ataque; incluye una tabla comparativa de las herramientas más relevantes y un
-análisis del posicionamiento de \textit{kubescan}. El
+análisis del posicionamiento de kubescan. El
 Capítulo~\ref{cap:objetivos} define los objetivos específicos y la metodología
 de seis fases. El Capítulo~\ref{cap:requisitos} identifica y justifica los
 requisitos funcionales y no funcionales del sistema, delimita su alcance y
 describe la estrategia de partición de datos y las métricas de evaluación que
 esos requisitos determinan. El Capítulo~\ref{cap:herramienta} describe la
 herramienta desarrollada: la arquitectura de tres capas, la construcción del
-dataset y el grafo, el diseño de cada capa, la implementación de \textit{kubescan}
+conjunto de datos y el grafo, el diseño de cada capa, la implementación de kubescan
 como herramienta de línea de comandos, la tabla completa de las
 28~características del clasificador y la calidad de software y el proceso de
 desarrollo seguidos. El Capítulo~\ref{cap:evaluacion} evalúa el
-sistema frente a una línea de base del estado del arte, reporta los resultados
+sistema frente a una línea de base del estado del arte, presenta los resultados
 de cada capa, sintetiza la métrica de proceso completo y verifica el
 cumplimiento de los requisitos, incluida la evaluación de usabilidad con
 usuarios expertos. El Capítulo~\ref{cap:conclusiones} recoge las conclusiones

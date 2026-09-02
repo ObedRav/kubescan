@@ -3,16 +3,16 @@
 \label{cap:estado}
 % ============================================================
 
-La detección automática de vulnerabilidades en infraestructuras \textit{Kubernetes}
+La detección automática de vulnerabilidades en infraestructuras Kubernetes
 se encuentra en la intersección de cuatro áreas de investigación activa: el análisis
 de seguridad en infraestructura como código (\textit{Infrastructure as Code}, \acs{IaC}),
 el aprendizaje automático aplicado a la ciberseguridad, las redes neuronales de grafos
-para razonamiento estructural, y la construcción de grafos de ataque para la
+para razonamiento estructural y la construcción de grafos de ataque para la
 identificación de rutas de explotación. Cada una de estas áreas aporta una pieza
-del problema: el análisis estático delimita qué constituye una misconfiguración,
+del problema: el análisis estático delimita qué constituye una configuración errónea,
 el aprendizaje automático permite estimar el riesgo asociado a esos indicadores,
 las redes neuronales de grafos añaden razonamiento sobre las relaciones entre
-recursos, y los grafos de ataque definen qué combinaciones de esas relaciones
+recursos y los grafos de ataque definen qué combinaciones de esas relaciones
 constituyen una ruta de explotación viable. Ninguna de las cuatro líneas ha
 producido hasta la fecha un sistema que prediga cadenas de ataque a partir de
 manifiestos estáticos mediante un modelo supervisado, carencia que delimita el
@@ -22,38 +22,39 @@ espacio en el que se sitúa la contribución de este trabajo.
 \section{Contexto del problema: seguridad en infraestructuras Kubernetes}
 % -----------------------------------------------------------
 
-\textit{Kubernetes} es la plataforma de orquestación de contenedores dominante en
-entornos de producción empresariales, con un 96\,\% de organizaciones que la utilizan
-o evalúan según la encuesta anual de 2021 de la \ac{CNCF}
-\citep{CNCF2022}. A pesar de su adopción generalizada, la seguridad sigue siendo uno
-de los principales retos operacionales: el informe \textit{State of Kubernetes Security}
-de Red Hat 2024 \citep{RedHat2024} revela que el 89\,\% de las organizaciones sufrió
-al menos un incidente de seguridad relacionado con \textit{Kubernetes} en el último
-año, y que el 67\,\% retrasó despliegues a producción por preocupaciones de seguridad.
-El 46\,\% reportó pérdidas de clientes o ingresos directamente atribuibles a incidentes
-en entornos de contenedores. Entre los riesgos más temidos, las vulnerabilidades
+Kubernetes es la plataforma de orquestación de contenedores dominante en entornos
+de producción empresariales; las cifras de adopción y de incidencia se recogen en
+el Capítulo~\ref{cap:introduccion} \citep{CNCF2022, RedHat2024}. A pesar de esa
+adopción generalizada, la seguridad sigue siendo uno de los principales retos
+operativos. El informe \textit{State of Kubernetes Security} de Red Hat 2024
+\citep{RedHat2024} detalla el coste de esa exposición: el 67\,\% de las
+organizaciones retrasó despliegues a producción por preocupaciones de seguridad y
+el 46\,\% declaró pérdidas de clientes o de ingresos directamente atribuibles a
+incidentes en entornos de contenedores. Entre los riesgos más temidos, las vulnerabilidades
 representan el 33\,\% de las preocupaciones de los equipos, mientras que las
-misconfiguraciones y exposiciones alcanzan el 27\,\%.
+configuraciones erróneas y exposiciones alcanzan el 27\,\%.
 
 Su modelo declarativo, basado en ficheros \acs{YAML} que especifican el estado deseado del
 clúster, ofrece grandes ventajas en reproducibilidad y automatización, pero también
 introduce una amplia superficie de ataque: un fichero mal configurado desplegado en
 producción puede conceder privilegios excesivos a un contenedor o exponer secretos
-en texto plano. La flexibilidad de \textit{Kubernetes} —que permite configurar desde
+en texto plano. La flexibilidad de Kubernetes —que permite configurar desde
 el sistema de ficheros del anfitrión hasta los permisos de red a nivel de pod— implica
 que el número de vectores de ataque crece proporcionalmente con la riqueza del modelo
 de configuración. La Agencia de Seguridad Nacional de Estados Unidos (\acs{NSA}) y la Agencia de
 Ciberseguridad e Infraestructura (\acs{CISA}) publicaron en 2022 una guía técnica
-\citep{NSA2022} que enumera las misconfiguraciones más críticas: uso de
+\citep{NSA2022} que enumera las configuraciones erróneas más críticas: uso de
 \texttt{privileged: true}, montaje del socket de Docker, compartición del espacio de
-nombres de proceso del anfitrión (\textit{hostPID}), y automontaje de tokens de cuenta
-de servicio con permisos excesivos. Estos vectores son precisamente los que este trabajo
-modeliza como nodos de escape en el grafo del clúster.
+nombres de proceso del anfitrión (\textit{hostPID}) y automontaje de \textit{tokens} de cuenta
+de servicio con permisos excesivos. Una cuenta de servicio es la identidad que
+Kubernetes asigna a un pod para autenticarse ante el servidor \acs{API}, y su
+\textit{token} es la credencial que la materializa. Estos vectores son precisamente los que
+este trabajo modeliza como nodos de escape en el grafo del clúster.
 
 Los trabajos de BishopFox \citep{BishopFox2021} demostraron empíricamente que un
 único pod con configuración \textit{everything-allowed} puede comprometer el nodo
 anfitrión en segundos y pivotar lateralmente a través del clúster. La plataforma
-educativa \textit{Kubernetes Goat} \citep{KubernetesGoat} sistematiza más de
+educativa Kubernetes Goat \citep{KubernetesGoat} sistematiza más de
 veinte escenarios de vulnerabilidad con los que se pueden reproducir rutas de
 explotación completas en un entorno controlado. Ambas constituyen fuentes de
 manifiestos del presente trabajo; las etiquetas de cadena de ataque no proceden
@@ -61,16 +62,16 @@ de ellas, sino de la regla explícita de etiquetado descrita en el
 Capítulo~\ref{cap:herramienta}.
 
 El marco taxonómico de referencia para los ataques en entornos de contenedores y
-\textit{Kubernetes} es \textit{MITRE ATT\&CK for Containers}
+Kubernetes es \textit{MITRE ATT\&CK for Containers}
 \citep{MITRE2021Containers}, incorporado en la versión~9 de la base de conocimiento
 ATT\&CK. Este marco describe las tácticas y técnicas empleadas por adversarios
-a nivel de orquestador (\textit{Kubernetes}) y a nivel de contenedor (\textit{Docker}),
+a nivel de orquestador (Kubernetes) y a nivel de contenedor (Docker),
 incluyendo las que este trabajo detecta directamente: escape de contenedor hacia el
 nodo anfitrión (T1611, \textit{Escape to Host}), movimiento lateral mediante el uso
 de \textit{tokens} de cuentas de servicio (T1550.001, \textit{Use Alternate
 Authentication Material: Application Access Token}) y abuso de cuentas válidas
 (T1078, \textit{Valid Accounts}). La alineación
-entre las \textit{escape flags} del presente sistema y las técnicas ATT\&CK valida que
+entre las banderas de escape del presente sistema y las técnicas ATT\&CK valida que
 el espacio de detección cubre los vectores de ataque documentados y más explotados en
 la industria.
 
@@ -81,12 +82,12 @@ la industria.
 
 El análisis estático de manifiestos \ac{IaC} cuenta con una larga trayectoria en la
 literatura. Rahman et~al.\ \citep{Rahman2022} construyeron un conjunto de datos
-de referencia para manifiestos \textit{Kubernetes} extraídos de repositorios
+de referencia para manifiestos Kubernetes extraídos de repositorios
 públicos, con 2.039 manifiestos de 92 repositorios etiquetados en 11 categorías de
 \textit{misconfiguration} identificadas mediante análisis cualitativo y cuantificadas
 con su herramienta de análisis estático (SLI-KUBE). Su aportación se circunscribe
 a la construcción del conjunto de datos y a la medición de la densidad de
-misconfiguraciones mediante reglas estáticas: no incluye ningún modelo de
+configuraciones erróneas mediante reglas estáticas: no incluye ningún modelo de
 clasificación supervisada entrenado sobre ese corpus, por lo que no ofrece una
 cifra de rendimiento predictivo con la que contrastar directamente.
 % Verificado contra el resumen publicado (TOSEM 32(4), 2023): la metodología
@@ -98,35 +99,37 @@ De ese trabajo, el presente sistema recupera y codifica 1.906 manifiestos de Git
 GitLab como vectores de características binarias que indican la presencia o ausencia
 de cada patrón.
 
-Las herramientas industriales actuales más utilizadas son \textit{Checkov}
+Las herramientas industriales actuales más utilizadas son Checkov
 \citep{Checkov2021}, que verifica más de mil políticas de seguridad predefinidas, y
-\textit{kube-linter} \citep{KubeLinter2021}, especializado en buenas prácticas de
-\textit{Kubernetes}. \textit{kube-linter} opera al nivel de manifiesto individual,
-mientras que \textit{Checkov} incorpora además comprobaciones basadas en grafos sobre
-las dependencias entre recursos (por ejemplo, escalada de privilegios a través de un
-\textit{RoleBinding}); no obstante, se trata de reglas declarativas escritas manualmente,
-sin un modelo aprendido de la estructura del clúster ni predicción supervisada de
-cadenas de ataque. También destaca
-\textit{Kubescape} \citep{Kubescape2021}, una plataforma de seguridad de código
+kube-linter \citep{KubeLinter2021}, especializado en buenas prácticas de
+Kubernetes. kube-linter opera al nivel de manifiesto individual. Checkov incorpora
+además comprobaciones basadas en grafos sobre las dependencias entre recursos: por
+ejemplo, la escalada de privilegios a través de un RoleBinding, el objeto que
+vincula un rol de \ac{RBAC} con la identidad que lo ejerce. Se trata,
+no obstante, de reglas declarativas escritas manualmente, sin un modelo aprendido
+de la estructura del clúster ni predicción supervisada de cadenas de ataque.
+También destaca
+Kubescape \citep{Kubescape2021}, una plataforma de seguridad de código
 abierto integrada en la \ac{CNCF} que combina
 análisis estático con validación de cumplimiento contra los marcos \ac{NSA}, MITRE ATT\&CK
 y \ac{CIS} \textit{Benchmarks}. Al igual que Checkov y kube-linter, sin embargo, Kubescape
 evalúa recursos de forma independiente y no construye ningún modelo del clúster como
 estructura relacional.
 
-La noción de un índice unificado de misconfiguraciones (\textit{unified
+La noción de un índice unificado de configuraciones erróneas (\textit{unified
 misconfiguration index}), propuesta por
-\citeauthor{Malul2024} (\citeyear{Malul2024}) en \textit{GenKubeSec}, normaliza y
+\citeauthor{Malul2024} (\citeyear{Malul2024}) en GenKubeSec, normaliza y
 unifica las etiquetas de múltiples herramientas de análisis basadas en reglas para
-poder compararlas, un problema afín al de generar un \textit{risk\_score} unificado
-como el de la Capa~1 del presente sistema; la fuente original emplea esa expresión
-descriptiva sin acuñar una sigla, por lo que la abreviatura \acs{UMI}\acused{UMI}
-que se usa en el resto de este documento es una convención propia. Su propuesta, que incorpora un modelo de
+poder compararlas. Es un problema afín al de generar un \textit{risk\_score}
+unificado como el de la Capa~1 del presente sistema. La fuente original emplea esa
+expresión descriptiva sin acuñar una sigla, por lo que la abreviatura
+\acs{UMI}\acused{UMI} que se usa en el resto de este documento es una convención
+propia. Su propuesta, que incorpora un modelo de
 lenguaje de gran escala (\acs{LLM}) para la clasificación, es complementaria a la de
 este trabajo, aunque opera en el mismo nivel de manifiesto individual.
 La limitación estructural común a estas herramientas es que ninguna aprende ni predice
 cadenas de ataque a partir de la estructura del clúster: incluso las comprobaciones de
-grafo de \textit{Checkov} son reglas fijas sobre dependencias conocidas, no un modelo
+grafo de Checkov son reglas fijas sobre dependencias conocidas, no un modelo
 entrenado. Estas herramientas detectan que un pod tiene \texttt{privileged: true}, pero no infieren
 si ese pod encadena con el acceso de red a los recursos críticos del clúster para formar
 una ruta de ataque completa. La detección de cadenas de ataque requiere, inevitablemente,
@@ -139,12 +142,12 @@ razonar sobre la estructura del clúster como un todo.
 
 El aprendizaje automático se ha aplicado a la detección de vulnerabilidades en
 código fuente y configuraciones desde hace más de una década. Los clasificadores
-basados en \textit{Random Forest} \citep{Breiman2001} —que combinan múltiples árboles
+basados en Random Forest \citep{Breiman2001} —que combinan múltiples árboles
 de decisión mediante \textit{bagging} y selección aleatoria de características— han
 demostrado resultados robustos en escenarios de alta dimensionalidad y clases
 desbalanceadas, características típicas de los conjuntos de datos de seguridad; el
 desequilibrio se aborda además mediante la ponderación de clases que ofrece su
-implementación en \textit{scikit-learn} \citep{Pedregosa2011}. En la literatura, el
+implementación en scikit-learn \citep{Pedregosa2011}. En la literatura, el
 ajuste de hiperparámetros de este tipo de clasificadores suele realizarse mediante
 búsqueda en rejilla (\textit{grid search}) con validación cruzada estratificada
 sobre parámetros como \texttt{n\_estimators} o \texttt{min\_samples\_leaf}. El
@@ -159,47 +162,47 @@ supervisados. Conviene precisar el alcance de esa referencia: el trabajo que lo
 presenta es un artículo de construcción de conjunto de datos, y su evaluación
 comparativa se limita a la exactitud y la tasa de falsas alarmas de árboles de
 decisión, regresión logística, \textit{naïve Bayes}, redes neuronales artificiales
-y modelos de mezclas esperadas, sin reportar valores de F1 macro ni resultados de
-\textit{Random Forest}. No constituye, por tanto, una revisión del rendimiento de
-\textit{Random Forest} sobre ese conjunto ni permite derivar de él un rango de
+y modelos de mezclas esperadas, sin consignar valores de F1 macro ni resultados de
+Random Forest. No constituye, por tanto, una revisión del rendimiento de
+Random Forest sobre ese conjunto ni permite derivar de él un rango de
 referencia para dicha métrica.
 El conjunto de manifiestos de este trabajo presenta un desequilibrio
-de clases moderado (56,3\,\% seguros vs.\ 43,7\,\% mal configurados); el
-desafío de desequilibrio más severo se concentra en las \textit{flags} de escape
+de clases moderado (56,3\,\% seguros frente a 43,7\,\% mal configurados); el
+desafío de desequilibrio más severo se concentra en las banderas de escape
 individuales, algunas presentes en menos del 1\,\% de los manifiestos reales.
 El desequilibrio de clases es un problema generalizado
-en los conjuntos de datos de seguridad: las misconfiguraciones críticas son rarísimas en
+en los conjuntos de datos de seguridad: las configuraciones erróneas críticas son rarísimas en
 repositorios reales, lo que obliga a adoptar estrategias explícitas de compensación.
 La alternativa más común es asignar pesos de clase inversamente proporcionales a su
-frecuencia (\textit{class\_weight=balanced} en \textit{scikit-learn}), que es la
+frecuencia (\textit{class\_weight=balanced} en scikit-learn), que es la
 estrategia adoptada en este trabajo \citep{Pedregosa2011}. Otras alternativas como
 \acs{SMOTE} (\textit{Synthetic Minority Over-sampling Technique}) no se consideraron
 apropiadas dado que las características son binarias, y la interpolación lineal
 entre muestras binarias puede generar vectores fuera del espacio semántico válido.
 
 Trabajos más recientes han explorado el uso de modelos de lenguaje de gran escala
-(\acs{LLM}) para la detección y remediación de misconfiguraciones en
-\textit{Kubernetes} \citep{Malul2024}. Si bien los \acs{LLM}s ofrecen
+(\acs{LLM}) para la detección y remediación de configuraciones erróneas en
+Kubernetes \citep{Malul2024}. Si bien los \acs{LLM} ofrecen
 capacidades de razonamiento semántico
 superiores, requieren recursos computacionales sustancialmente mayores, producen
 salidas no deterministas y son más opacos que los clasificadores clásicos, lo que
 dificulta su interpretación en auditorías de seguridad donde la trazabilidad de las
 reglas de detección es un requisito normativo. Para entornos de producción donde el
 operador de seguridad debe poder justificar ante una auditoría por qué un clúster
-fue marcado como de alto riesgo, la interpretabilidad del \textit{Random Forest}
+fue marcado como de alto riesgo, la interpretabilidad del Random Forest
 —mediante importancia de características y reglas de árbol legibles— representa una
-ventaja operacional significativa sobre los modelos de caja negra.
+ventaja operativa significativa sobre los modelos de caja negra.
 
 La aplicación de técnicas de \ac{ML} a la predicción de
 vulnerabilidades en software es un enfoque consolidado que supera de forma
 consistente a los modelos estadísticos clásicos \citep{Jabeen2022}. Dentro de ese
-espacio, el \textit{Random Forest} resulta especialmente adecuado para el problema
+espacio, el Random Forest resulta especialmente adecuado para el problema
 de la Capa~1 por su comportamiento sobre características binarias de alta dimensión
 con clases desbalanceadas. Ese comportamiento, unido a sus ventajas de
 interpretabilidad en auditorías de seguridad, motivó su adopción como componente
-de Capa~1 de \textit{kubescan}.
+de Capa~1 de kubescan.
 
-La elección de \textit{Random Forest} sobre otros algoritmos clásicos para la
+La elección de Random Forest sobre otros algoritmos clásicos para la
 clasificación de manifiestos \ac{IaC} responde a tres criterios derivados de la
 naturaleza de los datos del problema:
 
@@ -207,16 +210,16 @@ naturaleza de los datos del problema:
 \raggedright
   \item \textbf{Robustez ante datos binarios y escasos.} Las características del
     presente trabajo son en su mayoría binarias (presencia/ausencia de una
-    misconfiguration), con alta proporción de ceros. Los \textit{Random Forests}
+    configuración errónea), con alta proporción de ceros. Los Random Forests
     manejan este tipo de datos de forma nativa sin requerir normalización, a diferencia
     de las Máquinas de Vectores Soporte (\acs{SVM}) o las Redes Neuronales, sensibles
     a la escala de las características.
 
   \item \textbf{Gestión intrínseca del desequilibrio de clases.} El parámetro
-    \texttt{class\_weight=balanced} de \textit{scikit-learn} implementa una estrategia
+    \texttt{class\_weight=balanced} de scikit-learn implementa una estrategia
     de ponderación inversamente proporcional a la frecuencia de clase, lo que eleva
     efectivamente el coste de clasificar erróneamente las muestras de la clase
-    minoritaria (misconfiguraciones críticas) sin modificar la función de pérdida
+    minoritaria (configuraciones erróneas críticas) sin modificar la función de pérdida
     subyacente \citep{Pedregosa2011}.
 
   \item \textbf{Generación de puntuaciones continuas utilizables.} El promedio de
@@ -260,7 +263,7 @@ Red Neuronal (\acs{MLP}) & No & Con pesos & Variable & Sensible a la escala de e
 Las redes neuronales de grafos (\textit{Graph Neural Networks},
 \acs{GNN})\acused{GNN} han emergido como la herramienta principal para
 aprendizaje en datos con estructura relacional \citep{Zhou2020, Hamilton2020}. A
-diferencia de los clasificadores tabulares clásicos, las \acs{GNN}s operan directamente
+diferencia de los clasificadores tabulares clásicos, las \acs{GNN} operan directamente
 sobre la topología del grafo, propagando información entre vecinos mediante operaciones
 de paso de mensajes (\textit{message passing}). Formalmente, en una capa \acs{GNN} la
 representación del nodo \(v\) se actualiza como:
@@ -312,20 +315,20 @@ de nodos \((v, u)\) el coeficiente de atención es:
 
 donde \(\mathbf{a}\) es un vector de parámetros de atención y \(\|\) denota
 concatenación. Este diseño es especialmente apropiado para grafos de clúster
-\textit{Kubernetes}, donde una arista de privilegio (\textit{privilege\_reach})
+Kubernetes, donde una arista de privilegio (\textit{privilege\_reach})
 debe pesar más que una arista de proximidad de directorio (\textit{dir\_proximity}).
 El modelo \textit{How Powerful are \acs{GNN}s?} de \citeauthor{Xu2019} (\citeyear{Xu2019})
-establece que la capacidad discriminativa de las \acs{GNN}s está acotada por el test de
+establece que la capacidad discriminativa de las \acs{GNN} está acotada por el test de
 isomorfismo de Weisfeiler-Lehman, y que la suma de vecinos maximiza el poder
 expresivo frente a la media o el máximo. En este trabajo se adopta un
 \textit{pooling} combinado de media y máximo por su robustez ante grafos de tamaño
 muy variable, aceptando explícitamente ese compromiso de expresividad.
 
 % -----------------------------------------------------------
-\section{\acs{GNN}s aplicadas a ciberseguridad}
+\section{\acs{GNN} aplicadas a ciberseguridad}
 % -----------------------------------------------------------
 
-La aplicación de \acs{GNN}s a la detección de amenazas es un campo emergente con rápido
+La aplicación de \acs{GNN} a la detección de amenazas es un campo emergente con rápido
 crecimiento. \citeauthor{Bilot2023} (\citeyear{Bilot2023}) proporcionan una
 revisión exhaustiva de los enfoques basados en \ac{GNN} para la detección de
 intrusiones en red, organizada en torno a enfoques basados en red (grafos de flujo) y
@@ -334,16 +337,16 @@ en \textit{Computers \& Security} en 2024 \citep{GNNSurvey2024} amplía esta
 taxonomía y documenta un crecimiento sostenido de la investigación en el área en
 los últimos años.
 
-\textit{E-GraphSAGE} \citep{Lo2022} propone representar flujos de red como grafos de
+E-GraphSAGE \citep{Lo2022} propone representar flujos de red como grafos de
 transacción para clasificación de intrusiones en \ac{IoT}, alcanzando tasas de detección
-superiores a los clasificadores tabulares clásicos sobre las re-publicaciones en
+superiores a los clasificadores tabulares clásicos sobre las republicaciones en
 formato NetFlow de los conjuntos de referencia habituales del área
 (NF-UNSW-NB15-v2, NF-ToN-IoT y NF-BoT-IoT), y no sobre la versión original de
 UNSW-NB15.
 La
-analogía con el presente trabajo es directa: los manifiestos \textit{Kubernetes}
+analogía con el presente trabajo es directa: los manifiestos Kubernetes
 son los nodos y las relaciones de privilegio y movimiento lateral son las aristas del
-grafo de amenaza. Una diferencia clave es que \textit{E-GraphSAGE} modela flujos de
+grafo de amenaza. Una diferencia clave es que E-GraphSAGE modela flujos de
 tráfico en tiempo real, mientras que este trabajo modela configuraciones declarativas
 estáticas, lo que permite operar antes del despliegue.
 
@@ -359,10 +362,11 @@ del presente sistema.
 Una limitación reconocida en la literatura es la escasez de conjuntos de datos de
 grafos etiquetados de alta calidad para ciberseguridad. Tanto \citeauthor{Bilot2023}
 (\citeyear{Bilot2023}) como \citeauthor{GNNSurvey2024} (\citeyear{GNNSurvey2024})
-señalan la escasez de conjuntos de datos etiquetados y de benchmarks estandarizados
-entre los principales obstáculos para el avance del área, lo que refuerza la contribución del presente trabajo al
-generar un conjunto de datos original de 599 grafos de clúster (1.154 tras
-aumentación de datos) con etiquetas de cadena de ataque.
+sitúan la escasez de conjuntos de datos etiquetados y de \textit{benchmarks}
+estandarizados entre los principales obstáculos para el avance del área. Esa
+carencia es la que refuerza la contribución del presente trabajo, que genera un
+conjunto de datos original de 599 grafos de clúster (1.154 tras aumentación de
+datos) con etiquetas de cadena de ataque.
 
 % -----------------------------------------------------------
 \section{Detección de cadenas de ataque y grafos de ataque en Kubernetes}
@@ -370,19 +374,20 @@ aumentación de datos) con etiquetas de cadena de ataque.
 
 La noción de cadena de ataque (\textit{kill chain}) fue formalizada originalmente
 por \citeauthor{Hutchins2011} (\citeyear{Hutchins2011}) para describir las fases
-secuenciales de una intrusión avanzada: reconocimiento, weaponización, entrega,
-explotación, instalación, comando y control, y acción. En el contexto de
-\textit{Kubernetes}, esta cadena se concreta de forma más compacta: requiere como
-mínimo (1) un pod con capacidad de escape al anfitrión (\textit{TRUE\_HOST\_PID},
-\textit{privileged: true}, \textit{hostPath} montado, etc.) y (2) un mecanismo de
-movimiento lateral hacia otros recursos del clúster (token de cuenta de servicio con
-permisos excesivos, montaje de secretos en el manifiesto, etc.).
+secuenciales de una intrusión avanzada: reconocimiento, preparación del artefacto
+(\textit{weaponization}), entrega, explotación, instalación, comando y control, y
+acción. En el contexto de Kubernetes, esta cadena se concreta de forma más
+compacta: requiere como mínimo (1) un pod con capacidad de escape al anfitrión
+(\textit{TRUE\_HOST\_PID}, \textit{privileged: true}, montaje de \textit{hostPath}
+—un directorio del nodo anfitrión expuesto dentro del contenedor—, etc.) y (2) un
+mecanismo de movimiento lateral hacia otros recursos del clúster (\textit{token} de cuenta
+de servicio con permisos excesivos, montaje de secretos en el manifiesto, etc.).
 En los últimos años han surgido dos herramientas de código abierto que abordan la
-detección de rutas de ataque en \textit{Kubernetes} mediante grafos:
-\textit{KubeHound} \citep{KubeHound2023} e \textit{IceKube} \citep{IceKube2023}.
+detección de rutas de ataque en Kubernetes mediante grafos:
+KubeHound \citep{KubeHound2023} e IceKube \citep{IceKube2023}.
 
 \textbf{KubeHound} (Datadog, 2023) construye un grafo de ataque del clúster a partir
-de la consulta directa al servidor \ac{API} de \textit{Kubernetes}, almacena el resultado
+de la consulta directa al servidor \ac{API} de Kubernetes, almacena el resultado
 en JanusGraph y permite explorar las rutas de ataque más cortas mediante el lenguaje
 de consulta Gremlin. El proyecto fue motivado por la misma intuición que subyace al
 presente trabajo, formulada por John Lambert y citada en su documentación:
@@ -394,16 +399,16 @@ amplio conjunto de ataques y ha sido adoptado por equipos de seguridad en produc
 en Neo4j, y permite definir rutas de ataque mediante consultas Cypher. Modela un
 amplio conjunto de técnicas de ataque como relaciones en el grafo y puede encontrar
 rutas desde cualquier identidad de bajo privilegio hasta \textit{cluster-admin}.
-La diferencia fundamental entre estas herramientas y \textit{kubescan} es de
+La diferencia fundamental entre estas herramientas y kubescan es de
 paradigma: KubeHound e IceKube operan sobre un \textbf{clúster activo}, requiriendo
-acceso con privilegios elevados a \texttt{kubectl}. \textit{kubescan}, en cambio,
+acceso con privilegios elevados a \texttt{kubectl}. kubescan, en cambio,
 opera sobre \textbf{manifiestos \acs{YAML} estáticos} antes del despliegue, integrándose
-en el pipeline \acs{CICD} como un control de seguridad \textit{shift-left}. Además, ambas
+en el \textit{pipeline} \acs{CICD} como un control de seguridad \textit{shift-left}. Además, ambas
 herramientas utilizan búsqueda de rutas mediante consultas ad-hoc en bases de datos
-de grafos, sin componente de aprendizaje automático supervisado; \textit{kubescan}
+de grafos, sin componente de aprendizaje automático supervisado; kubescan
 es el primer sistema, según la revisión bibliográfica no sistemática realizada en
 este trabajo, que combina análisis estático
-de manifiestos con \acs{GNN}s para la predicción de cadenas de ataque como tarea de
+de manifiestos con \acs{GNN} para la predicción de cadenas de ataque como tarea de
 clasificación supervisada.
 
 % -----------------------------------------------------------
@@ -416,17 +421,18 @@ motivan el presente trabajo. En primer lugar, las herramientas de análisis est�
 existentes (Checkov, kube-linter, Kubescape) no aprenden ni predicen cadenas de ataque
 a partir de la estructura del clúster; aunque Checkov incorpora comprobaciones de grafo
 basadas en reglas declarativas sobre dependencias entre recursos, ninguna emplea un
-modelo supervisado que razone sobre las relaciones que habilitan dichas cadenas. En segundo lugar, los conjuntos de datos de referencia para
-seguridad de \textit{Kubernetes} son escasos, de pequeño tamaño y desequilibrados
-hacia las clases de riesgo bajo, lo que dificulta el entrenamiento de clasificadores
-de clúster: el análisis del corpus de manifiestos reales recopilado en este trabajo
-(Capítulo~\ref{cap:herramienta}) confirma que \texttt{TRUE\_HOST\_PID} —la flag de escape
-más peligrosa— aparece en sólo el 0,3\,\% de las filas antes de incorporar fuentes
-especializadas. En tercer lugar, las herramientas de grafo de
+modelo supervisado que razone sobre las relaciones que habilitan dichas cadenas.
+En segundo lugar, los conjuntos de datos de referencia para seguridad de Kubernetes
+son escasos, de pequeño tamaño y desequilibrados hacia las clases de riesgo bajo,
+lo que dificulta el entrenamiento de clasificadores de clúster. El análisis del
+corpus de manifiestos reales recopilado en este trabajo
+(Capítulo~\ref{cap:herramienta}) confirma ese desequilibrio: \texttt{TRUE\_HOST\_PID}
+—la bandera de escape más peligrosa— aparece en solo el 0,3\,\% de las filas antes
+de incorporar fuentes especializadas. En tercer lugar, las herramientas de grafo de
 ataque más avanzadas (KubeHound, IceKube) requieren un clúster activo, lo que impide
-su uso como control preventivo en el pipeline \acs{CICD}.
+su uso como control preventivo en el \textit{pipeline} \acs{CICD}.
 
-La Tabla~\ref{tab:comparativa} resume el posicionamiento de \textit{kubescan} frente
+La Tabla~\ref{tab:comparativa} resume el posicionamiento de kubescan frente
 a las principales herramientas del estado del arte.
 
 \begin{table}[htbp]
@@ -449,15 +455,15 @@ IceKube \citep{IceKube2023} & No & Sí & \checkmark & No \\
 \fuentepropia
 \end{table}
 
-El sistema \textit{kubescan} presentado en este trabajo responde a las tres carencias
+El sistema kubescan presentado en este trabajo responde a las tres carencias
 identificadas: adopta una arquitectura de grafo heterogéneo con tipos de arista
-semánticamente significativos para el dominio \textit{Kubernetes}, combina el análisis
+semánticamente significativos para el dominio Kubernetes, combina el análisis
 estático (Capa~1) con el razonamiento estructural (Capa~2) en un \textit{ensemble}
 optimizado (Capa~3), y contribuye un conjunto de datos de 599~grafos de clúster
 originales con etiquetas de cadena de ataque derivadas de reglas de seguridad
 explícitas y auditables. Al operar sobre manifiestos \acs{YAML} sin requerir acceso
-al clúster, \textit{kubescan} se posiciona como un control preventivo integrable en
-pipelines \acs{CICD}, complementario a —y no sustituto de— las herramientas de
+al clúster, kubescan se posiciona como un control preventivo integrable en
+\textit{pipelines} \acs{CICD}, complementario a —y no sustituto de— las herramientas de
 análisis de clúster activo como KubeHound. Los capítulos siguientes describen en
 detalle los objetivos específicos, el diseño e implementación del sistema y la
 evaluación experimental de cada una de sus tres capas.

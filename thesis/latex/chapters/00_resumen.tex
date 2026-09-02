@@ -1,20 +1,19 @@
 % ============================================================
 \chapter{Resumen}
 
-Las herramientas de análisis estático de \textit{Kubernetes} detectan
+Las herramientas de análisis estático de Kubernetes detectan
 configuraciones inseguras aisladas, pero no si se encadenan en una ruta de
-ataque viable. El objetivo de este trabajo es identificar automáticamente esas
+ataque viable. El objetivo es identificar automáticamente esas
 cadenas a partir de manifiestos estáticos, sin acceso a un clúster activo.
-\textit{kubescan} combina un clasificador \textit{Random Forest} (Capa~1), una
+kubescan combina un clasificador Random Forest (Capa~1), una
 red de atención sobre grafos (\textit{Graph Attention Network},
 \acs{GAT}\acused{GAT}) (Capa~2) y pesos de \textit{ensemble} optimizados por
 Algoritmo Genético (Capa~3).
 
-El corpus reunido —2.827 manifiestos de cinco fuentes públicas
+El corpus —2.827 manifiestos de cinco fuentes públicas
 complementarias— y su protocolo de particionado anti-fuga son la contribución
-metodológica central. Los grafos de clúster derivados incorporan aristas de
-alcance de privilegio, movimiento lateral, proximidad, espacio de nombres y
-control de acceso basado en roles (\acs{RBAC}\acused{RBAC}). El particionado,
+metodológica central. Los grafos de clúster derivados incorporan cinco tipos de
+arista de seguridad. El particionado,
 consciente de grupos y de familias de plantilla, elimina la fuga entre familias
 casi duplicadas.
 
@@ -24,14 +23,17 @@ logra F1~macro\,=\,0,803\,\(\pm\)\,0,137 y
 Precisión@5\,=\,0,720\,\(\pm\)\,0,160 en validación cruzada. Sobre el test
 independiente (86~grafos, 5~cadenas reales) el sistema alcanza
 Precisión@1\,=\,1,00, Precisión@3\,=\,1,00 y Precisión@5\,=\,0,80, sin falsos
-positivos en los tres clústeres limpios del conjunto (tasa de falsos positivos,
-\acs{FPR}\acused{FPR}\_clean\,=\,0\,\%). La restricción de viabilidad
-estructural es decisiva: sin ella P@1 y P@3 caen a 0,00 y 0,33. Tres expertos
+positivos en los tres clústeres limpios
+(\acs{FPR}\acused{FPR}\_clean\,=\,0\,\%). La restricción de viabilidad
+estructural es decisiva: sin ella P@1 y P@3 caen a 0,00 y 0,33. Las etiquetas
+derivan de reglas sobre las mismas características que observan los modelos: las
+cifras miden separabilidad del criterio, no validación externa.
+Tres expertos
 otorgan 88,3 de media en la escala de usabilidad del sistema
 (\acs{SUS}\acused{SUS}), «excelente».
 
-El análisis estático de manifiestos basta, por tanto, para situar las cadenas
-de ataque en cabeza del ranking. \textit{kubescan} es viable como control
+El análisis estático de manifiestos basta para situar las cadenas
+de ataque en cabeza del \textit{ranking}. kubescan es viable como control
 preventivo integrable en flujos de integración y entrega continua
 (\acs{CICD}\acused{CICD}), antes de que las configuraciones de riesgo lleguen a
 producción.
@@ -44,18 +46,17 @@ cadenas de ataque, infraestructura como código.
 \chapter{Abstract}
 % ============================================================
 
-Static analysis tools for \textit{Kubernetes} detect isolated insecure settings,
+Static analysis tools for Kubernetes detect isolated insecure settings,
 but not whether they chain into a viable attack path. The objective of this work
 is to identify such chains automatically from static manifests, without access
-to a live cluster. \textit{kubescan} combines a Random Forest classifier
-(Layer~1), a \textit{Graph Attention Network} (\acs{GAT}) (Layer~2) and
+to a live cluster. kubescan combines a Random Forest classifier
+(Layer~1), a Graph Attention Network (\acs{GAT}) (Layer~2) and
 ensemble weights optimised by a Genetic Algorithm (Layer~3).
 
 The corpus assembled —2,827 manifests from five complementary public sources—
 and its anti-leakage partitioning protocol are the central methodological
-contribution. The cluster graphs derived from it carry edges for
-privilege-reach, lateral-movement, proximity, namespace, and Role-Based Access
-Control (\acs{RBAC}). Partitioning is group- and template-family-aware, which
+contribution. The cluster graphs derived from it carry five types of security
+edge. Partitioning is group- and template-family-aware, which
 removes the leakage between near-duplicate families.
 
 Layer~1 achieves macro-F1\,=\,0.9946 and an area under the ROC curve
@@ -63,14 +64,16 @@ Layer~1 achieves macro-F1\,=\,0.9946 and an area under the ROC curve
 macro-F1\,=\,0.803\,\(\pm\)\,0.137 and Precision@5\,=\,0.720\,\(\pm\)\,0.160
 under cross-validation. On the independent test set (86~graphs, 5~real chains)
 the system achieves Precision@1\,=\,1.00, Precision@3\,=\,1.00 and
-Precision@5\,=\,0.80, with no false positives on the three clean clusters of
-that set (false positive rate, \acs{FPR}\_clean\,=\,0\,\%). The structural
+Precision@5\,=\,0.80, with no false positives on the three clean clusters
+(\acs{FPR}\_clean\,=\,0\,\%). The structural
 feasibility constraint is decisive: without it P@1 and P@3 fall to 0.00 and
-0.33. Three experts award a mean System Usability Scale (\acs{SUS}) score of
+0.33. Graph labels are derived from rules defined over the same features the
+models observe, so the figures measure separability of that criterion, not
+external validation. Three experts award a mean System Usability Scale (\acs{SUS}) score of
 88.3, an ``excellent'' rating.
 
 Static analysis of manifests therefore suffices to place attack chains at the
-top of the risk ranking. \textit{kubescan} is viable as a preventive control
+top of the risk ranking. kubescan is viable as a preventive control
 integrable into Continuous Integration / Continuous Delivery (\acs{CICD})
 pipelines, before risky configurations reach production.
 

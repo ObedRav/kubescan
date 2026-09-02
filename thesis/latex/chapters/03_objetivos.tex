@@ -17,11 +17,11 @@ distinta y no guardan correspondencia uno a uno con ellas.
 % -----------------------------------------------------------
 
 Diseñar, implementar y evaluar un sistema automático de predicción de cadenas de
-ataque en infraestructuras \textit{Kubernetes} que complemente los enfoques de
+ataque en infraestructuras Kubernetes que complemente los enfoques de
 análisis estático por manifiesto individual con el contexto estructural del
 clúster, mediante la combinación de un clasificador de manifiestos individuales
-(\textit{Random Forest}) con una red neuronal de grafos (\textit{Graph Attention
-Network}) y optimización de ensemble mediante Algoritmo Genético. El sistema opera
+(Random Forest) con una red neuronal de grafos (\textit{Graph Attention
+Network}) y optimización de \textit{ensemble} mediante Algoritmo Genético. El sistema opera
 principalmente sobre manifiestos \acs{YAML} estáticos, sin requerir acceso a un
 clúster activo, si bien incorpora opcionalmente una vía de consulta directa al
 clúster (OE6). Los objetivos específicos que concretan este objetivo general,
@@ -40,23 +40,22 @@ externa. Cada objetivo indica, junto a su criterio, la sección que aporta la
 evidencia de cumplimiento.
 
 \begin{description}
-  \item[OE1.] Construir un conjunto de datos de manifiestos \textit{Kubernetes}
+  \item[OE1.] Construir un conjunto de datos de manifiestos Kubernetes
     etiquetados que combine múltiples fuentes públicas, contenga al menos
-    2.000~manifiestos, y alcance una cobertura mínima del 2\,\% en la bandera de escape
+    2.000~manifiestos y alcance una cobertura mínima del 2\,\% en la bandera de escape
     \texttt{TRUE\_HOST\_PID}, superando el 0,3\,\% que presentan los manifiestos
     procedentes de repositorios reales. Ambas cifras son criterios de diseño
-    fijados en este trabajo: el
-    mínimo de 2.000~manifiestos responde al tamaño necesario para sostener una
-    validación cruzada de 5~pliegues manteniendo representación de la clase
-    minoritaria en cada partición, y el suelo del 2\,\% se estableció para
-    garantizar un número suficiente de manifiestos con capacidad de escape, dado
-    que la regla de etiquetado de grafos marca un clúster como
-    \textit{attack\_chain} en dos supuestos, ambos dependientes de la presencia de
-    nodos con capacidad de escape: cuando el clúster contiene dos o más nodos con
-    alguna bandera de escape activa —situación en la que la escalada compuesta es
-    posible sin necesidad de un salto lateral explícito— o cuando existe una ruta
-    de alcance sobre aristas de escalada que enlaza un nodo de escape con un nodo
-    de movimiento lateral. Con la cobertura del 0,3\,\% observada en los
+    fijados en este trabajo. El mínimo de 2.000~manifiestos responde al tamaño
+    necesario para sostener una validación cruzada de 5~pliegues manteniendo
+    representación de la clase minoritaria en cada partición. El suelo del 2\,\%
+    se estableció para garantizar un número suficiente de manifiestos con
+    capacidad de escape, porque la regla de etiquetado de grafos marca un clúster
+    como \textit{attack\_chain} en dos supuestos, ambos dependientes de la
+    presencia de nodos con esa capacidad: cuando el clúster contiene dos o más
+    nodos con alguna bandera de escape activa, situación en la que la escalada
+    compuesta es posible sin necesidad de un salto lateral explícito, o cuando
+    existe una ruta de alcance sobre aristas de escalada que enlaza un nodo de
+    escape con un nodo de movimiento lateral. Con la cobertura del 0,3\,\% observada en los
     repositorios reales sin aportación de fuentes intencionalmente vulnerables,
     ninguno de los dos supuestos llega a activarse con frecuencia suficiente, de
     modo que la clase minoritaria quedaría sin ejemplos bastantes para entrenar la
@@ -65,7 +64,7 @@ evidencia de cumplimiento.
     Sección~\ref{sec:construccion_dataset}.
 
   \item[OE2.] Desarrollar una Capa~1 de clasificación de manifiestos individuales
-    basada en \textit{Random Forest} con F1 macro superior a 0,85, que produzca
+    basada en Random Forest con F1 macro superior a 0,85, que produzca
     \textit{risk scores} continuos en el rango [0,1] destinados a alimentar el
     vector de nodo de la Capa~2 y el \textit{ensemble} de la Capa~3. En el sistema
     distribuible ambos consumos se satisfacen con la predicción del clasificador;
@@ -73,14 +72,14 @@ evidencia de cumplimiento.
     heurística determinista, circunstancia analizada como limitación en el
     Capítulo~\ref{cap:conclusiones}. El umbral de 0,85 se adopta como criterio de diseño
     propio de este trabajo, no derivado de una referencia externa: la literatura
-    de detección de intrusiones sobre conjuntos comparables no reporta rangos de
-    F1 macro para \textit{Random Forest} que puedan trasladarse a este dominio
+    de detección de intrusiones sobre conjuntos comparables no documenta rangos de
+    F1 macro para Random Forest que puedan trasladarse a este dominio
     (Sección~\ref{sec:ml_vulnerabilidades}). La Sección~\ref{sec:layer1} sitúa
     además el resultado obtenido frente a una línea de base trivial calculada
     sobre el propio corpus, que constituye la comparación informativa.
 
   \item[OE3.] Diseñar un esquema de grafo de clúster con tipos de arista
-    semánticamente significativos para el dominio \textit{Kubernetes}:
+    semánticamente significativos para el dominio Kubernetes:
     proximidad de directorio, alcance de privilegio, movimiento lateral mediante
     cuenta de servicio, co-espacio de nombres semántico y escalada \ac{RBAC}. El
     criterio de éxito se formula a nivel de arquitectura: la configuración
@@ -105,11 +104,11 @@ evidencia de cumplimiento.
     del esfuerzo de revisión manual recaiga sobre hallazgos verdaderos.
     El criterio se evalúa sobre esa configuración concreta y admite, por tanto,
     resultado negativo si la media de sus pliegues queda por debajo del umbral.
-    De forma complementaria —y sin formar parte del criterio— se reporta la
+    De forma complementaria —y sin formar parte del criterio— se presenta la
     dispersión entre semillas de entrenamiento, cuya media puede situarse por
     debajo de 0,70 sin invalidar el objetivo; la Sección~\ref{sec:multisemilla}
     la cuantifica y el Capítulo~\ref{cap:conclusiones} discute su alcance. El
-    resultado del modelo desplegado se reporta en la Sección~\ref{sec:layer2}.
+    resultado del modelo desplegado se presenta en la Sección~\ref{sec:layer2}.
 
   \item[OE5.] Implementar una Capa~3 que optimice mediante Algoritmo Genético una
     función objetivo combinada de Precisión@5 y falsos positivos de clústeres
@@ -120,9 +119,9 @@ evidencia de cumplimiento.
     en la Sección~\ref{sec:layer3}.
 
   \item[OE6.] Empaquetar el sistema completo como una herramienta de línea de comandos
-    (\textit{kubescan}) con soporte para análisis de directorios locales y,
-    opcionalmente, consulta directa al \ac{API} de \textit{Kubernetes} mediante
-    \textit{kubectl}; instalable mediante un único \texttt{pip install} en entornos
+    (kubescan) con soporte para análisis de directorios locales y,
+    opcionalmente, consulta directa al \ac{API} de Kubernetes mediante
+    \texttt{kubectl}; instalable mediante un único \texttt{pip install} en entornos
     Python 3.10 o superior, con verificación efectiva sobre las versiones 3.10 y
     3.11. La evaluación funcional y de instalabilidad se documenta en la
     Sección~\ref{sec:verificacion_requisitos} y la evaluación con usuarios expertos
@@ -143,7 +142,7 @@ los dos sentidos.
 
 El trabajo sigue un proceso iterativo de seis etapas definido específicamente para
 este proyecto, sin adoptar ninguna metodología estandarizada de referencia, que
-articula las actividades propias del desarrollo de \textit{software} (diseño,
+articula las actividades propias del desarrollo de software (diseño,
 implementación y prueba) con las del proceso de ciencia de datos (adquisición,
 preparación, modelado y evaluación). La especificación de requisitos antecede a las
 seis etapas y se documenta de forma independiente en el
@@ -152,12 +151,12 @@ funcionales junto con sus criterios de aceptación. Las etapas se enumeran a
 continuación en el orden en que se ejecutaron:
 
 \textbf{Etapa~1 — Adquisición de datos.} Descarga y normalización de manifiestos
-\textit{Kubernetes} de cinco fuentes públicas complementarias (agrupadas en
+Kubernetes de cinco fuentes públicas complementarias (agrupadas en
 cuatro categorías): el conjunto de datos
 de Rahman et~al.\ \citep{Rahman2022} (repositorios reales etiquetados), BishopFox
-BadPods \citep{BishopFox2021} (pods intencionadamente vulnerables), \textit{Kubernetes
-Goat} \citep{KubernetesGoat} (escenarios de vulnerabilidad) y repositorios de
-seguridad adicionales (CTFs, laboratorios y \textit{fixtures}). El criterio de
+BadPods \citep{BishopFox2021} (pods intencionadamente vulnerables), Kubernetes
+Goat \citep{KubernetesGoat} (escenarios de vulnerabilidad) y repositorios de
+seguridad adicionales (CTF, laboratorios y \textit{fixtures}). El criterio de
 inclusión de repositorios adicionales fue la presencia de al menos una bandera de escape
 activa (\texttt{HOSTPATH\_MOUNT}, \texttt{TRUE\_HOST\_PID}, etc.) en al menos un
 manifiesto del directorio. Este criterio de selección se adoptó porque los
@@ -181,7 +180,7 @@ realizó también la validación de cobertura de la bandera \texttt{HOSTPATH\_MO
 documentada en la Sección~\ref{sec:construccion_dataset}.
 
 \textbf{Etapa~3 — Entrenamiento de la Capa~1.} Entrenamiento de un clasificador
-\textit{Random Forest} para predecir la presencia de misconfiguraciones
+Random Forest para predecir la presencia de configuraciones erróneas
 individuales, con los hiperparámetros fijos detallados en la
 Sección~\ref{sec:capa1_diseno} y la validación cruzada de 5~pliegues descrita en
 la Sección~\ref{sec:particion}. La puntuación por manifiesto que acompaña a cada
@@ -190,25 +189,23 @@ ponderada documentada en la Sección~\ref{sec:construccion_grafo}.
 
 \textbf{Etapa~4 — Entrenamiento de la Capa~2.} Entrenamiento de una \ac{GAT} de 3~capas
 con agrupamiento de grafos (\textit{graph pooling}) y validación cruzada estratificada
-de 5~pliegues consciente de grupos y de familias de plantilla: las variantes
-aumentadas siguen a su grafo base y las familias de plantilla con etiquetas mixtas
-(p.~ej.\ \texttt{badpods\_*}) se asignan como unidades atómicas a una única
-partición, nunca repartidas entre pliegues. La aumentación de datos se aplica sobre
+de 5~pliegues consciente de grupos y de familias de plantilla, según el
+procedimiento que detalla la Sección~\ref{sec:aumentacion}. La aumentación de datos se aplica sobre
 los grafos de entrenamiento para mitigar la escasez de ejemplos de cadena de
 ataque, y el \textit{checkpoint} de cada pliegue se selecciona por Precisión@5 de
 validación.
 
-\textbf{Etapa~5 — Optimización de ensemble y evaluación.} Optimización de los pesos
-del ensemble de tres componentes (\ac{RF}, \ac{GNN}, señal de escape) mediante
+\textbf{Etapa~5 — Optimización de \textit{ensemble} y evaluación.} Optimización de los pesos
+del \textit{ensemble} de tres componentes (Random Forest, \ac{GNN}, señal de escape) mediante
 Algoritmo Genético sobre las predicciones \textit{out-of-fold} de la validación
 cruzada de la Capa~2, aplicación de una restricción de viabilidad estructural en el
 \textit{ranking} final (un grafo de un solo nodo no puede albergar una cadena de
-ataque multi-salto), y evaluación final sobre el conjunto de test reservado desde
+ataque multi-salto) y evaluación final sobre el conjunto de test reservado desde
 el inicio y no utilizado en ninguna etapa de entrenamiento ni selección de
 hiperparámetros.
 
 \textbf{Etapa~6 — Empaquetado y evaluación funcional y de usabilidad.} Empaquetado del
-sistema como herramienta de línea de comandos instalable (\textit{kubescan}),
+sistema como herramienta de línea de comandos instalable (kubescan),
 evaluación funcional de rendimiento e integración (latencia, formatos de salida,
 resolución de \textit{checkpoints}) y estudio de usabilidad y aplicabilidad con
 usuarios expertos mediante el cuestionario \ac{SUS} y un conjunto de tareas guiadas;
