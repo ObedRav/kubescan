@@ -156,6 +156,8 @@
 %
 %--- Azul corporativo UNIR de la plantilla 2026: #0098CD.
 \definecolor{azulunir}{rgb}{0,0.596,0.804}
+%--- Gris E7E6E6 de los filetes de la tabla de portada en la plantilla de Word.
+\definecolor{grisbordeportada}{rgb}{0.906,0.902,0.902}
 
 %--- La portada de la plantilla UNIR 2026 no lleva ciudad, así que no existe
 %    \nombreciudad: \creaportada compone logo, universidad, escuela,
@@ -266,15 +268,27 @@
 \end{center}
 \vfill
 
+%--- Tabla de la portada, calcada de la plantilla de Word (plantilla_individual.docx):
+%    dos columnas en autoajuste de 3964 y 4549 twips (6,99 y 8,02 cm, medidas de
+%    celda), margenes de celda de 0,19 cm, filetes de 0,5 pt en gris E7E6E6 y
+%    contenido centrado verticalmente. Las anchuras de \p{}/\m{} son el area de
+%    texto, asi que se descuentan los dos margenes de cada celda. La primera
+%    columna se dimensiona para que «Trabajo fin de estudio presentado por:»
+%    entre en un solo renglon, que es lo que resuelve el autoajuste de Word.
 \begin{center}
+\begingroup
+\arrayrulecolor{grisbordeportada}
+\setlength{\arrayrulewidth}{0.5pt}
+\setlength{\tabcolsep}{0.19cm}
 \renewcommand{\arraystretch}{1.6}
-\begin{tabular}{|p{5.5cm}|p{8cm}|}
+\begin{tabular}{|m{6.61cm}|m{7.64cm}|}
 \hline
 Trabajo fin de estudio presentado por: & \theauthor \\ \hline
 Tipo de trabajo: & \@tipotrabajo \\ \hline
 Director/a: & \@director \\ \hline
 Fecha: & \thedate \\ \hline
 \end{tabular}
+\endgroup
 \end{center}
 \newpage
 \thispagestyle{empty}

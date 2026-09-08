@@ -45,6 +45,10 @@
 \usepackage{bookmark}
 \hypersetup{hidelinks}  % enlaces navegables sin recuadros de color (aspecto elegante)
 \usepackage{booktabs}
+\usepackage{tabularx}
+%--- Columna X en bandera: reparte la anchura sobrante sin justificar, que en
+%    columnas estrechas abriria huecos entre palabras.
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
 \usepackage{multirow}
 \usepackage{acronym}  % la lista se compone en appendix/acronimos.tex
 \usepackage{tocloft}
@@ -97,7 +101,8 @@
 % «Fuente:» según el estilo «Pie de foto-tabla» de la plantilla:
 % centrado, 9,5 pt, gris (#595959), redonda.
 \definecolor{grisfuente}{rgb}{0.349,0.349,0.349}
-\newcommand{\notafuente}[1]{\par\begin{center}{\fontsize{9.5pt}{11pt}\selectfont\color{grisfuente}Fuente: #1}\end{center}}
+\newcommand{\notafuente}[1]{\par\addvspace{6pt}
+  {\centering\fontsize{9.5pt}{11pt}\selectfont\color{grisfuente}Fuente: #1\par}}
 \newcommand{\fuentepropia}{\notafuente{elaboración propia.}}
 
 %---------------------------
