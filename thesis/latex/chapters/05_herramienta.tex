@@ -48,7 +48,6 @@ validación cruzada (Sección~\ref{sec:capa3_diseno}).
   \caption{Arquitectura del sistema kubescan}
   \label{fig:arquitectura}
   \includegraphics[width=\textwidth]{fig_arquitectura}
-
   \fuentepropia
 \end{figure}
 
@@ -86,7 +85,7 @@ plataformas distintas con características de distribución diferentes; ver Tabl
 \centering\small
 \caption{Composición del conjunto de datos de manifiestos Kubernetes}
 \label{tab:dataset}
-\begin{tabular}{@{}p{5.4cm}rp{4.9cm}@{}}
+\begin{tabularx}{\textwidth}{@{}>{\hsize=1.15\hsize}Lr>{\hsize=0.85\hsize}L@{}}
 \toprule
 Fuente & Filas & Rol \\
 \midrule
@@ -98,7 +97,7 @@ Repositorios de seguridad adicionales & 779 & CTF, \textit{fixtures} de herramie
 \midrule
 \textbf{Total} & \textbf{2.827} & \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \fuentepropia
 \end{table}
 
@@ -137,17 +136,16 @@ El extractor de características aplica 28 reglas de análisis estático a cada 
 \acs{YAML}, organizadas en tres grupos:
 
 \begin{itemize}
-\raggedright
-  \item \textbf{18 banderas Rahman} (subconjunto del trabajo original): \texttt{TRUE\_HOST\_PID},
-    \texttt{CAP\_SYS\_ADMIN}, \texttt{SEC\_CONT\_OVER\_PRIVIL}, \texttt{INSECURE\_HTTP},
+  \item \textbf{18 banderas Rahman} (subconjunto del trabajo original): \identcode{TRUE\_HOST\_PID},
+    \identcode{CAP\_SYS\_ADMIN}, \identcode{SEC\_CONT\_OVER\_PRIVIL}, \identcode{INSECURE\_HTTP},
     etc.
-  \item \textbf{3 características derivadas}: \texttt{cap\_misuse} (OR de las dos banderas de
-    capacidades de sistema), \texttt{all\_secrets} (OR de los indicadores de exposición
-    de secretos), \texttt{total\_misconfigs} (suma de todas las banderas activas).
-  \item \textbf{7 características extendidas}: \texttt{NO\_RUN\_AS\_NON\_ROOT},
-    \texttt{IMAGE\_USES\_LATEST}, \texttt{SA\_AUTOMOUNT\_TOKEN}, \texttt{HOSTPATH\_MOUNT},
+  \item \textbf{3 características derivadas}: \identcode{cap\_misuse} (OR de las dos banderas de
+    capacidades de sistema), \identcode{all\_secrets} (OR de los indicadores de exposición
+    de secretos), \identcode{total\_misconfigs} (suma de todas las banderas activas).
+  \item \textbf{7 características extendidas}: \identcode{NO\_RUN\_AS\_NON\_ROOT},
+    \identcode{IMAGE\_USES\_LATEST}, \identcode{SA\_AUTOMOUNT\_TOKEN}, \identcode{HOSTPATH\_MOUNT},
     etc. Seis de ellas presentan una procedencia mixta de valores; la séptima,
-    \texttt{HOSTPATH\_MOUNT}, se extrae siempre del propio manifiesto.
+    \identcode{HOSTPATH\_MOUNT}, se extrae siempre del propio manifiesto.
 \end{itemize}
 
 La procedencia de los valores de las seis características extendidas con
@@ -170,7 +168,7 @@ GitHub —1.175 de sus 1.510~filas— y no produjo salida alguna para los
 repositorios de seguridad adicionales, GitLab, BadPods ni Kubernetes Goat, cuyas
 filas se resuelven por el analizador \acs{YAML} o por mediana. La séptima
 característica extendida queda al margen de este esquema, ya que
-\texttt{HOSTPATH\_MOUNT} se deriva por completo del análisis estático del
+\identcode{HOSTPATH\_MOUNT} se deriva por completo del análisis estático del
 manifiesto y está poblada para las 2.827~filas.
 
 La Capa~2 (\ac{GNN}) consume únicamente las 18~banderas Rahman y las 7~características extendidas
@@ -205,23 +203,26 @@ lateral y limpio. Un \textit{namespace} o espacio de nombres es la partición
 lógica con la que Kubernetes agrupa y aísla recursos dentro de un mismo clúster,
 y delimita el alcance de tres de los cinco tipos de arista. Las reglas de
 asignación de cada tipo de nodo y de arista se detallan en las dos subsecciones
-siguientes.
+siguientes. Las aristas dirigidas parten del nodo con la capacidad que se indica
+hacia los demás nodos de su mismo espacio de nombres.
 
 \begin{table}[htbp]
 \centering\small
 \caption{Tipos de aristas en el grafo de clúster}
 \label{tab:edge_types}
-\begin{tabular}{@{}p{3cm}cp{3.6cm}p{3.8cm}@{}}
+%--- Pesos de \hsize proporcionales al contenido mas largo de cada columna, para
+%    que ninguna celda parta en dos renglones (suman 3, el numero de columnas X).
+\begin{tabularx}{\textwidth}{@{}>{\hsize=1.00\hsize}Lc>{\hsize=0.66\hsize}L>{\hsize=1.34\hsize}L@{}}
 \toprule
 Tipo & Código & Dirección & Criterio \\
 \midrule
-Proximidad de directorio & 0 & Bidireccional & Mismos dos componentes finales de ruta \acs{YAML} \\
-Alcance de privilegio & 1 & Dirigida (escape\(\to\)mismo \textit{namespace}) & Bandera de escape activa \\
-Movimiento lateral \acs{SA}\acused{SA} & 2 & Dirigida (lateral\(\to\)mismo \textit{namespace}) & Bandera de movimiento lateral \\
-Co-espacio de nombres (\texttt{SEMANTIC\_NS}) & 3 & Bidireccional & Mismo \textit{namespace} K8s \\
-Escalada \ac{RBAC} & 4 & Dirigida (elevado\(\to\)mismo \textit{namespace}) & \acs{SA} vinculado a rol privilegiado \\
+Proximidad de directorio & 0 & Bidireccional & Dos últimos componentes de la ruta \\
+Alcance de privilegio & 1 & Dirigida (escape) & Bandera de escape activa \\
+Movimiento lateral \acs{SA}\acused{SA} & 2 & Dirigida (lateral) & Bandera de movimiento lateral \\
+Coespacio de nombres & 3 & Bidireccional & Mismo \textit{namespace} (\identcode{SEMANTIC\_NS}) \\
+Escalada \ac{RBAC} & 4 & Dirigida (elevado) & \acs{SA} vinculado a rol privilegiado \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \fuentepropia
 \end{table}
 
@@ -240,7 +241,6 @@ en el 86\,\% de los grafos.
   \caption{Ejemplo de grafo de clúster Kubernetes con cuatro nodos}
   \label{fig:grafo_cluster}
   \includegraphics[width=0.72\textwidth]{fig_grafo_cluster}
-
   \fuentepropia
 \end{figure}
 
@@ -267,7 +267,6 @@ Capítulo~\ref{cap:evaluacion}.
 
 \subsection{Detección de escape y movimiento lateral}
 
-{\raggedright
 La clasificación de nodos utiliza dos conjuntos de banderas definidos en el código
 como constantes inmutables (\texttt{frozenset}). Un nodo se clasifica como de
 \textbf{escape} si tiene activa al menos una de las siguientes 8~banderas:
@@ -280,7 +279,7 @@ el sistema de ficheros del anfitrión— era incorrectamente etiquetado como
 el número de clústeres de cadena de ataque del corpus preliminar ascendió de 13
 a~15; la trayectoria completa del tamaño del corpus y del número de cadenas a lo
 largo de las fases experimentales se recoge en la
-Tabla~\ref{tab:gnn_evolution}.\par}
+Tabla~\ref{tab:gnn_evolution}.
 
 Un nodo se clasifica como de \textbf{movimiento lateral} si tiene activa al menos una
 de las siguientes 4~banderas: \texttt{SA\_AUTOMOUNT\_TOKEN} (\textit{token} de cuenta de servicio
@@ -370,7 +369,6 @@ El modelo \ac{GAT} \citep{Velickovic2018} implementado tiene la siguiente estruc
 con las dimensiones exactas verificadas en \texttt{gat\_encoder.py}:
 
 \begin{enumerate}
-\raggedright
   \item \textbf{\textit{Embedding} de tipo de arista}: \texttt{Embedding(5, 8)}.
         Los cinco tipos de arista (proximidad de directorio, alcance de
         privilegio, lateral por ServiceAccount, espacio de nombres y
@@ -718,7 +716,6 @@ tamaño máximo de los ficheros añadidos), mientras que \texttt{mypy},
 \texttt{pytest} y \texttt{radon} se ejecutan en el flujo de integración continua
 de GitHub Actions sobre cada \textit{push} y cada \textit{pull request}.
 
-{\raggedright
 La suite comprende siete módulos unitarios —analizador \acs{YAML}, constructor
 del grafo, codificador \ac{GAT}, clasificador Random Forest, ensamblador \ac{GA},
 utilidades de dispositivo y un módulo de pruebas basadas en propiedades con
@@ -734,4 +731,4 @@ cómputo; y la carga del clasificador valida los tipos declarados por el fichero
 NumPy, de modo que un \textit{checkpoint} manipulado no pueda introducir
 tipos arbitrarios. En el lado de investigación, cada \acs{JSON} de resultados
 incorpora un bloque de procedencia con el \textit{commit}, las semillas y las
-versiones de los paquetes que lo produjeron.\par}
+versiones de los paquetes que lo produjeron.

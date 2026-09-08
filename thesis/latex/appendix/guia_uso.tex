@@ -164,15 +164,14 @@ sobre \textit{workloads} y recursos \ac{RBAC} en el clúster objetivo.
 \section{Reproducción del \textit{pipeline} de investigación}
 % -----------------------------------------------------------
 
-{\raggedright
 El \textit{pipeline} de entrenamiento se ejecuta mediante los objetivos definidos en el
 \texttt{Makefile} de la raíz del repositorio. Los pasos de adquisición y
-extracción (\texttt{research/scripts/01\_acquire/}, con
-\texttt{download\_github\_manifests.py} e \texttt{ingest\_attack\_repos.py}; y
-\texttt{research/scripts/02\_extract/}, con \texttt{extract\_yaml\_features.py}
-y \texttt{build\_graphs.py}) son intensivos en red y no están automatizados en
+extracción (\identcode{research/scripts/01\_acquire/}, con
+\identcode{download\_github\_manifests.py} e \identcode{ingest\_attack\_repos.py}; y
+\identcode{research/scripts/02\_extract/}, con \identcode{extract\_yaml\_features.py}
+y \identcode{build\_graphs.py}) son intensivos en red y no están automatizados en
 el \texttt{Makefile}; se ejecutan manualmente una única vez y producen los
-grafos de clúster en \texttt{research/data/graphs/*.npz}.\par}
+grafos de clúster en \texttt{research/data/graphs/*.npz}.
 
 A partir de ahí, el resto del \textit{pipeline} es reproducible con dos objetivos:
 
@@ -181,7 +180,6 @@ make data       # aumentacion -> cache de grafos -> splits group-aware
 make reproduce  # data -> RF -> GAT (5-fold) -> ensemble GA -> eval en test
 \end{verbatim}}
 
-{\raggedright
 El objetivo \texttt{reproduce} encadena, en orden, \texttt{train\_rf.py},
 \texttt{train\_gnn.py} (5-fold, 300 épocas, \texttt{hidden=64},
 \texttt{heads=4}, \texttt{layers=3}, entropía cruzada ponderada y selección de
@@ -199,13 +197,13 @@ entornos Google Colab con GPU. El objetivo
 \texttt{reproduce-ablations} reentrena las variantes de arquitectura recogidas
 en la Tabla~\ref{tab:arch_ablation} (\ac{GAT} de 2~capas y \ac{GCN} de
 3~capas) con la misma configuración de pérdida y selección que el modelo
-desplegado.\par}
+desplegado.
 
 \begin{table}[htbp]
 \centering\small
 \caption{Opciones de la interfaz de línea de comandos de kubescan}
 \label{tab:cli_options}
-\begin{tabular}{@{}p{3.9cm}p{2.5cm}p{6.2cm}@{}}
+\begin{tabularx}{\textwidth}{@{}>{\hsize=0.80\hsize}L>{\hsize=0.52\hsize}L>{\hsize=1.68\hsize}L@{}}
 \toprule
 Opción & Ámbito & Efecto \\
 \midrule
@@ -218,7 +216,7 @@ Opción & Ámbito & Efecto \\
 \texttt{-{}-verbose}, \texttt{-v} & Grupo raíz & Registro en nivel \texttt{DEBUG} \\
 \texttt{-{}-version} & Grupo raíz & Versión instalada del paquete \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 
 {\footnotesize\(^{*}\)La forma corta \texttt{-n} corresponde a
 \texttt{-{}-cluster-name} en \texttt{scan} y a \texttt{-{}-namespace} en
