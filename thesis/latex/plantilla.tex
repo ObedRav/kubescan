@@ -97,7 +97,6 @@
 \newcommand{\addequationtoindex}[1]{%
   \addcontentsline{loe}{ecuaciones}{\protect\numberline{\theequation}#1}%
 }
-\newcommand{\startchapter}{\addtocontents{loe}{\protect\addvspace{10pt}}}
 % «Fuente:» según el estilo «Pie de foto-tabla» de la plantilla:
 % centrado, 9,5 pt, gris (#595959), redonda.
 \definecolor{grisfuente}{rgb}{0.349,0.349,0.349}
@@ -144,29 +143,36 @@ GNNSurvey2024,Lin2017,Bangor2009}
 \tableofcontents
 % Los tres índices auxiliares se listan en el índice de contenidos, igual que
 % las referencias bibliográficas; \phantomsection fija el destino del enlace.
+% Los tres indices se componen con \addvspace neutralizado: LaTeX lo inserta
+% entre los grupos de cada capitulo y, sumado al \parskip de 12 pt, abre un hueco
+% doble que los estilos de indice de la plantilla de Word no tienen.
+\newcommand{\indicesinsaltos}[1]{\begingroup
+  \renewcommand*{\addvspace}[1]{}%
+  #1%
+\endgroup}
 \clearpage
 \phantomsection
 \addcontentsline{toc}{chapter}{\listfigurename}
-\listoffigures
+\indicesinsaltos{\listoffigures}
 \clearpage
 \phantomsection
 \addcontentsline{toc}{chapter}{\listtablename}
-\listoftables
+\indicesinsaltos{\listoftables}
 \clearpage
 \phantomsection
 \addcontentsline{toc}{chapter}{\listecuacionesname}
-\listofecuaciones
+\indicesinsaltos{\listofecuaciones}
 \clearpage
 
 % ---- Main chapters ----------------------------------------
 \mainmatter
-\startchapter\include{chapters/01_introduccion}
-\startchapter\include{chapters/02_estado_arte}
-\startchapter\include{chapters/03_objetivos}
-\startchapter\include{chapters/04_requisitos}
-\startchapter\include{chapters/05_herramienta}
-\startchapter\include{chapters/06_evaluacion}
-\startchapter\include{chapters/07_conclusiones}
+\include{chapters/01_introduccion}
+\include{chapters/02_estado_arte}
+\include{chapters/03_objetivos}
+\include{chapters/04_requisitos}
+\include{chapters/05_herramienta}
+\include{chapters/06_evaluacion}
+\include{chapters/07_conclusiones}
 
 % ---- Bibliography -----------------------------------------
 \cleardoublepage
@@ -182,8 +188,8 @@ GNNSurvey2024,Lin2017,Bangor2009}
 \appendix
 \renewcommand{\appendixname}{Anexo}
 \activaformatoanexo
-\startchapter\include{appendix/repositorio}
-\startchapter\include{appendix/guia_uso}
-\startchapter\include{appendix/acronimos}
+\include{appendix/repositorio}
+\include{appendix/guia_uso}
+\include{appendix/acronimos}
 
 \end{document}
