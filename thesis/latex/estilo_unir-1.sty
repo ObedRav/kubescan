@@ -140,6 +140,17 @@
 
 \renewcommand{\baselinestretch}{1.5}
 
+%--- Las instrucciones piden interlineado sencillo en las notas al pie, pero
+%    \baselinestretch es global y también las estiraba a 1,5 (17,4 pt medidos
+%    frente a los 12,2 pt que corresponden a un cuerpo de 10 pt). Se restituye el
+%    interlineado simple dentro del texto de la nota.
+%    Se envuelve \@footnotetext en lugar de parchearlo: hyperref lo redefine y
+%    \patchcmd ya no encuentra el \footnotesize original.
+\AtBeginDocument{%
+  \let\estilounir@fntext\@footnotetext
+  \long\def\@footnotetext#1{\estilounir@fntext{\linespread{1}\selectfont #1}}%
+}
+
 
 
 \usepackage{etoolbox}
@@ -177,17 +188,20 @@
 \titleformat{name=\chapter,numberless}[hang]{\fontsize{18pt}{22pt}\selectfont\calibrilight\color{azulunir}}{}{0pt}{}
 %--- El título de capítulo comienza en el margen superior del cuerpo (2,5 cm),
 %    sin el hueco de 50 pt que el estilo book añade por defecto.
-\titlespacing*{\chapter}{0pt}{0pt}{18pt}
-\titlespacing*{name=\chapter,numberless}{0pt}{0pt}{18pt}
+\titlespacing*{\chapter}{0pt}{0pt}{0pt}
+\titlespacing*{name=\chapter,numberless}{0pt}{0pt}{0pt}
 \titleformat{\section}{\fontsize{14pt}{17pt}\selectfont\calibrilight\color{azulunir}}{\thesection.}{0.5em}{}
 \titleformat{\subsection}{\normalsize\calibrilight\bfseries}{\thesubsection.}{0.5em}{}
 \titleformat{\subsubsection}{\normalsize\mdseries}{\thesubsubsection.}{0.5em}{}
-%--- Espaciado de la plantilla Word (6 pt antes/después de cada título): sin
-%    esto, titlesec usa sus valores por defecto (varias veces mayores), que se
-%    suman al \parskip de los párrafos vecinos en lugar de sustituirlo.
-\titlespacing*{\section}{0pt}{6pt}{6pt}
-\titlespacing*{\subsection}{0pt}{6pt}{6pt}
-\titlespacing*{\subsubsection}{0pt}{6pt}{6pt}
+%--- Espaciado de los títulos. En la plantilla de Word los estilos Título 1-4
+%    heredan de Normal (6 pt antes y 6 pt después) y no añaden nada propio, de
+%    modo que la separación alrededor de un título es la misma que entre dos
+%    párrafos. En LaTeX ese 6+6 ya lo aporta el \parskip de 12 pt, así que
+%    titlesec no debe sumar nada más: con 6 pt propios el hueco medido pasaba de
+%    33,6 a 39,6 pt y se veía como un espacio doble tras cada título.
+\titlespacing*{\section}{0pt}{0pt}{0pt}
+\titlespacing*{\subsection}{0pt}{0pt}{0pt}
+\titlespacing*{\subsubsection}{0pt}{0pt}{0pt}
 \setcounter{secnumdepth}{3}
 \setcounter{tocdepth}{3}
 
